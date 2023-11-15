@@ -9,7 +9,9 @@
 #include <GWCA/Managers/GameThreadMgr.h>
 #include <GWCA/Managers/RenderMgr.h>
 
-#define GWCA_CTOS_DISABLED 1
+#ifndef GWCA_CTOS_ENABLED
+#define GWCA_CTOS_ENABLED 0
+#endif
 
 namespace {
     using namespace GW;
@@ -38,7 +40,7 @@ namespace {
     uintptr_t game_srv_object_addr;
 
     void Init() {
-#ifndef GWCA_CTOS_DISABLED
+#if GWCA_CTOS_ENABLED
         SendPacket_Func = (SendPacket_pt)Scanner::FindAssertion("p:\\code\\net\\msg\\msgconn.cpp", "bytes >= sizeof(dword)", -0x67);
 #endif
         uintptr_t address = Scanner::FindAssertion("p:\\code\\gw\\net\\cli\\gcgamecmd.cpp","No valid case for switch variable 'code'", -0x32);
@@ -51,7 +53,7 @@ namespace {
         GWCA_INFO("[SCAN] CtoGSObjectPtr = %p", game_srv_object_addr);
 
 #ifdef _DEBUG
-#ifndef GWCA_CTOS_DISABLED
+#if GWCA_CTOS_ENABLED
         GWCA_ASSERT(SendPacket_Func);
 #endif
         GWCA_ASSERT(game_srv_object_addr);
