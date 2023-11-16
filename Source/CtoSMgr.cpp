@@ -9,15 +9,10 @@
 #include <GWCA/Managers/GameThreadMgr.h>
 #include <GWCA/Managers/RenderMgr.h>
 
-#ifndef GWCA_CTOS_ENABLED
-#define GWCA_CTOS_ENABLED 0
-#endif
-
 namespace {
     using namespace GW;
 
-    typedef void(__cdecl *SendPacket_pt)(
-        uint32_t context, uint32_t size, void* packet);
+    using SendPacket_pt = void(__cdecl *)(uint32_t context, uint32_t size, void* packet);
     SendPacket_pt SendPacket_Func = 0;
     SendPacket_pt RetSendPacket = 0;
 
@@ -98,6 +93,7 @@ namespace GW {
         if (it != callbacks.end())
             callbacks.erase(it);
     }
+#if GWCA_CTOS_ENABLED
     bool CtoS::SendPacket(uint32_t size, void *buffer) {
         if (!(Verify(SendPacket_Func && game_srv_object_addr)))
             return false;
@@ -121,4 +117,5 @@ namespace GW {
         uint32_t *pak = &size + 1;
         return SendPacket(size, pak);
     }
+#endif
 } // namespace GW
