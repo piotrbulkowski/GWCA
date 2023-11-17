@@ -12,9 +12,6 @@ namespace GW {
         wchar_t character_name[20];
     };
     struct PreGameContext {
-
-        static PreGameContext* instance();
-
         /* +h0000 */ uint32_t frame_id;
         /* +h0004 */ uint32_t h0004[72];
         /* +h0124 */ uint32_t chosen_character_index;

@@ -19,9 +19,6 @@ namespace GW {
     struct AccountContext;
 
     struct GameContext {
-
-        static GameContext* instance();
-
         /* +h0000 */ void* h0000;
         /* +h0004 */ void* h0004;
         /* +h0008 */ AgentContext* agent; // Most functions that access are prefixed with Agent.

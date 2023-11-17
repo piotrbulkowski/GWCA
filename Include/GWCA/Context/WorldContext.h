@@ -118,9 +118,6 @@ namespace GW {
 
 
     struct WorldContext {
-
-        static WorldContext* instance();
-
         /* +h0000 */ AccountInfo* accountInfo;
         /* +h0004 */ Array<wchar_t> message_buff;
         /* +h0014 */ Array<wchar_t> dialog_buff;
