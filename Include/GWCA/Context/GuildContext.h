@@ -13,9 +13,6 @@ namespace GW {
     typedef Array<GuildHistoryEvent *> GuildHistory;
 
     struct GuildContext {
-
-        static GuildContext* instance();
-
         /* +h0000 */ uint32_t h0000;
         /* +h0004 */ uint32_t h0004;
         /* +h0008 */ uint32_t h0008;

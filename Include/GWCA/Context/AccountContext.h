@@ -20,9 +20,6 @@ namespace GW {
     };
 
     struct AccountContext {
-
-        static AccountContext* instance();
-
         /* +h0000 */ Array<AccountUnlockedCount> account_unlocked_counts; // e.g. number of unlocked storage panes
         /* +h0010 */ uint8_t h0010[0xA4];
         /* +h00b4 */ Array<uint32_t> unlocked_pvp_heros; // Unused, hero battles is no more :(
