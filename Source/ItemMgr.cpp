@@ -14,7 +14,9 @@
 
 #include <GWCA/GameEntities/Item.h>
 #include <GWCA/GameEntities/Agent.h>
+#include <GWCA/GameEntities/Map.h>
 
+#include <GWCA/Managers/MapMgr.h>
 #include <GWCA/Managers/ItemMgr.h>
 #include <GWCA/Managers/Module.h>
 #include <GWCA/Managers/StoCMgr.h>
@@ -136,6 +138,25 @@ namespace {
     typedef void(__cdecl* ChangeGold_pt)(uint32_t character_gold, uint32_t storage_gold);
     ChangeGold_pt ChangeGold_Func = 0;
 
+    bool IsStorageBag(const GW::Bag* bag) {
+        return bag && bag->bag_type == GW::Constants::BagType::Storage;
+    }
+    bool IsStorageItem(const GW::Item* item) {
+        return item && IsStorageBag(item->bag);
+    }
+
+    bool CanAccessXunlaiChest() {
+        if (GW::Map::GetInstanceType() != GW::Constants::InstanceType::Outpost)
+            return false;
+        // TODO: Any way to tell if current character has paid 50g to unlock storage?
+        const auto map = GW::Map::GetCurrentMapInfo();
+        return map && map->region != GW::Region_Presearing;
+    }
+
+    bool CanInteractWithItem(const GW::Item* item) {
+        return !IsStorageItem(item) || CanAccessXunlaiChest();
+    }
+
     std::unordered_map<HookEntry *, ItemClickCallback> ItemClick_callbacks;
     void __fastcall OnItemClick(uint32_t* bag_id, void *edx, ItemClickParam *param) {
         HookBase::EnterHook();
@@ -148,6 +169,8 @@ namespace {
         uint32_t slot = param->slot - 2; // for some reason the slot is offset by 2
         GW::HookStatus status;
         Bag* bag = GetBag(*bag_id + 1);
+        if (IsStorageBag(bag) && !CanAccessXunlaiChest())
+            status.blocked = true;
         if (bag) {
             for (auto& it : ItemClick_callbacks) {
                 it.second(&status, param->type, slot, bag);
@@ -363,6 +386,8 @@ namespace GW {
         bool EquipItem(const Item* item, uint32_t agent_id) {
             if (!(item && EquipItem_Func))
                 return false;
+            if (!CanInteractWithItem(item))
+                return false;
             if (!agent_id)
                 agent_id = Agents::GetPlayerId();
             if (!agent_id)
@@ -373,6 +398,8 @@ namespace GW {
 
         bool UseItem(const Item* item) {
             if (!(UseItem_Func && item))
+                return false;
+            if (!CanInteractWithItem(item))
                 return false;
             UseItem_Func(item->item_id);
             return true;
