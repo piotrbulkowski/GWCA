@@ -137,6 +137,14 @@ namespace {
 
     typedef void(__cdecl* ChangeGold_pt)(uint32_t character_gold, uint32_t storage_gold);
     ChangeGold_pt ChangeGold_Func = 0;
+    ChangeGold_pt ChangeGold_Ret = 0;
+
+    void __cdecl OnChangeGold(uint32_t character_gold, uint32_t storage_gold) {
+        HookBase::EnterHook();
+        if (CanAccessXunlaiChest())
+            ChangeGold_Ret(character_gold, storage_gold);
+        HookBase::LeaveHook();
+    }
 
     bool IsStorageBag(const GW::Bag* bag) {
         return bag && bag->bag_type == GW::Constants::BagType::Storage;
@@ -153,8 +161,9 @@ namespace {
         return map && map->region != GW::Region_Presearing;
     }
 
-    bool CanInteractWithItem(const GW::Item* item) {
-        return !IsStorageItem(item) || CanAccessXunlaiChest();
+    uint32_t GetSalvageSessionId() {
+        const auto w = GetWorldContext();
+        return w ? w->salvage_session_id : 0;
     }
 
     std::unordered_map<HookEntry *, ItemClickCallback> ItemClick_callbacks;
@@ -299,6 +308,10 @@ namespace {
             HookBase::CreateHook(UseItem_Func, OnUseItem, (void**)&UseItem_Ret);
             UI::RegisterUIMessageCallback(&OnUseItem_Entry, UI::UIMessage::kSendUseItem, OnUseItem_UIMessage, 0x1);
         }
+        if (ChangeGold_Func) {
+            HookBase::CreateHook(ChangeGold_Func, OnChangeGold, (void**)&ChangeGold_Ret);
+            UI::RegisterUIMessageCallback(&OnUseItem_Entry, UI::UIMessage::kSendUseItem, OnUseItem_UIMessage, 0x1);
+        }
     }
 
     void EnableHooks() {
@@ -321,6 +334,8 @@ namespace {
             HookBase::DisableHooks(MoveItem_Func);
         if (UseItem_Func)
             HookBase::DisableHooks(UseItem_Func);
+        if (ChangeGold_Func)
+            HookBase::DisableHooks(ChangeGold_Func);
     }
 
     void Exit() {
@@ -328,6 +343,7 @@ namespace {
         HookBase::RemoveHook(PingWeaponSet_Func);
         HookBase::RemoveHook(MoveItem_Func);
         HookBase::RemoveHook(UseItem_Func);
+        HookBase::RemoveHook(ChangeGold_Func);
     }
 }
 
@@ -341,6 +357,8 @@ namespace GW {
         ::EnableHooks,           // enable_hooks
         ::DisableHooks,           // disable_hooks
     };
+
+
     bool Item::GetIsZcoin() const {
         if (model_file_id == 31202) return true; // Copper
         if (model_file_id == 31203) return true; // Gold
@@ -364,7 +382,9 @@ namespace GW {
             pack.data = 3;
             StoC::EmulatePacket(&pack);
         }
-
+        bool CanInteractWithItem(const GW::Item* item) {
+            return item && !IsStorageItem(item) || CanAccessXunlaiChest();
+        }
         bool PickUpItem(const Item* item, uint32_t CallTarget /*= 0*/) {
             return Agents::PickUpItem(Agents::GetAgentByID(item->agent_id), CallTarget);
         }
@@ -479,10 +499,18 @@ namespace GW {
         }
 
         bool SalvageStart(uint32_t salvage_kit_id, uint32_t item_id) {
-            return SalvageStart_Func ? SalvageStart_Func(salvage_kit_id, GetWorldContext()->salvage_session_id, item_id), true : false;
+            if (!(CanInteractWithItem(GetItemById(salvage_kit_id))
+                && CanInteractWithItem(GetItemById(item_id)))) {
+                return false;
+            }
+            return SalvageStart_Func ? SalvageStart_Func(salvage_kit_id, GetSalvageSessionId(), item_id), true : false;
         }
 
         bool IdentifyItem(uint32_t identification_kit_id, uint32_t item_id) {
+            if (!(CanInteractWithItem(GetItemById(identification_kit_id))
+                && CanInteractWithItem(GetItemById(item_id)))) {
+                return false;
+            }
             return IdentifyItem_Func ? IdentifyItem_Func(identification_kit_id, item_id), true : false;
         }
 
@@ -543,19 +571,12 @@ namespace GW {
 
         bool OpenLockedChest(bool use_key) {
             auto* target = Agents::GetTarget();
-            if (!(OpenLockedChest_Func && target && target->GetIsGadgetType()))
+            if (!(target && target->GetIsGadgetType()))
                 return false;
             auto* me = Agents::GetPlayer();
             if (!(me && GetDistance(me->pos, target->pos) < Constants::Range::Area))
                 return false;
-            if (use_key) {
-                // TODO: Find matching key for chest to allow GWCA to use keys; how does the game know what dialog buttons to show?
-                use_key = false;
-            }
-            if (!use_key && !GetItemByModelId(Constants::ItemID::Lockpick))
-                return false;
-            OpenLockedChest_Func(use_key ? 0x1U : 0x2U);
-            return true;
+            return GW::UI::SendUIMessage(GW::UI::UIMessage::kSendDialog, use_key ? (void*)1 : (void*)2);
         }
 
         bool MoveItem(const Item* from, const Bag* bag, uint32_t slot, uint32_t quantity) {

@@ -65,6 +65,9 @@ namespace GW {
         // Ping weapon/offhand for an agent
         GWCA_API bool PingWeaponSet(uint32_t agent_id, uint32_t weapon_item_id, uint32_t offhand_item_id);
 
+        // Returns whether the player is able to use/move/interact with the item
+        GWCA_API bool CanInteractWithItem(const GW::Item* item);
+
         // Pick up selected item off the ground.
         GWCA_API bool PickUpItem(const Item *item, uint32_t call_target = 0);
 
