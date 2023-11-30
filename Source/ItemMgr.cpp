@@ -139,6 +139,14 @@ namespace {
     ChangeGold_pt ChangeGold_Func = 0;
     ChangeGold_pt ChangeGold_Ret = 0;
 
+    bool CanAccessXunlaiChest() {
+        if (GW::Map::GetInstanceType() != GW::Constants::InstanceType::Outpost)
+            return false;
+        // TODO: Any way to tell if current character has paid 50g to unlock storage?
+        const auto map = GW::Map::GetCurrentMapInfo();
+        return map && map->region != GW::Region_Presearing;
+    }
+
     void __cdecl OnChangeGold(uint32_t character_gold, uint32_t storage_gold) {
         HookBase::EnterHook();
         if (CanAccessXunlaiChest())
@@ -151,14 +159,6 @@ namespace {
     }
     bool IsStorageItem(const GW::Item* item) {
         return item && IsStorageBag(item->bag);
-    }
-
-    bool CanAccessXunlaiChest() {
-        if (GW::Map::GetInstanceType() != GW::Constants::InstanceType::Outpost)
-            return false;
-        // TODO: Any way to tell if current character has paid 50g to unlock storage?
-        const auto map = GW::Map::GetCurrentMapInfo();
-        return map && map->region != GW::Region_Presearing;
     }
 
     uint32_t GetSalvageSessionId() {

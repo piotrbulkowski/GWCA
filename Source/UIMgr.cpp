@@ -655,19 +655,25 @@ namespace GW {
                 });
             return true;
         }
-        bool DrawOnCompass(unsigned session_id, unsigned pt_count, CompassPoint *pts)
+        
+        bool DrawOnCompass(unsigned session_id, unsigned pt_count, GW::Vec2f *pts)
         {
             if (!DrawOnCompass_Func)
                 return false;
-            uint32_t* pts_conv = new uint32_t[pt_count * 2];
+            DrawOnCompass_Func(session_id, pt_count, (uint32_t*)pts);
+            return true;
+        }
+        bool DrawOnCompass(unsigned session_id, unsigned pt_count, CompassPoint *pts)
+        {
+            Vec2f* pts_conv = new Vec2f[pt_count];
             // Legacy code was to pass short* for coordinates direct to CtoS. New hook needs them in int* coordinates, fill with 0xf
             for (uint32_t i = 0; i < pt_count; i++) {
-                pts_conv[i * 2] = pts[i].x | 0xffff0000;
-                pts_conv[i * 2 + 1] = pts[i].y | 0xffff0000;
+                pts_conv[i].x = (float)(pts[i].x | 0xffff0000);
+                pts_conv[i].y = (float)(pts[i].y | 0xffff0000);
             }
-            DrawOnCompass_Func(session_id, pt_count, pts_conv);
+            bool res = DrawOnCompass(session_id, pt_count, pts_conv);
             delete[] pts_conv;
-            return true;
+            return res;
         }
 
         void LoadSettings(size_t size, uint8_t *data) {

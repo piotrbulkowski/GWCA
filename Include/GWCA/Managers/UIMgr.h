@@ -605,6 +605,7 @@ namespace GW {
         GWCA_API bool SetWindowVisible(UI::WindowID window_id, bool is_visible);
         GWCA_API bool SetWindowPosition(UI::WindowID window_id, UI::WindowPosition* info);
 
+        GWCA_API bool DrawOnCompass(unsigned session_id, unsigned pt_count, Vec2f* pts);
         GWCA_API bool DrawOnCompass(unsigned session_id, unsigned pt_count, CompassPoint* pts);
 
         // Call from GameThread to be safe
