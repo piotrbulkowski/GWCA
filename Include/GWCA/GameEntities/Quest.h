@@ -16,7 +16,7 @@ namespace GW {
         /* +h000C */ wchar_t* name; // quest name
         /* +h0010 */ wchar_t* npc; //
         /* +h0014 */ GW::Constants::MapID map_from;
-        /* +h0018 */ Vec3f    marker;
+        /* +h0018 */ GamePos    marker;
         /* +h0024 */ uint32_t h0024;
         /* +h0028 */ GW::Constants::MapID map_to;
         /* +h002C */ wchar_t* description; // namestring reward

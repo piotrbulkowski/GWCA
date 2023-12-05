@@ -203,7 +203,7 @@ namespace GW {
 
             struct QuestAdd : Packet<QuestAdd> {
                 GW::Constants::QuestID quest_id;
-                Vec3f marker;
+                GW::GamePos marker;
                 GW::Constants::MapID map_to;
                 uint32_t log_state;
                 wchar_t location[8];
