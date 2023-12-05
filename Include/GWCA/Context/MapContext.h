@@ -36,7 +36,8 @@ namespace GW {
                 PathingMapArray pmaps;
             } *sub2;
             /* +h0004 */ Array<uint32_t> pathing_map_block;
-            /* +h0014 */ uint32_t h0014[0x13];
+            /* +h0018 */ uint32_t total_trapezoid_count;
+            /* +h0018 */ uint32_t h0014[0x12];
             /* +h0060 */ Array<TList<void*>> something_else_for_props;
             //... Bunch of arrays and shit
         } *sub1;

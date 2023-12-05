@@ -286,8 +286,10 @@ namespace GW {
         }
 
         PathingMapArray* GetPathingMap() {
-            // @Cleanup: Verify pointers
-            return &GetGameContext()->map->sub1->sub2->pmaps;
+            const auto m = GetMapContext();
+            if (!(m && m->sub1 && m->sub1->sub2))
+                return nullptr;
+            return &m->sub1->sub2->pmaps;
         }
 
         uint32_t GetFoesKilled() {
