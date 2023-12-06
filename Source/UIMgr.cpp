@@ -1061,7 +1061,7 @@ namespace GW {
                 while (it2 != it.second.end()) {
                     if (it2->entry == entry) {
                         it.second.erase(it2);
-                        return;
+                        break;
                     }
                     it2++;
                 }
