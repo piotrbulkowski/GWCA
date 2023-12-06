@@ -52,6 +52,7 @@ namespace {
     }
 
     DoAction_pt RequestQuestInfo_Func = 0;
+    DoAction_pt RequestQuestMarker_Func = 0;
 
     void Init() {
         DWORD address = 0;
@@ -68,17 +69,24 @@ namespace {
         if (SetActiveQuest_Func) {
             HookBase::CreateHook(SetActiveQuest_Func, OnSetActiveQuest, (void**)&SetActiveQuest_Ret);
             UI::RegisterUIMessageCallback(&SetActiveQuest_HookEntry, UI::UIMessage::kSendSetActiveQuest, OnSetActiveQuest_UIMessage, 0x1);
+
+            address = ((uintptr_t)SetActiveQuest_Func) + 0x6b;
+            RequestQuestMarker_Func = (DoAction_pt)GW::Scanner::FunctionFromNearCall(address);
         }
 
-        RequestQuestInfo_Func = (DoAction_pt)GW::Scanner::FunctionFromNearCall(GW::Scanner::Find("\x68\x4a\x01\x00\x10\xff\x77\x04", "xxxxxxxx", 0x7a));
+        address = Scanner::Find("\x68\x4a\x01\x00\x10\xff\x77\x04", "xxxxxxxx", 0x7a);
+
+        RequestQuestInfo_Func = (DoAction_pt)GW::Scanner::FunctionFromNearCall(address);
 
         GWCA_INFO("[SCAN] AbandonQuest_Func = %p", AbandonQuest_Func);
         GWCA_INFO("[SCAN] SetActiveQuest_Func = %p", SetActiveQuest_Func);
+        GWCA_INFO("[SCAN] RequestQuestMarker_Func = %p", RequestQuestMarker_Func);
         GWCA_INFO("[SCAN] RequestQuestInfo_Func = %p", RequestQuestInfo_Func);
 
 #ifdef _DEBUG
         GWCA_ASSERT(AbandonQuest_Func);
         GWCA_ASSERT(SetActiveQuest_Func);
+        GWCA_ASSERT(RequestQuestMarker_Func);
         GWCA_ASSERT(RequestQuestInfo_Func);
 #endif
     }
@@ -187,6 +195,7 @@ namespace GW {
             if (!(RequestQuestInfo_Func && GetQuest(quest_id)))
                 return false;
             RequestQuestInfo_Func((uint32_t)quest_id);
+            RequestQuestMarker_Func((uint32_t)quest_id);
             return true;
         }
     }
