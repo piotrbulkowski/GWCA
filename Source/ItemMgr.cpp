@@ -310,7 +310,6 @@ namespace {
         }
         if (ChangeGold_Func) {
             HookBase::CreateHook(ChangeGold_Func, OnChangeGold, (void**)&ChangeGold_Ret);
-            UI::RegisterUIMessageCallback(&OnUseItem_Entry, UI::UIMessage::kSendUseItem, OnUseItem_UIMessage, 0x1);
         }
     }
 
