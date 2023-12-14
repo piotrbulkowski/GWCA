@@ -9,6 +9,7 @@ namespace GW {
         ~MemoryPatcher();
 
         void Reset();
+        bool IsValid();
         void SetPatch(uintptr_t addr, const char* patch, size_t size);
 
         // Use to redirect a CALL or JMP instruction to call a different function instead.

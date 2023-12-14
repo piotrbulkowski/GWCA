@@ -26,8 +26,12 @@ namespace GW {
         m_enable = false;
     }
 
+    bool MemoryPatcher::IsValid() {
+        return m_addr != nullptr;
+    }
+
     void MemoryPatcher::SetPatch(uintptr_t addr, const char *patch, size_t size) {
-        GWCA_ASSERT(m_addr == nullptr);
+        GWCA_ASSERT(!IsValid());
 
         m_addr = reinterpret_cast<void *>(addr);
         m_size = size;
@@ -44,7 +48,7 @@ namespace GW {
     }
 
     bool MemoryPatcher::SetRedirect(uintptr_t call_instruction_address, void* redirect_func) {
-        GWCA_ASSERT(m_addr == nullptr);
+        GWCA_ASSERT(!IsValid());
         if (!(call_instruction_address && redirect_func))
             return false;
         if (((*(uintptr_t*)call_instruction_address) & 0x000000e8) != 0x000000e8
@@ -69,7 +73,7 @@ namespace GW {
     }
 
     bool MemoryPatcher::TogglePatch(bool flag) {
-        GWCA_ASSERT(m_addr != nullptr);
+        GWCA_ASSERT(IsValid());
 
         if (m_enable == flag)
             return flag;
