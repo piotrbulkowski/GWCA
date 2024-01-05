@@ -10,11 +10,15 @@
 namespace GW {
     namespace Constants {
 
-        enum class Campaign { Core, Prophecies, Factions, Nightfall, EyeOfTheNorth, BonusMissionPack };
+        enum class Campaign : uint32_t { Core, Prophecies, Factions, Nightfall, EyeOfTheNorth, BonusMissionPack };
         enum class Difficulty { Normal, Hard };
         enum class InstanceType { Outpost, Explorable, Loading };
 
-        enum class Profession {
+        enum class Profession : uint32_t {
+            None, Warrior, Ranger, Monk, Necromancer, Mesmer,
+            Elementalist, Assassin, Ritualist, Paragon, Dervish
+        };
+        enum class ProfessionByte : uint8_t {
             None, Warrior, Ranger, Monk, Necromancer, Mesmer,
             Elementalist, Assassin, Ritualist, Paragon, Dervish
         };
@@ -58,6 +62,20 @@ namespace GW {
         }
 
         enum class Attribute : uint32_t {
+            FastCasting, IllusionMagic, DominationMagic, InspirationMagic,      // mesmer
+            BloodMagic, DeathMagic, SoulReaping, Curses,                        // necro
+            AirMagic, EarthMagic, FireMagic, WaterMagic, EnergyStorage,         // ele
+            HealingPrayers, SmitingPrayers, ProtectionPrayers, DivineFavor,     // monk
+            Strength, AxeMastery, HammerMastery, Swordsmanship, Tactics,        // warrior
+            BeastMastery, Expertise, WildernessSurvival, Marksmanship,          // ranger
+            DaggerMastery = 29, DeadlyArts, ShadowArts,                         // assassin (most)
+            Communing, RestorationMagic, ChannelingMagic,                       // ritualist (most)
+            CriticalStrikes, SpawningPower,                                     // sin/rit primary (gw is weird)
+            SpearMastery, Command, Motivation, Leadership,                      // paragon
+            ScytheMastery, WindPrayers, EarthPrayers, Mysticism,                // derv
+            None = 0xff
+        };
+        enum class AttributeByte : uint8_t {
             FastCasting, IllusionMagic, DominationMagic, InspirationMagic,      // mesmer
             BloodMagic, DeathMagic, SoulReaping, Curses,                        // necro
             AirMagic, EarthMagic, FireMagic, WaterMagic, EnergyStorage,         // ele

@@ -13,7 +13,7 @@ namespace GW {
 
     namespace Constants {
         enum class TitleID : uint32_t;
-        enum class Profession;
+        enum class Profession: uint32_t;
         enum class QuestID : uint32_t;
     }
 

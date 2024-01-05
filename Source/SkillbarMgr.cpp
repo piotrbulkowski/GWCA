@@ -400,9 +400,10 @@ namespace GW {
             }
             if (header == 14) _ReadBits(&it, 4);
             int bits_per_prof = 2 * _ReadBits(&it, 2) + 4;
-            int prof1 = _ReadBits(&it, bits_per_prof);
-            int prof2 = _ReadBits(&it, bits_per_prof);
-            if (prof1 <= 0 || prof2 < 0 || prof1 > 10 || prof2 > 10) return false;
+            Constants::ProfessionByte prof1 = static_cast<Constants::ProfessionByte>(_ReadBits(&it, bits_per_prof));
+            Constants::ProfessionByte prof2 = static_cast<Constants::ProfessionByte>(_ReadBits(&it, bits_per_prof));
+            if (prof1 <= Constants::ProfessionByte::None || prof2 < Constants::ProfessionByte::None || prof1 > Constants::ProfessionByte::Dervish || prof2 > Constants::ProfessionByte::Dervish) 
+                return false;
 
             // ATTRIBUTES
             attrib_count = _ReadBits(&it, 4);
@@ -427,7 +428,7 @@ namespace GW {
                 if (!attrib_val) {
                     continue;
                 }
-                int prof = (int)GetAttributeProfession((Constants::Attribute)attrib_id, &is_primary_attribute);
+                auto prof = static_cast<Constants::ProfessionByte>(GetAttributeProfession((Constants::Attribute)attrib_id, &is_primary_attribute));
                 if (prof != prof1 && prof != prof2) {
                     GWCA_ERR("Attribute id %d does not match build profession(s)\n", attrib_id);
                     return false;
@@ -458,7 +459,7 @@ namespace GW {
                     GWCA_ERR("Failed to get info for skill ID %d\n", skill_id);
                     return false;
                 }
-                if (s->profession != 0 && s->profession != (uint8_t)prof1 && s->profession != (uint8_t)prof2) {
+                if (s->profession != Constants::ProfessionByte::None && s->profession != prof1 && s->profession != prof2) {
                     GWCA_ERR("Skill id %d doesn't match build profession(s)\n", skill_id);
                     return false;
                 }

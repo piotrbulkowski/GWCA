@@ -160,8 +160,9 @@ namespace GW {
             Ring_of_Fire,
             Abaddons_Mouth,
             Hells_Precipice,
+            Titans_Tears,
 
-            Golden_Gates_mission = 126,
+            Golden_Gates_mission,
             Scarred_Earth2,
             The_Eternal_Grove,
             Lutgardis_Conservatory_outpost,

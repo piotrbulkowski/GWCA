@@ -4,14 +4,17 @@
 
 namespace GW {
     namespace Constants {
+        enum class ProfessionByte : uint8_t;
+        enum class AttributeByte : uint8_t;
         enum class SkillID : uint32_t;
+        enum class Campaign : uint32_t;
         enum class SkillType;
     }
 
     struct Skill { // total : 0xA0/160
         /* +h0000 */ GW::Constants::SkillID skill_id;
         /* +h0004 */ uint32_t h0004;
-        /* +h0008 */ uint32_t campaign;
+        /* +h0008 */ GW::Constants::Campaign campaign;
         /* +h000C */ GW::Constants::SkillType type;
         /* +h0010 */ uint32_t special;
         /* +h0014 */ uint32_t combo_req;
@@ -19,8 +22,8 @@ namespace GW {
         /* +h001C */ uint32_t condition;
         /* +h0020 */ uint32_t effect2;
         /* +h0024 */ uint32_t weapon_req;
-        /* +h0028 */ uint8_t profession;
-        /* +h0029 */ uint8_t attribute;
+        /* +h0028 */ GW::Constants::ProfessionByte profession;
+        /* +h0029 */ GW::Constants::AttributeByte attribute;
         /* +h002A */ uint16_t title;
         /* +h002C */ GW::Constants::SkillID skill_id_pvp;
         /* +h0030 */ uint8_t combo;
@@ -68,12 +71,13 @@ namespace GW {
         inline bool IsElite() { return (special & 0x4) != 0; }
         inline bool IsHalfRange() { return (special & 0x8) != 0; }
         inline bool IsPvP() { return (special & 0x400000) != 0; }
-        inline bool IsPvE() { return (special & 0x800000) != 0; }
+        inline bool IsPvE() { return (special & 0x80000) != 0; }
         inline bool IsPlayable() { return (special & 0x2000000) == 0; }
 
         // NB: Guild Wars uses the skill array to build mods for weapons, so stuff like runes are skills too, and use stacking/non-stacking flags
         inline bool IsStacking() { return (special & 0x10000) != 0; }
         inline bool IsNonStacking() { return (special & 0x20000) != 0; }
+        bool IsUnused() const;
     };
     static_assert(sizeof(Skill) == 0xa0, "struct Skill has incorect size");
 

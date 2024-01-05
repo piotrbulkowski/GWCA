@@ -5,7 +5,7 @@
 namespace GW {
     namespace Constants {
         enum class Attribute : uint32_t;
-        enum class Profession;
+        enum class Profession : uint32_t;
     }
 
     struct Attribute { // total: 0x14/20

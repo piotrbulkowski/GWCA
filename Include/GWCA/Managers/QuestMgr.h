@@ -9,7 +9,7 @@ namespace GW {
 
     namespace Constants {
         enum class QuestID : uint32_t;
-        enum class Profession;
+        enum class Profession: uint32_t;
     }
 
     struct Module;

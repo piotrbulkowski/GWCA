@@ -9,7 +9,7 @@ namespace GW {
     GWCA_API WorldContext* GetWorldContext();
 
     namespace Constants {
-        enum class Profession;
+        enum class Profession : uint32_t;
     }
 
     typedef uint32_t ItemID;
