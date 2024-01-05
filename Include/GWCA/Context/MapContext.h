@@ -13,11 +13,11 @@ namespace GW {
     typedef Array<PathingMap> PathingMapArray;
 
     struct PropsContext {
-        /* +h0000 */ uint8_t pad1[0x6C];
+        /* +h0000 */ uint32_t pad1[0x1b];
         /* +h006C */ Array<TList<PropByType>> propsByType;
-        /* +h007C */ uint8_t h007C[0x28];
+        /* +h007C */ uint32_t h007C[0xa];
         /* +h00A4 */ Array<PropModelInfo> propModels;
-        /* +h00B4 */ uint8_t h00B4[0xE0];
+        /* +h00B4 */ uint32_t h00B4[0x38];
         /* +h0194 */ Array<MapProp*> propArray;
     };
     static_assert(sizeof(PropsContext) == 0x1A4, "struct PropsContext has incorect size");
@@ -25,7 +25,7 @@ namespace GW {
 
     struct MapContext {
         /* +h0000 */ float map_boundaries[5];
-        /* +h0014 */ uint8_t h0014[24];
+        /* +h0014 */ uint32_t h0014[6];
         /* +h002C */ Array<void *> spawns1; // Seem to be arena spawns. struct is X,Y,unk 4 byte value,unk 4 byte value.
         /* +h003C */ Array<void *> spawns2; // Same as above
         /* +h004C */ Array<void *> spawns3; // Same as above
@@ -43,6 +43,10 @@ namespace GW {
         } *sub1;
         /* +h0078 */ uint8_t pad1[4];
         /* +h007C */ PropsContext *props;
+        /* +h0080 */ uint32_t h0080;
+        /* +h0084 */ void* terrain;
+        /* +h0088 */ uint32_t h0088[42];
+        /* +h0130 */ void* zones;
         //... Player coords and shit beyond this point if they are desirable :p
     };
 
