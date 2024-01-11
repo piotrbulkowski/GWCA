@@ -28,7 +28,7 @@
 namespace {
     using namespace GW;
 
-    int* region_id_addr = 0;
+    GW::Constants::MapRegion* region_id_addr = 0;
     AreaInfo* area_info_addr = 0;
 
     typedef float(__cdecl* QueryAltitude_pt)(
@@ -104,7 +104,7 @@ namespace {
 
         address = GW::Scanner::Find("\x6a\x54\x8d\x46\x24\x89\x08", "xxxxxxx", -0x4);
         if(address && Scanner::IsValidPtr(*(uintptr_t*)(address)))
-            region_id_addr = *(int**)(address);
+            region_id_addr = *(GW::Constants::MapRegion**)(address);
 
         address = Scanner::Find("\x6B\xC6\x7C\x5E\x05", "xxxxx", 5);
         if (address && Scanner::IsValidPtr(*(uintptr_t*)address,Scanner::Section::RDATA))
@@ -186,52 +186,77 @@ namespace GW {
             return g && g->map != nullptr;
         }
 
-        bool Travel(Constants::MapID map_id,
-            int district, int region, int language) {
+        bool Travel(Constants::MapID map_id, Constants::MapRegion region, int district_number, Constants::Language language) {
             struct MapStruct {
                 GW::Constants::MapID map_id;
-                int region;
-                int language;
-                int district;
+                Constants::MapRegion region;
+                Constants::Language language;
+                int district_number;
             };
             MapStruct t;
             t.map_id = map_id;
-            t.district = district;
+            t.district_number = district_number;
             t.region = region;
             t.language = language;
             return UI::SendUIMessage(UI::UIMessage::kTravel, &t);
         }
+        GW::Constants::MapRegion RegionFromDistrict(const GW::Constants::District _district)
+        {
+            switch (_district) {
+            case GW::Constants::District::International:
+                return GW::Constants::MapRegion::International;
+            case GW::Constants::District::American:
+                return GW::Constants::MapRegion::America;
+            case GW::Constants::District::EuropeEnglish:
+            case GW::Constants::District::EuropeFrench:
+            case GW::Constants::District::EuropeGerman:
+            case GW::Constants::District::EuropeItalian:
+            case GW::Constants::District::EuropeSpanish:
+            case GW::Constants::District::EuropePolish:
+            case GW::Constants::District::EuropeRussian:
+                return GW::Constants::MapRegion::Europe;
+            case GW::Constants::District::AsiaKorean:
+                return GW::Constants::MapRegion::Korea;
+            case GW::Constants::District::AsiaChinese:
+                return GW::Constants::MapRegion::China;
+            case GW::Constants::District::AsiaJapanese:
+                return GW::Constants::MapRegion::Japan;
+            default:
+                break;
+            }
+            return GW::Map::GetRegion();
+        }
+
+        GW::Constants::Language LanguageFromDistrict(const GW::Constants::District _district)
+        {
+            switch (_district) {
+            case GW::Constants::District::EuropeFrench:
+                return GW::Constants::Language::French;
+            case GW::Constants::District::EuropeGerman:
+                return GW::Constants::Language::German;
+            case GW::Constants::District::EuropeItalian:
+                return GW::Constants::Language::Italian;
+            case GW::Constants::District::EuropeSpanish:
+                return GW::Constants::Language::Spanish;
+            case GW::Constants::District::EuropePolish:
+                return GW::Constants::Language::Polish;
+            case GW::Constants::District::EuropeRussian:
+                return GW::Constants::Language::Russian;
+            case GW::Constants::District::EuropeEnglish:
+            case GW::Constants::District::AsiaKorean:
+            case GW::Constants::District::AsiaChinese:
+            case GW::Constants::District::AsiaJapanese:
+            case GW::Constants::District::International:
+            case GW::Constants::District::American:
+                return GW::Constants::Language::English;
+            default:
+                break;
+            }
+            return GetLanguage();
+        }
 
         bool Travel(Constants::MapID map_id, Constants::District district, int district_number) {
-            switch (district) {
-            case Constants::District::Current:
-                return Travel(map_id, district_number, GetRegion(), GetLanguage());
-            case Constants::District::International:
-                return Travel(map_id, district_number, Constants::Region::International, 0);
-            case Constants::District::American:
-                return Travel(map_id, district_number, Constants::Region::America, 0);
-            case Constants::District::EuropeEnglish:
-                return Travel(map_id, district_number, Constants::Region::Europe, Constants::EuropeLanguage::English);
-            case Constants::District::EuropeFrench:
-                return Travel(map_id, district_number, Constants::Region::Europe, Constants::EuropeLanguage::French);
-            case Constants::District::EuropeGerman:
-                return Travel(map_id, district_number, Constants::Region::Europe, Constants::EuropeLanguage::German);
-            case Constants::District::EuropeItalian:
-                return Travel(map_id, district_number, Constants::Region::Europe, Constants::EuropeLanguage::Italian);
-            case Constants::District::EuropeSpanish:
-                return Travel(map_id, district_number, Constants::Region::Europe, Constants::EuropeLanguage::Spanish);
-            case Constants::District::EuropePolish:
-                return Travel(map_id, district_number, Constants::Region::Europe, Constants::EuropeLanguage::Polish);
-            case Constants::District::EuropeRussian:
-                return Travel(map_id, district_number, Constants::Region::Europe, Constants::EuropeLanguage::Russian);
-            case Constants::District::AsiaKorean:
-                return Travel(map_id, district_number, Constants::Region::Korea, 0);
-            case Constants::District::AsiaChinese:
-                return Travel(map_id, district_number, Constants::Region::China, 0);
-            case Constants::District::AsiaJapanese:
-                return Travel(map_id, district_number, Constants::Region::Japan, 0);
-            }
-            return false;
+            return Travel(map_id, RegionFromDistrict(district), district_number, LanguageFromDistrict(district));
         }
 
         uint32_t GetInstanceTime() {
@@ -241,11 +266,11 @@ namespace GW {
 
         Constants::MapID GetMapID() {
             auto* c = GetCharContext();
-            return c ? (Constants::MapID)c->current_map_id : Constants::MapID::None;
+            return c ? c->current_map_id : Constants::MapID::None;
         }
 
-        int GetRegion() {
-            return region_id_addr ? *region_id_addr : 0;
+        GW::Constants::MapRegion GetRegion() {
+            return region_id_addr ? *region_id_addr : GW::Constants::MapRegion::Unknown;
         }
 
         bool GetIsMapUnlocked(Constants::MapID map_id) {
@@ -261,9 +286,9 @@ namespace GW {
             return (unlocked_map->at(real_index) & flag) != 0;
         }
 
-        int GetLanguage() {
+        GW::Constants::Language GetLanguage() {
             auto* c = GetCharContext();
-            return c ? c->language : 0;
+            return c ? c->language : GW::Constants::Language::English;
         }
 
         bool GetIsObserving() {

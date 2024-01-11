@@ -1,5 +1,7 @@
 #include "stdafx.h"
 
+#include <GWCA/Constants/Constants.h>
+
 #include <GWCA/Context/GameContext.h>
 #include <GWCA/Context/TextParser.h>
 
@@ -728,19 +730,19 @@ namespace GW {
             ValidateAsyncDecodeStr((wchar_t*)enc_str, __callback_copy_char, abuf);
         }
 
-        void AsyncDecodeStr(const wchar_t* enc_str, DecodeStr_Callback callback, void* callback_param, uint32_t language_id) {
+        void AsyncDecodeStr(const wchar_t* enc_str, DecodeStr_Callback callback, void* callback_param, GW::Constants::Language language_id) {
             if (!ValidateAsyncDecodeStr)
                 return;
             auto& textParser = GetGameContext()->text_parser;
-            uint32_t prev_language_id = textParser->language_id;
-            if (language_id != -1) {
+            const auto prev_language_id = textParser->language_id;
+            if (language_id != GW::Constants::Language::Unknown) {
                 textParser->language_id = language_id;
             }
             ValidateAsyncDecodeStr((wchar_t*)enc_str, callback, callback_param);
             textParser->language_id = prev_language_id;
         }
 
-        void AsyncDecodeStr(const wchar_t *enc_str, std::wstring *out, uint32_t language_id) {
+        void AsyncDecodeStr(const wchar_t *enc_str, std::wstring *out, GW::Constants::Language language_id) {
             return AsyncDecodeStr(enc_str, __calback_copy_wstring, out, language_id);
         }
 

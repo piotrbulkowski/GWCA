@@ -76,6 +76,22 @@ namespace {
     HookEntry OnUseItem_Entry;
     DoAction_pt UseItem_Func = 0;
     DoAction_pt UseItem_Ret = 0;
+
+    bool CanAccessXunlaiChest() {
+        if (GW::Map::GetInstanceType() != GW::Constants::InstanceType::Outpost)
+            return false;
+        // TODO: Any way to tell if current character has paid 50g to unlock storage?
+        const auto map = GW::Map::GetCurrentMapInfo();
+        return map && map->region != GW::Region_Presearing;
+    }
+    bool IsStorageBag(const GW::Bag* bag) {
+        return bag && bag->bag_type == GW::Constants::BagType::Storage;
+    }
+    bool IsStorageItem(const GW::Item* item) {
+        return item && IsStorageBag(item->bag);
+    }
+
+
     void OnUseItem(uint32_t item_id) {
         GW::Hook::EnterHook();
         UI::SendUIMessage(UI::UIMessage::kSendUseItem, (void*)item_id);
@@ -121,6 +137,11 @@ namespace {
     void OnMoveItem_UIMessage(GW::HookStatus* status, UI::UIMessage message_id, void* wparam, void*) {
         GWCA_ASSERT(message_id == UI::UIMessage::kSendMoveItem && wparam);
         uint32_t* pack = (uint32_t*)wparam;
+        // Make sure the user is allowed to move the item by the game
+        if (!status->blocked && !CanAccessXunlaiChest()) {
+            if (IsStorageItem(Items::GetItemById(pack[0])) || IsStorageBag(Items::GetBag(pack[2])))
+                status->blocked = true;
+        }
         if (!status->blocked) {
             MoveItem_Ret(pack[0], pack[1], pack[2], pack[3]);
         }
@@ -139,26 +160,13 @@ namespace {
     ChangeGold_pt ChangeGold_Func = 0;
     ChangeGold_pt ChangeGold_Ret = 0;
 
-    bool CanAccessXunlaiChest() {
-        if (GW::Map::GetInstanceType() != GW::Constants::InstanceType::Outpost)
-            return false;
-        // TODO: Any way to tell if current character has paid 50g to unlock storage?
-        const auto map = GW::Map::GetCurrentMapInfo();
-        return map && map->region != GW::Region_Presearing;
-    }
+
 
     void __cdecl OnChangeGold(uint32_t character_gold, uint32_t storage_gold) {
         HookBase::EnterHook();
         if (CanAccessXunlaiChest())
             ChangeGold_Ret(character_gold, storage_gold);
         HookBase::LeaveHook();
-    }
-
-    bool IsStorageBag(const GW::Bag* bag) {
-        return bag && bag->bag_type == GW::Constants::BagType::Storage;
-    }
-    bool IsStorageItem(const GW::Item* item) {
-        return item && IsStorageBag(item->bag);
     }
 
     uint32_t GetSalvageSessionId() {
@@ -524,8 +532,6 @@ namespace GW {
         }
 
         bool ChangeGold(uint32_t character_gold, uint32_t storage_gold) {
-            if (!CanAccessXunlaiChest())
-                return false;
             if (!(ChangeGold_Func && (GetGoldAmountInStorage() + GetGoldAmountOnCharacter()) == (character_gold + storage_gold)))
                 return false;
             ChangeGold_Func(character_gold, storage_gold);
