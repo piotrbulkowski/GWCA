@@ -217,23 +217,30 @@ namespace GW {
         }
 
         // travel, region, districts
-        namespace Region { // in-game region code
-            constexpr int International = -2;
-            constexpr int America = 0;
-            constexpr int Korea = 1;
-            constexpr int Europe = 2;
-            constexpr int China = 3;
-            constexpr int Japan = 4;
+        enum class MapRegion {
+            International = -2,
+            America = 0,
+            Korea,
+            Europe,
+            China,
+            Japan,
+            Unknown = 0xff
         };
 
-        namespace EuropeLanguage { // in-game language code for the european region
-            constexpr int English = 0;
-            constexpr int French = 2;
-            constexpr int German = 3;
-            constexpr int Italian = 4;
-            constexpr int Spanish = 5;
-            constexpr int Polish = 9;
-            constexpr int Russian = 10;
+        // in-game language for maps and in-game text
+        enum class Language {
+            English,
+            Korean,
+            French,
+            German,
+            Italian,
+            Spanish,
+            TraditionalChinese,
+            Japanese = 8,
+            Polish,
+            Russian,
+            BorkBorkBork = 17,
+            Unknown = 0xff
         };
 
         enum class District { // arbitrary enum for game district
@@ -250,6 +257,7 @@ namespace GW {
             AsiaKorean,
             AsiaChinese,
             AsiaJapanese,
+            Unknown = 0xff
         };
 
         namespace Range {

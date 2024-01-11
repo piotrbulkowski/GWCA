@@ -3,6 +3,9 @@
 #include <GWCA/GameContainers/Array.h>
 
 namespace GW {
+    namespace Constants {
+        enum class Language;
+    }
     struct TextCache {
         /* +h0000 */ uint32_t h0000;
     };
@@ -38,7 +41,7 @@ namespace GW {
         /* +h016C */ uint32_t h016C[5];
         /* +h0180 */ SubStruct1 *sub_struct;
         /* +h0184 */ uint32_t h0184[19];
-        /* +h01d0 */ uint32_t language_id;
+        /* +h01d0 */ GW::Constants::Language language_id;
     };
 
 }

@@ -2,37 +2,7 @@
 
 namespace GW {
     namespace Constants {
-        enum class MapRegion {
-            International = -2,
-            American = 0,
-            Korean,
-            European,
-            Chinese,
-            Japanese
-        };
 
-        enum class MapLanguage {
-            English,
-            French = 2,
-            German,
-            Italian,
-            Spanish,
-            Polish = 9,
-            Russian
-        };
-        enum class TextLanguage {
-            English,
-            Korean,
-            French,
-            German,
-            Italian,
-            Spanish,
-            TraditionalChinese,
-            Japanese = 8,
-            Polish,
-            Russian,
-            BorkBorkBork = 17
-        };
 
         enum class MapID {
             None = 0,

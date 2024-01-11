@@ -10,6 +10,10 @@ namespace GW {
     struct Module;
     extern Module UIModule;
 
+    namespace Constants {
+        enum class Language;
+    }
+
     namespace UI {
         typedef GW::Array<unsigned char> ArrayByte;
 
@@ -618,8 +622,8 @@ namespace GW {
 
         GWCA_API void AsyncDecodeStr(const wchar_t *enc_str, wchar_t *buffer, size_t size);
         GWCA_API void AsyncDecodeStr(const wchar_t *enc_str, char    *buffer, size_t size);
-        GWCA_API void AsyncDecodeStr(const wchar_t* enc_str, DecodeStr_Callback callback, void* callback_param = 0, uint32_t language_id = -1);
-        GWCA_API void AsyncDecodeStr(const wchar_t *enc_str, std::wstring *out, uint32_t language_id = -1);
+        GWCA_API void AsyncDecodeStr(const wchar_t* enc_str, DecodeStr_Callback callback, void* callback_param = 0, GW::Constants::Language language_id = (GW::Constants::Language)0xff);
+        GWCA_API void AsyncDecodeStr(const wchar_t *enc_str, std::wstring *out, GW::Constants::Language language_id = (GW::Constants::Language)0xff);
 
         GWCA_API bool UInt32ToEncStr(uint32_t value, wchar_t *buffer, size_t count);
         GWCA_API uint32_t EncStrToUInt32(const wchar_t *enc_str);
