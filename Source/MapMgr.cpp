@@ -28,7 +28,7 @@
 namespace {
     using namespace GW;
 
-    GW::Constants::MapRegion* region_id_addr = 0;
+    GW::Constants::ServerRegion* region_id_addr = 0;
     AreaInfo* area_info_addr = 0;
 
     typedef float(__cdecl* QueryAltitude_pt)(
@@ -104,7 +104,7 @@ namespace {
 
         address = GW::Scanner::Find("\x6a\x54\x8d\x46\x24\x89\x08", "xxxxxxx", -0x4);
         if(address && Scanner::IsValidPtr(*(uintptr_t*)(address)))
-            region_id_addr = *(GW::Constants::MapRegion**)(address);
+            region_id_addr = *(GW::Constants::ServerRegion**)(address);
 
         address = Scanner::Find("\x6B\xC6\x7C\x5E\x05", "xxxxx", 5);
         if (address && Scanner::IsValidPtr(*(uintptr_t*)address,Scanner::Section::RDATA))
@@ -186,10 +186,10 @@ namespace GW {
             return g && g->map != nullptr;
         }
 
-        bool Travel(Constants::MapID map_id, Constants::MapRegion region, int district_number, Constants::Language language) {
+        bool Travel(Constants::MapID map_id, Constants::ServerRegion region, int district_number, Constants::Language language) {
             struct MapStruct {
                 GW::Constants::MapID map_id;
-                Constants::MapRegion region;
+                Constants::ServerRegion region;
                 Constants::Language language;
                 int district_number;
             };
@@ -200,13 +200,13 @@ namespace GW {
             t.language = language;
             return UI::SendUIMessage(UI::UIMessage::kTravel, &t);
         }
-        GW::Constants::MapRegion RegionFromDistrict(const GW::Constants::District _district)
+        GW::Constants::ServerRegion RegionFromDistrict(const GW::Constants::District _district)
         {
             switch (_district) {
             case GW::Constants::District::International:
-                return GW::Constants::MapRegion::International;
+                return GW::Constants::ServerRegion::International;
             case GW::Constants::District::American:
-                return GW::Constants::MapRegion::America;
+                return GW::Constants::ServerRegion::America;
             case GW::Constants::District::EuropeEnglish:
             case GW::Constants::District::EuropeFrench:
             case GW::Constants::District::EuropeGerman:
@@ -214,13 +214,13 @@ namespace GW {
             case GW::Constants::District::EuropeSpanish:
             case GW::Constants::District::EuropePolish:
             case GW::Constants::District::EuropeRussian:
-                return GW::Constants::MapRegion::Europe;
+                return GW::Constants::ServerRegion::Europe;
             case GW::Constants::District::AsiaKorean:
-                return GW::Constants::MapRegion::Korea;
+                return GW::Constants::ServerRegion::Korea;
             case GW::Constants::District::AsiaChinese:
-                return GW::Constants::MapRegion::China;
+                return GW::Constants::ServerRegion::China;
             case GW::Constants::District::AsiaJapanese:
-                return GW::Constants::MapRegion::Japan;
+                return GW::Constants::ServerRegion::Japan;
             default:
                 break;
             }
@@ -269,8 +269,8 @@ namespace GW {
             return c ? c->current_map_id : Constants::MapID::None;
         }
 
-        GW::Constants::MapRegion GetRegion() {
-            return region_id_addr ? *region_id_addr : GW::Constants::MapRegion::Unknown;
+        GW::Constants::ServerRegion GetRegion() {
+            return region_id_addr ? *region_id_addr : GW::Constants::ServerRegion::Unknown;
         }
 
         bool GetIsMapUnlocked(Constants::MapID map_id) {

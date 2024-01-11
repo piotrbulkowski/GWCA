@@ -217,7 +217,7 @@ namespace GW {
         }
 
         // travel, region, districts
-        enum class MapRegion {
+        enum class ServerRegion {
             International = -2,
             America = 0,
             Korea,

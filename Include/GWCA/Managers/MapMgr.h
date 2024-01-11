@@ -19,7 +19,7 @@ namespace GW {
         enum class District;
         enum class InstanceType;
         enum class Language;
-        enum class MapRegion;
+        enum class ServerRegion;
     }
 
     enum class RegionType : uint32_t;
@@ -43,7 +43,7 @@ namespace GW {
         GWCA_API bool GetIsMapUnlocked(Constants::MapID map_id);
 
         // Get current region you are in.
-        GWCA_API GW::Constants::MapRegion GetRegion();
+        GWCA_API GW::Constants::ServerRegion GetRegion();
 
         // Can be used to get the instance type for auth server request
         GWCA_API MapTypeInstanceInfo* GetMapTypeInstanceInfo(RegionType map_type);
@@ -64,11 +64,11 @@ namespace GW {
         GWCA_API Constants::InstanceType GetInstanceType();
 
         // Travel to specified outpost.
-        GWCA_API bool Travel(Constants::MapID map_id, GW::Constants::MapRegion region, int district_number = 0, GW::Constants::Language language = (GW::Constants::Language)0);
+        GWCA_API bool Travel(Constants::MapID map_id, GW::Constants::ServerRegion region, int district_number = 0, GW::Constants::Language language = (GW::Constants::Language)0);
 
         GWCA_API bool Travel(Constants::MapID map_id, Constants::District district, int district_number = 0);
 
-        GWCA_API Constants::MapRegion RegionFromDistrict(const GW::Constants::District _district);
+        GWCA_API Constants::ServerRegion RegionFromDistrict(const GW::Constants::District _district);
 
         GWCA_API Constants::Language LanguageFromDistrict(const GW::Constants::District _district);
 
