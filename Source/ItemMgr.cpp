@@ -524,6 +524,8 @@ namespace GW {
         }
 
         bool ChangeGold(uint32_t character_gold, uint32_t storage_gold) {
+            if (!CanAccessXunlaiChest())
+                return false;
             if (!(ChangeGold_Func && (GetGoldAmountInStorage() + GetGoldAmountOnCharacter()) == (character_gold + storage_gold)))
                 return false;
             ChangeGold_Func(character_gold, storage_gold);
