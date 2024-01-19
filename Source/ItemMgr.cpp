@@ -139,7 +139,7 @@ namespace {
         uint32_t* pack = (uint32_t*)wparam;
         // Make sure the user is allowed to move the item by the game
         if (!status->blocked && !CanAccessXunlaiChest()) {
-            if (IsStorageItem(Items::GetItemById(pack[0])) || IsStorageBag(Items::GetBag(pack[2])))
+            if (IsStorageItem(Items::GetItemById(pack[0])) || IsStorageBag(Items::GetBag(pack[2]+1)))
                 status->blocked = true;
         }
         if (!status->blocked) {
