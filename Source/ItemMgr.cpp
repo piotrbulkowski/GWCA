@@ -5,6 +5,8 @@
 
 #include <GWCA/Packets/StoC.h>
 
+#include <GWCA/Context/GameContext.h>
+#include <GWCA/Context/AccountContext.h>
 #include <GWCA/Context/ItemContext.h>
 #include <GWCA/Context/WorldContext.h>
 
@@ -125,25 +127,33 @@ namespace {
     }
 
     HookEntry OnMoveItem_Entry;
-    typedef void(__cdecl* MoveItem_pt)(uint32_t item_id, uint32_t quantity, uint32_t bag_id, uint32_t slot);
+    typedef void(__cdecl* MoveItem_pt)(uint32_t item_id, uint32_t quantity, uint32_t bag_index, uint32_t slot);
     MoveItem_pt MoveItem_Func = 0;
     MoveItem_pt MoveItem_Ret = 0;
-    void OnMoveItem(uint32_t item_id, uint32_t quantity, uint32_t bag_id, uint32_t slot) {
+    struct MoveItem_UIMessage { 
+        uint32_t item_id; 
+        uint32_t quantity; 
+        Constants::Bag bag_id; 
+        uint32_t slot; 
+    };
+    void OnMoveItem(uint32_t item_id, uint32_t quantity, uint32_t bag_index, uint32_t slot) {
         GW::Hook::EnterHook();
-        uint32_t pack[] = { item_id,quantity,bag_id, slot };
-        UI::SendUIMessage(UI::UIMessage::kSendMoveItem, (void*)pack);
+        MoveItem_UIMessage pack = { item_id,quantity,(Constants::Bag)(bag_index + 1), slot };
+        UI::SendUIMessage(UI::UIMessage::kSendMoveItem, &pack);
         GW::Hook::LeaveHook();
     };
     void OnMoveItem_UIMessage(GW::HookStatus* status, UI::UIMessage message_id, void* wparam, void*) {
         GWCA_ASSERT(message_id == UI::UIMessage::kSendMoveItem && wparam);
-        uint32_t* pack = (uint32_t*)wparam;
+        MoveItem_UIMessage* pack = (MoveItem_UIMessage*)wparam;
+        const auto bag = Items::GetBag(pack->bag_id);
+        GWCA_ASSERT(bag);
         // Make sure the user is allowed to move the item by the game
         if (!status->blocked && !CanAccessXunlaiChest()) {
-            if (IsStorageItem(Items::GetItemById(pack[0])) || IsStorageBag(Items::GetBag(pack[2]+1)))
+            if (IsStorageItem(Items::GetItemById(pack->item_id)) || IsStorageBag(bag))
                 status->blocked = true;
         }
         if (!status->blocked) {
-            MoveItem_Ret(pack[0], pack[1], pack[2], pack[3]);
+            MoveItem_Ret(pack->item_id, pack->quantity, bag->index, pack->slot);
         }
     }
 
@@ -175,17 +185,17 @@ namespace {
     }
 
     std::unordered_map<HookEntry *, ItemClickCallback> ItemClick_callbacks;
-    void __fastcall OnItemClick(uint32_t* bag_id, void *edx, ItemClickParam *param) {
+    void __fastcall OnItemClick(uint32_t* bag_index, void *edx, ItemClickParam *param) {
         HookBase::EnterHook();
-        if (!(bag_id && param)) {
-            RetItemClick(bag_id, edx, param);
+        if (!(bag_index && param)) {
+            RetItemClick(bag_index, edx, param);
             HookBase::LeaveHook();
             return;
         }
 
         uint32_t slot = param->slot - 2; // for some reason the slot is offset by 2
         GW::HookStatus status;
-        Bag* bag = GetBag(*bag_id + 1);
+        Bag* bag = GetBagByIndex(*bag_index);
         if (IsStorageBag(bag) && !CanAccessXunlaiChest())
             status.blocked = true;
         if (bag) {
@@ -195,7 +205,7 @@ namespace {
             }
         }
         if (!status.blocked)
-            RetItemClick(bag_id, edx, param);
+            RetItemClick(bag_index, edx, param);
         HookBase::LeaveHook();
     }
 
@@ -365,6 +375,16 @@ namespace GW {
         ::DisableHooks,           // disable_hooks
     };
 
+    GW::ItemModifier* Item::GetModifier(const uint32_t identifier) const
+    {
+        for (size_t i = 0; i < mod_struct_size; i++) {
+            GW::ItemModifier* mod = &mod_struct[i];
+            if (mod->identifier() == identifier) {
+                return mod;
+            }
+        }
+        return nullptr;
+    }
 
     bool Item::GetIsZcoin() const {
         if (model_file_id == 31202) return true; // Copper
@@ -443,6 +463,10 @@ namespace GW {
             Bag** bags = GetBagArray();
             return bags ? bags[(unsigned)bag_id] : nullptr;
         }
+        Bag* GetBagByIndex(uint32_t bag_index) {
+            return GetBag((Constants::Bag)(bag_index + 1));
+        }
+
         uint32_t GetMaterialStorageStackSize() {
             const auto g = GW::GetGameContext();
             const auto a = g ? g->account : nullptr;
@@ -454,8 +478,6 @@ namespace GW {
             }
             return 250;
 
-        Bag* GetBag(uint32_t bag_id) {
-            return GetBag((Constants::Bag)bag_id);
         }
 
         Item* GetItemBySlot(const Bag* bag, uint32_t slot) {
@@ -465,21 +487,11 @@ namespace GW {
             return bag->items[slot - 1];
         }
 
-        Item* GetItemBySlot(Constants::Bag bag, uint32_t slot) {
-            Bag* bag_ptr = GetBag(bag);
-            return bag_ptr ? GetItemBySlot(bag_ptr, slot) : nullptr;
-        }
-
         Item* GetHoveredItem() {
             UI::TooltipInfo* tooltip = UI::GetCurrentTooltip();
             if (!(tooltip && (tooltip->type() == UI::TooltipType::Item || tooltip->type() == UI::TooltipType::WeaponSet)))
                 return nullptr;
             return GetItemById(*(uint32_t*)tooltip->payload);
-        }
-
-        Item* GetItemBySlot(uint32_t bag, uint32_t slot) {
-            if (Constants::BagMax <= bag) return nullptr;
-            return GetItemBySlot((Constants::Bag)bag, slot);
         }
 
         Item* GetItemById(uint32_t item_id) {
@@ -614,56 +626,6 @@ namespace GW {
             return MoveItem(from, to->bag, to->slot, quantity);
         }
 
-
-        int GetMaterialSlot(uint32_t model_id) {
-            switch (model_id) {
-            case 921: return Constants::Bone;
-            case 948: return Constants::IronIngot;
-            case 940: return Constants::TannedHideSquare;
-            case 953: return Constants::Scale;
-            case 954: return Constants::ChitinFragment;
-            case 925: return Constants::BoltofCloth;
-            case 946: return Constants::WoodPlank;
-            case 955: return Constants::GraniteSlab;
-            case 929: return Constants::PileofGlitteringDust;
-            case 934: return Constants::PlantFiber;
-            case 933: return Constants::Feather;
-                // rare
-            case 941: return Constants::FurSquare;
-            case 926: return Constants::BoltofLinen;
-            case 927: return Constants::BoltofDamask;
-            case 928: return Constants::BoltofSilk;
-            case 930: return Constants::GlobofEctoplasm;
-            case 949: return Constants::SteelIngot;
-            case 950: return Constants::DeldrimorSteelIngot;
-            case 923: return Constants::MonstrousClaw;
-            case 931: return Constants::MonstrousEye;
-            case 932: return Constants::MonstrousFang;
-            case 937: return Constants::Ruby;
-            case 938: return Constants::Sapphire;
-            case 935: return Constants::Diamond;
-            case 936: return Constants::OnyxGemstone;
-            case 922: return Constants::LumpofCharcoal;
-            case 945: return Constants::ObsidianShard;
-            case 939: return Constants::TemperedGlassVial;
-            case 942: return Constants::LeatherSquare;
-            case 943: return Constants::ElonianLeatherSquare;
-            case 944: return Constants::VialofInk;
-            case 951: return Constants::RollofParchment;
-            case 952: return Constants::RollofVellum;
-            case 956: return Constants::SpiritwoodPlank;
-            case 6532: return Constants::AmberChunk;
-            case 6533: return Constants::JadeiteShard;
-            };
-            return -1;
-        }
-
-        int GetMaterialSlot(const Item* item) {
-            if (!item) return -1;
-            if (!item->GetIsMaterial()) return -1;
-            return GetMaterialSlot(item->model_id);
-        }
-
         bool UseItemByModelId(uint32_t modelid, int bagStart, int bagEnd) {
             return UseItem(GetItemByModelId(modelid, bagStart, bagEnd));
         }
@@ -703,6 +665,14 @@ namespace GW {
             return NULL;
         }
 
+        Constants::MaterialSlot GetMaterialSlot(const Item* item) {
+            const auto mod = item ? item->GetModifier(9480) : nullptr;
+            if(!mod) return Constants::MaterialSlot::Count;
+            const auto slot = (Constants::MaterialSlot)mod->arg1();
+            if (slot >= Constants::MaterialSlot::BronzeZCoin)
+                return Constants::MaterialSlot::Count;
+            return slot;
+        }
         
         Item* GetItemByModelIdAndModifiers(uint32_t modelid, const ItemModifier* modifiers, uint32_t modifiers_len, int bagStart, int bagEnd) {
             Bag** bags = GetBagArray();
@@ -723,8 +693,8 @@ namespace GW {
             return nullptr;
         }
 
-        uint32_t GetStoragePage(void) {
-            return UI::GetPreference(UI::NumberPreference::StorageBagPage);
+        GW::Constants::StoragePane GetStoragePage(void) {
+            return (GW::Constants::StoragePane)UI::GetPreference(UI::NumberPreference::StorageBagPage);
         }
 
         bool GetIsStorageOpen(void) {

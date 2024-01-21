@@ -18,7 +18,9 @@ namespace GW {
     struct CompositeModelInfo;
 
     namespace Constants {
-        enum class Bag;
+        enum class Bag : uint8_t;
+        enum class StoragePane : uint8_t;
+        enum class MaterialSlot : uint32_t;
     }
 
     enum class EquipmentType : uint32_t {
@@ -42,14 +44,13 @@ namespace GW {
         // Note: bag->index of each bag is one less than its index in the array
         GWCA_API Bag **GetBagArray();
         GWCA_API Bag  *GetBag(Constants::Bag bag_id);
-        GWCA_API Bag  *GetBag(uint32_t bag_id);
+        GWCA_API Bag  *GetBagByIndex(uint32_t bag_index);
+
         // Returns the maximum stack size for a single material on the material pane of the xunlai chest, accounting for purchased expansions
         GWCA_API uint32_t GetMaterialStorageStackSize();
 
         // bag & slot are 1 based
         GWCA_API Item *GetItemBySlot(const Bag *bag, uint32_t slot);
-        GWCA_API Item *GetItemBySlot(Constants::Bag bag, uint32_t slot);
-        GWCA_API Item *GetItemBySlot(uint32_t bag, uint32_t slot);
 
         GWCA_API Item *GetHoveredItem();
 
@@ -131,7 +132,7 @@ namespace GW {
         GWCA_API Item* GetItemByModelIdAndModifiers(uint32_t modelid, const ItemModifier* modifiers, uint32_t modifiers_len, int bagStart = 1, int bagEnd = 4);
 
         // Returns the current storage pannel (0 based). Note that if material storage is on focus, 0 is returned.
-        GWCA_API uint32_t GetStoragePage(void);
+        GWCA_API GW::Constants::StoragePane GetStoragePage(void);
 
         GWCA_API bool GetIsStorageOpen(void);
 
@@ -145,8 +146,7 @@ namespace GW {
             HookEntry *entry);
 
         // Returns the slot of the materials in the storage page. (-1 if not found)
-        GWCA_API int GetMaterialSlot(uint32_t model_id);
-        GWCA_API int GetMaterialSlot(const Item *item);
+        GWCA_API Constants::MaterialSlot GetMaterialSlot(const Item *item);
 
         GWCA_API void AsyncGetItemName(const Item *item, std::wstring& name);
 
