@@ -6,7 +6,7 @@
 namespace GW {
     typedef uint32_t ItemID;
     namespace Constants {
-        enum class Bag;
+        enum class Bag : uint8_t;
         enum class ItemType : uint8_t;
 
         enum class BagType {
@@ -125,6 +125,7 @@ namespace GW {
 
         bool GetIsMaterial() const;
         bool GetIsZcoin() const;
+        GW::ItemModifier* GetModifier(const uint32_t identifier) const;
     };
     static_assert(sizeof(Item) == 84, "struct Item has incorrect size");
 

@@ -90,7 +90,7 @@ namespace GW {
             None = 0xff
         };
 
-        enum class Bag {
+        enum class Bag : uint8_t {
             None, Backpack, Belt_Pouch, Bag_1, Bag_2, Equipment_Pack,
             Material_Storage, Unclaimed_Items, Storage_1, Storage_2,
             Storage_3, Storage_4, Storage_5, Storage_6, Storage_7,
@@ -98,7 +98,7 @@ namespace GW {
             Storage_13, Storage_14, Equipped_Items, Max
         };
         // Order of storage panes.
-        enum class StoragePane {
+        enum class StoragePane : uint8_t {
             Storage_1,Storage_2,Storage_3,Storage_4,Storage_5,
             Storage_6,Storage_7,Storage_8,Storage_9,Storage_10,
             Storage_11,Storage_12,Storage_13,Storage_14,Material_Storage
@@ -130,7 +130,7 @@ namespace GW {
             Miku, ZeiRi
         };
 
-        enum MaterialSlot : uint32_t {
+        enum class MaterialSlot : uint32_t {
             Bone, IronIngot, TannedHideSquare, Scale, ChitinFragment,
             BoltofCloth, WoodPlank, GraniteSlab = 8,
             PileofGlitteringDust, PlantFiber, Feather,
@@ -143,7 +143,9 @@ namespace GW {
             ElonianLeatherSquare, VialofInk, RollofParchment,
             RollofVellum, SpiritwoodPlank, AmberChunk, JadeiteShard,
 
-            N_MATS
+            BronzeZCoin, SilverZCoin, GoldZCoin,
+
+            Count
         };
 
         constexpr Profession HeroProfs[] = {
