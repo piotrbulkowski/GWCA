@@ -43,6 +43,8 @@ namespace GW {
         GWCA_API Bag **GetBagArray();
         GWCA_API Bag  *GetBag(Constants::Bag bag_id);
         GWCA_API Bag  *GetBag(uint32_t bag_id);
+        // Returns the maximum stack size for a single material on the material pane of the xunlai chest, accounting for purchased expansions
+        GWCA_API uint32_t GetMaterialStorageStackSize();
 
         // bag & slot are 1 based
         GWCA_API Item *GetItemBySlot(const Bag *bag, uint32_t slot);

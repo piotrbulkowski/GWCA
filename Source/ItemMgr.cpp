@@ -443,6 +443,16 @@ namespace GW {
             Bag** bags = GetBagArray();
             return bags ? bags[(unsigned)bag_id] : nullptr;
         }
+        uint32_t GetMaterialStorageStackSize() {
+            const auto g = GW::GetGameContext();
+            const auto a = g ? g->account : nullptr;
+            if (!a) return 250;
+            // @Cleanup: Create an AccountMgr.cpp and chuck this stuff in there!
+            for (auto& unlock : a->account_unlocked_counts) {
+                if (unlock.id == 0x83)
+                    return (unlock.unk1 * 250) + 250;
+            }
+            return 250;
 
         Bag* GetBag(uint32_t bag_id) {
             return GetBag((Constants::Bag)bag_id);
