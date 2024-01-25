@@ -126,20 +126,6 @@ namespace {
     typedef void(__cdecl* ChangeSecondary_pt)(uint32_t agent_id, uint32_t profession);
     ChangeSecondary_pt ChangeSecondary_Func = 0;
 
-    std::unordered_map<HookEntry*, UseSkillCallback> OnUseSkill_Callbacks;
-    void __cdecl OnUseSkill(uint32_t agent_id, uint32_t slot, uint32_t target, uint32_t call_target)
-    {
-        HookBase::EnterHook();
-        HookStatus status;
-        for (auto& it : OnUseSkill_Callbacks) {
-            it.second(&status, agent_id, slot, target, call_target);
-            ++status.altitude;
-        }
-        if (!status.blocked)
-            RetUseSkill(agent_id, slot, target, call_target);
-        HookBase::LeaveHook();
-    }
-
     void Init() {
 
         DWORD address = 0;
@@ -152,8 +138,6 @@ namespace {
             attribute_array_addr = *(AttributeInfo**)address;
         }
 
-        UseSkill_Func = (UseSkill_pt)GW::Scanner::Find( "\x85\xF6\x74\x5B\x83\xFE\x11\x74", "xxxxxxxx", -0x126);
-
         address = Scanner::FindAssertion("p:\\code\\gw\\ui\\game\\templates\\templateshelpers.cpp", "targetPrimaryProf == templateData.profPrimary");
         ChangeSecondary_Func = (ChangeSecondary_pt)Scanner::FunctionFromNearCall(address + 0x20);
         LoadAttributes_Func = (LoadAttributes_pt)Scanner::FunctionFromNearCall(address + 0x34);
@@ -164,18 +148,14 @@ namespace {
             UI::RegisterUIMessageCallback(&OnLoadSkillbar_HookEntry, UI::UIMessage::kSendLoadSkillbar, OnLoadSkillbar_UIMessage, 0x1);
         }
 
-        HookBase::CreateHook(UseSkill_Func, OnUseSkill, (void**)&RetUseSkill);
-
         GWCA_INFO("[SCAN] SkillArray = %p", skill_array_addr);
         GWCA_INFO("[SCAN] AttributeArray = %p", attribute_array_addr);
-        GWCA_INFO("[SCAN] UseSkill_Func = %p", UseSkill_Func);
         GWCA_INFO("[SCAN] ChangeSecondary_Func = %p", ChangeSecondary_Func);
         GWCA_INFO("[SCAN] LoadAttributes_Func = %p", LoadAttributes_Func);
         GWCA_INFO("[SCAN] LoadSkills_Func = %p", LoadSkills_Func);
 #ifdef _DEBUG
         GWCA_ASSERT(skill_array_addr);
         GWCA_ASSERT(attribute_array_addr);
-        GWCA_ASSERT(UseSkill_Func);
         GWCA_ASSERT(ChangeSecondary_Func);
         GWCA_ASSERT(LoadAttributes_Func);
         GWCA_ASSERT(LoadSkills_Func);
@@ -609,18 +589,17 @@ namespace GW {
             return SetAttributes(count, attribute_ids, attribute_values, hero_index);
         }
 
-        bool UseSkill(uint32_t slot, uint32_t target, uint32_t call_target) {
-            if (!UseSkill_Func)
-                return false;
-            UseSkill_Func(Agents::GetPlayerId(), slot, target, call_target);
-            return true;
+        bool UseSkill(uint32_t slot, uint32_t target) {
+            if (target)
+                Agents::ChangeTarget(target);
+            return UI::Keypress((GW::UI::ControlAction)((uint32_t)GW::UI::ControlAction_UseSkill1 + slot));
         }
 
-        bool UseSkillByID(uint32_t skill_id, uint32_t target, uint32_t call_target) {
+        bool UseSkillByID(uint32_t skill_id, uint32_t target) {
             int slot = GetSkillSlot((Constants::SkillID)skill_id);
             if (slot == -1)
                 return false;
-            return UseSkill((uint32_t)slot, target, call_target);
+            return UseSkill((uint32_t)slot, target);
         }
 
         int GetSkillSlot(Constants::SkillID skill_id) {
@@ -676,20 +655,6 @@ namespace GW {
             uint32_t shift = index % 32;
             uint32_t flag = 1U << shift;
             return (array[real_index] & flag) != 0;
-        }
-        void RegisterUseSkillCallback(
-            HookEntry* entry,
-            const UseSkillCallback& callback)
-        {
-            OnUseSkill_Callbacks.insert({ entry, callback });
-        }
-
-        void RemoveUseSkillCallback(
-            HookEntry* entry)
-        {
-            auto it = OnUseSkill_Callbacks.find(entry);
-            if (it != OnUseSkill_Callbacks.end())
-                OnUseSkill_Callbacks.erase(it);
         }
     }
 } // namespace GW

@@ -39,11 +39,11 @@ namespace GW {
         GWCA_API int GetSkillSlot(Constants::SkillID skill_id);
 
         // Use Skill in slot (Slot) on (Agent), optionally call that you are using said skill.
-        GWCA_API bool UseSkill(uint32_t slot, uint32_t target = 0, uint32_t call_target = 0);
+        GWCA_API bool UseSkill(uint32_t slot, uint32_t target = 0);
 
         // Send raw packet to use skill with ID (SkillID).
         // Same as above except the skillbar client struct will not be registered as casting.
-        GWCA_API bool UseSkillByID(uint32_t skill_id, uint32_t target = 0, uint32_t call_target = 0);
+        GWCA_API bool UseSkillByID(uint32_t skill_id, uint32_t target = 0);
 
         // Get skill structure of said id, houses pretty much everything you would want to know about the skill.
         GWCA_API Skill* GetSkillConstantData(Constants::SkillID skill_id);
@@ -76,13 +76,5 @@ namespace GW {
         GWCA_API bool SetAttributes(uint32_t attribute_count,
             uint32_t *attribute_ids, uint32_t *attribute_values, uint32_t hero_index = 0);
         GWCA_API bool SetAttributes(Attribute *attributes, size_t n_attributes, uint32_t hero_index = 0);
-
-        typedef HookCallback<uint32_t, uint32_t, uint32_t, uint32_t> UseSkillCallback;
-        GWCA_API void RegisterUseSkillCallback(
-            HookEntry* entry,
-            const UseSkillCallback& callback);
-
-        GWCA_API void RemoveUseSkillCallback(
-            HookEntry* entry);
     }
 }
