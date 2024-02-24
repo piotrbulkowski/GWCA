@@ -34,20 +34,59 @@ namespace {
     SetTooltip_pt SetTooltip_Func = 0;
     SetTooltip_pt RetSetTooltip = 0;
 
+    typedef uint32_t(__cdecl* CreateHashFromWchar_pt)(const wchar_t* wcs, int seed);
+    CreateHashFromWchar_pt CreateHashFromWchar_Func = 0;
+    CreateHashFromWchar_pt CreateHashFromWchar_Ret = 0;
+
+    typedef uint32_t(__cdecl* GetChildFrameId_pt)(uint32_t, uint32_t);
+    GetChildFrameId_pt GetChildFrameId_Func = 0;
+
+    // Create a uint hash from a wide char array; used for hashing frame ids
+    uint32_t __cdecl OnCreateHashFromWchar(wchar_t* wcs, int seed) {
+        GW::Hook::EnterHook();
+        uint32_t out = CreateHashFromWchar_Ret(wcs, seed);
+        GW::Hook::LeaveHook();
+        return out;
+    }
+
+    uintptr_t* UiFrames_Addr = nullptr;
 
     typedef uint32_t(__cdecl* CreateUIComponent_pt)(uint32_t frame_id, uint32_t component_flags, uint32_t tab_index, void* event_callback, wchar_t* name_enc, wchar_t* component_label);
     CreateUIComponent_pt CreateUIComponent_Func = 0;
     CreateUIComponent_pt CreateUIComponent_Ret = 0;
-    std::unordered_map<HookEntry*, UI::CreateUIComponentCallback> OnCreateUIComponent_callbacks;
+
+    struct CreateUIComponentCallbackEntry {
+        int altitude;
+        HookEntry* entry;
+        UI::CreateUIComponentCallback callback;
+    };
+    std::vector<CreateUIComponentCallbackEntry> OnCreateUIComponent_callbacks;
 
 
     uint32_t __cdecl OnCreateUIComponent(uint32_t frame_id, uint32_t component_flags, uint32_t tab_index, void* event_callback, wchar_t* name_enc, wchar_t* component_label) {
         GW::Hook::EnterHook();
         UI::CreateUIComponentPacket packet = {frame_id,component_flags, tab_index, event_callback, name_enc, component_label};
-        for (auto& it : OnCreateUIComponent_callbacks) {
-            it.second(&packet);
+
+        HookStatus status;
+        auto it = OnCreateUIComponent_callbacks.begin();
+        const auto& end = OnCreateUIComponent_callbacks.end();
+        // Pre callbacks
+        while (it != end) {
+            if (it->altitude > 0)
+                break;
+            it->callback(&packet);
+            ++status.altitude;
+            it++;
         }
+
         uint32_t out = CreateUIComponent_Ret(packet.frame_id,packet.component_flags,packet.tab_index,packet.event_callback,packet.name_enc,packet.component_label);
+
+        // Post callbacks
+        while (it != end) {
+            it->callback(&packet);
+            ++status.altitude;
+            it++;
+        }
         GW::Hook::LeaveHook();
         return out;
     }
@@ -64,9 +103,9 @@ namespace {
     typedef void(__cdecl* SetWindowPosition_pt)(uint32_t window_id, UI::WindowPosition* info, void* wParam, void* lParam);
     SetWindowPosition_pt SetWindowPosition_Func = 0;
 
-    typedef void(__fastcall* DoAction_pt)(void* ecx, void* edx, uint32_t msgid, void* arg1, void* arg2);
-    DoAction_pt DoAction_Func = 0;
-    DoAction_pt RetDoAction = 0;
+    typedef void(__fastcall* SendFrameUIMessage_pt)(Array<UI::UIInteractionCallback>* callbacks, void* edx, UI::UIMessage message_id, void* arg1, void* arg2);
+    SendFrameUIMessage_pt SendFrameUIMessage_Func = 0;
+    SendFrameUIMessage_pt SendFrameUIMessage_Ret = 0;
 
     typedef void(__cdecl* DrawOnCompass_pt)(uint32_t session_id, uint32_t pt_count, uint32_t* pts);
     DrawOnCompass_pt DrawOnCompass_Func = 0;
@@ -76,13 +115,9 @@ namespace {
         uint32_t unk1 = 0x4000;
         uint32_t unk2 = 0;
     };
-    GW::Array<uintptr_t>* s_FrameCache = nullptr;
-    static uintptr_t GetActionContext()
-    {
-        if (!(s_FrameCache && s_FrameCache->size() > 1))
-            return 0;
-        return (*s_FrameCache)[1] + 0xA0;
-    }
+
+    // Global array of every frame drawn in the game atm
+    GW::Array<UI::Frame*>* s_FrameArray = nullptr;
 
     typedef void (__cdecl *LoadSettings_pt)(uint32_t size, uint8_t *data);
     LoadSettings_pt LoadSettings_Func = 0;
@@ -212,29 +247,19 @@ namespace {
         HookBase::LeaveHook();
     }
 
-    std::unordered_map<HookEntry*, UI::KeyCallback> OnKeydown_callbacks;
-    std::unordered_map<HookEntry*, UI::KeyCallback> OnKeyup_callbacks;
-    void __fastcall OnDoAction(void* ecx, void* edx, uint32_t action_type, void* arg1, void* arg2) {
+    struct FrameCallbackEntry {
+        int altitude;
+        HookEntry* entry;
+        UI::FrameUIMessageCallback callback;
+    };
+
+    std::unordered_map<UI::UIMessage,std::vector<FrameCallbackEntry>> FrameUIMessage_callbacks;
+
+    void __fastcall OnSendFrameUIMessage(Array<UI::UIInteractionCallback>* frame_callbacks, void*, UI::UIMessage message_id, void* wParam, void* lParam) {
         HookBase::EnterHook();
-        switch (action_type) {
-        case 0x1E: // Keydown
-        case 0x20: // Keyup
-        {
-            GW::HookStatus status;
-            const uint32_t key_pressed = *static_cast<uint32_t*>(arg1);
-            const auto& callbacks = action_type == 0x1e ? OnKeydown_callbacks : OnKeyup_callbacks;
-            for (const auto& it : callbacks) {
-                it.second(&status, key_pressed);
-                ++status.altitude;
-            }
-            if (!status.blocked)
-                RetDoAction(ecx, edx, action_type, arg1, arg2);
-        }
-            break;
-        default:
-             RetDoAction(ecx, edx, action_type, arg1, arg2);
-            break;
-        }
+        const auto frame = (UI::Frame*)(((uintptr_t)frame_callbacks) - 0xA0);
+        GWCA_ASSERT(&frame->frame_callbacks == frame_callbacks);
+        UI::SendFrameUIMessage(frame, message_id, wParam, lParam);
         HookBase::LeaveHook();
     }
 
@@ -272,15 +297,24 @@ namespace {
     void Init() {
         uintptr_t address;
 
-        uintptr_t FrameCache_addr = Scanner::Find("\x68\x00\x10\x00\x00\x8B\x1C\x98\x8D", "xxxxxxxxx", -4);
-        if (Verify(FrameCache_addr))
-            s_FrameCache = *(GW::Array<uintptr_t>**)FrameCache_addr;
+        address = Scanner::FindAssertion("p:\\code\\engine\\frame\\frmsg.cpp", "frame", -0x14);
+        if (address) {
+            s_FrameArray = *(GW::Array<UI::Frame*>**)address;
+        }
 
         address = Scanner::Find("\x81\x0D\xFF\xFF\xFF\xFF\x00\x00\x08\x00", "xx????xxxx", 2);
         if (Verify(address))
             WorldMapState_Addr = *(uintptr_t*)address;
 
-        DoAction_Func = (DoAction_pt)Scanner::Find("\x83\xfe\x0b\x75\x14\x68\x77\x01\x00\x00", "xxxxxxxxxx", -0x1b);
+        SendFrameUIMessage_Func = (SendFrameUIMessage_pt)Scanner::Find("\x83\xfe\x0b\x75\x14\x68\x77\x01\x00\x00", "xxxxxxxxxx", -0x1b);
+
+        // @TODO: Grab the seeding context from memory, write this ourselves!
+        address = Scanner::Find("\x85\xc0\x74\x0d\x6a\xff\x50","xxxxxxx",0x7);
+        CreateHashFromWchar_Func = (CreateHashFromWchar_pt)GW::Scanner::FunctionFromNearCall(address);
+
+        // @TODO: Grab the relationship array from memory, write this ourselves!
+        address = Scanner::FindAssertion("p:\\code\\engine\\controls\\ctlview.cpp", "pageId", 0x19);
+        GetChildFrameId_Func = (GetChildFrameId_pt)GW::Scanner::FunctionFromNearCall(address);
 
         SendUIMessage_Func = (SendUIMessage_pt)Scanner::Find(
             "\xE8\x00\x00\x00\x00\x5D\xC3\x89\x45\x08\x5D\xE9", "x????xxxxxxx", -0x1A);
@@ -395,9 +429,8 @@ namespace {
         GetGameRendererMode_Func = (GetGameRendererMode_pt)GW::Scanner::FunctionFromNearCall(address - 0x1d);
         GetGameRendererMetric_Func = (GetGameRendererMetric_pt)GW::Scanner::FunctionFromNearCall(address - 0x5);
 
-        GWCA_INFO("[SCAN] FrameCache_addr = %p", FrameCache_addr);
         GWCA_INFO("[SCAN] WorldMapState_Addr = %p", WorldMapState_Addr);
-        GWCA_INFO("[SCAN] DoAction = %p", DoAction_Func);
+        GWCA_INFO("[SCAN] SendFrameUIMessage_Func = %p", SendFrameUIMessage_Func);
         GWCA_INFO("[SCAN] SendUIMessage = %p", SendUIMessage_Func);
         GWCA_INFO("[SCAN] LoadSettings = %p", LoadSettings_Func);
         GWCA_INFO("[SCAN] ui_drawn_addr = %p", ui_drawn_addr);
@@ -438,9 +471,8 @@ namespace {
         GWCA_ASSERT(SetEnumPreference_Func);
         GWCA_ASSERT(SetNumberPreference_Func);
         GWCA_ASSERT(SetFlagPreference_Func);
-        GWCA_ASSERT(FrameCache_addr);
         GWCA_ASSERT(WorldMapState_Addr);
-        GWCA_ASSERT(DoAction_Func);
+        GWCA_ASSERT(SendFrameUIMessage_Func);
         GWCA_ASSERT(SendUIMessage_Func);
         GWCA_ASSERT(LoadSettings_Func);
         GWCA_ASSERT(ui_drawn_addr);
@@ -464,16 +496,13 @@ namespace {
         GWCA_ASSERT(PreferencesInitialised_Addr);
 #endif
         HookBase::CreateHook(SendUIMessage_Func, OnSendUIMessage, (void **)&RetSendUIMessage);
-        HookBase::CreateHook(DoAction_Func, OnDoAction, (void**)&RetDoAction);
         HookBase::CreateHook(CreateUIComponent_Func, OnCreateUIComponent, (void**)&CreateUIComponent_Ret);
-
+        HookBase::CreateHook(SendFrameUIMessage_Func, OnSendFrameUIMessage, (void**)&SendFrameUIMessage_Ret);
     }
 
     void EnableHooks() {
         if (AsyncDecodeStringPtr)
             HookBase::EnableHooks(AsyncDecodeStringPtr);
-        if (DoAction_Func)
-            HookBase::EnableHooks(DoAction_Func);
         if (SetTooltip_Func)
             HookBase::EnableHooks(SetTooltip_Func);
         if (SendUIMessage_Func)
@@ -486,8 +515,6 @@ namespace {
         UI::RemoveUIMessageCallback(&open_template_hook);
         if (AsyncDecodeStringPtr)
             HookBase::DisableHooks(AsyncDecodeStringPtr);
-        if (DoAction_Func)
-            HookBase::DisableHooks(DoAction_Func);
         if (SetTooltip_Func)
             HookBase::DisableHooks(SetTooltip_Func);
         if (SendUIMessage_Func)
@@ -499,14 +526,19 @@ namespace {
     void Exit()
     {
         HookBase::RemoveHook(AsyncDecodeStringPtr);
-        HookBase::RemoveHook(DoAction_Func);
         HookBase::RemoveHook(SetTooltip_Func);
         HookBase::RemoveHook(SendUIMessage_Func);
         HookBase::RemoveHook(CreateUIComponent_Func);
+        HookBase::RemoveHook(CreateHashFromWchar_Func);
+        HookBase::RemoveHook(CreateHashFromWchar_Func);
     }
 
     bool PrefsInitialised() {
         return PreferencesInitialised_Addr && *(uint32_t*)PreferencesInitialised_Addr == 1;
+    }
+
+    bool IsFrameValid(UI::Frame* frame) {
+        return frame && (int)frame != -1;
     }
 }
 
@@ -521,6 +553,36 @@ namespace GW {
         ::DisableHooks,           // disable_hooks
     };
     namespace UI {
+
+        Frame* GetChildFrame(uint32_t parent_frame_id, uint32_t child_offset) {
+            if (!GetChildFrameId_Func)
+                return nullptr;
+            const auto frame = GetFrameById(parent_frame_id);
+            if (!frame)
+                return nullptr;
+            const auto found_id = GetChildFrameId_Func(parent_frame_id, child_offset);
+            return GetFrameById(found_id);
+        }
+
+        Frame* GetFrameById(uint32_t frame_id) {
+            if (!(s_FrameArray && s_FrameArray->size() > frame_id))
+                return nullptr;
+            auto frame = (*s_FrameArray)[frame_id];
+            return IsFrameValid(frame) ? frame : nullptr;
+        }
+        Frame* GetFrameByLabel(const wchar_t* frame_label) {
+            if (!(CreateHashFromWchar_Func && s_FrameArray))
+                return nullptr;
+            const auto hash = CreateHashFromWchar_Func(frame_label, -1);
+            for (auto frame : *s_FrameArray) {
+                if (!IsFrameValid(frame))
+                    continue;
+                if (frame->frame_hash_id == hash)
+                    return frame;
+            }
+            return nullptr;
+        }
+
         Vec2f WindowPosition::yAxis(float multiplier) const {
             const float h = static_cast<float>(Render::GetViewportHeight());
             Vec2f y;
@@ -583,9 +645,54 @@ namespace GW {
             return true;
         }
 
-        bool SendUIMessage(UIMessage msgid, void* wParam, void* lParam)
+        bool SendFrameUIMessage(Frame* frame, UIMessage message_id, void* wParam, void* lParam)
+        {
+            if (!(SendFrameUIMessage_Ret && frame && frame->frame_callbacks.size()))
+                return false;
+
+            const auto& found = FrameUIMessage_callbacks.find(message_id);
+            if (found == FrameUIMessage_callbacks.end()) {
+                HookBase::EnterHook();
+                SendFrameUIMessage_Ret(&frame->frame_callbacks, nullptr, message_id, wParam, lParam);
+                HookBase::LeaveHook();
+                return true;
+            }
+
+            HookStatus status;
+            auto it = found->second.begin();
+            const auto& end = found->second.end();
+            // Pre callbacks
+            while (it != end) {
+                if (it->altitude > 0)
+                    break;
+                it->callback(&status, frame, message_id, wParam, lParam);
+                ++status.altitude;
+                it++;
+            }
+
+            const bool result = !status.blocked;
+            if (result) {
+                HookBase::EnterHook();
+                SendFrameUIMessage_Ret(&frame->frame_callbacks, nullptr, message_id, wParam, lParam);
+                HookBase::LeaveHook();
+            }
+
+            // Post callbacks
+            while (it != end) {
+                it->callback(&status, frame, message_id, wParam, lParam);
+                ++status.altitude;
+                it++;
+            }
+            return result;
+
+        }
+
+        bool SendUIMessage(UIMessage msgid, void* wParam, void* lParam, bool skip_hooks)
         {
             HookStatus status;
+            if (skip_hooks) {
+                return RawSendUIMessage(msgid, wParam, lParam);
+            }
             const auto& found = UIMessage_callbacks.find(msgid);
             if (found == UIMessage_callbacks.end()) {
                 return RawSendUIMessage(msgid, wParam, lParam);
@@ -613,22 +720,14 @@ namespace GW {
             return result;
         }
         bool Keydown(ControlAction key) {
-            const uintptr_t ecx = GetActionContext();
-            if (!(ecx && RetDoAction))
-                return false;
             KeypressPacket action;
             action.key = key;
-            OnDoAction(reinterpret_cast<void*>(ecx), nullptr, 0x1E, &action, nullptr);
-            return true;
+            return SendFrameUIMessage(GetFrameById(7), UI::UIMessage::kKeyDown, &action);
         }
         bool Keyup(ControlAction key) {
-            const uintptr_t ecx = GetActionContext();
-            if (!(ecx && RetDoAction))
-                return false;
             KeypressPacket action;
             action.key = key;
-            OnDoAction(reinterpret_cast<void*>(ecx), nullptr, 0x20, &action, nullptr);
-            return true;
+            return SendFrameUIMessage(GetFrameById(7), UI::UIMessage::kKeyUp, &action);
         }
 
         bool SetWindowVisible(WindowID window_id,bool is_visible) {
@@ -1020,23 +1119,54 @@ namespace GW {
         }
 
         void RegisterKeyupCallback(HookEntry* entry, const KeyCallback& callback) {
-            OnKeyup_callbacks.insert({ entry, callback });
+            RegisterFrameUIMessageCallback(entry, UIMessage::kKeyUp, [callback](GW::HookStatus* status, const Frame*, UIMessage, void* wParam, void*) {
+                callback(status, *(uint32_t*)wParam);
+                });
         }
         void RemoveKeyupCallback(HookEntry* entry) {
-            auto it = OnKeyup_callbacks.find(entry);
-            if (it != OnKeyup_callbacks.end())
-                OnKeyup_callbacks.erase(it);
+            RemoveFrameUIMessageCallback(entry);
         }
 
         void RegisterKeydownCallback(HookEntry* entry, const KeyCallback& callback) {
-            OnKeydown_callbacks.insert({ entry, callback });
+            RegisterFrameUIMessageCallback(entry, UIMessage::kKeyDown, [callback](GW::HookStatus* status, const Frame*, UIMessage, void* wParam, void*) {
+                callback(status, *(uint32_t*)wParam);
+                });
         }
         void RemoveKeydownCallback(HookEntry* entry) {
-            auto it = OnKeydown_callbacks.find(entry);
-            if (it != OnKeydown_callbacks.end())
-                OnKeydown_callbacks.erase(it);
+            RemoveFrameUIMessageCallback(entry);
         }
 
+        void RegisterFrameUIMessageCallback(
+            HookEntry *entry,
+            UIMessage message_id,
+            const FrameUIMessageCallback& callback,
+            int altitude)
+        {
+            if (FrameUIMessage_callbacks.find(message_id) == FrameUIMessage_callbacks.end()) {
+                FrameUIMessage_callbacks[message_id] = std::vector<FrameCallbackEntry>();
+            }
+            auto it = FrameUIMessage_callbacks[message_id].begin();
+            while (it != FrameUIMessage_callbacks[message_id].end()) {
+                if (it->altitude > altitude)
+                    break;
+                it++;
+            }
+            FrameUIMessage_callbacks[message_id].insert(it, { altitude, entry, callback});
+        }
+        void RemoveFrameUIMessageCallback(
+            HookEntry *entry)
+        {
+            for (auto& it : FrameUIMessage_callbacks) {
+                auto it2 = it.second.begin();
+                while (it2 != it.second.end()) {
+                    if (it2->entry == entry) {
+                        it.second.erase(it2);
+                        break;
+                    }
+                    it2++;
+                }
+            }
+        }
         void RegisterUIMessageCallback(
             HookEntry *entry,
             UIMessage message_id,
@@ -1074,15 +1204,25 @@ namespace GW {
             return CurrentTooltipPtr && *CurrentTooltipPtr ? **CurrentTooltipPtr : 0;
         }
 
-        void RegisterCreateUIComponentCallback(HookEntry* entry, const CreateUIComponentCallback& callback)
+        void RegisterCreateUIComponentCallback(HookEntry* entry, const CreateUIComponentCallback& callback, int altitude)
         {
-            if (OnCreateUIComponent_callbacks.find(entry) == OnCreateUIComponent_callbacks.end())
-                OnCreateUIComponent_callbacks[entry] = callback;
+            RemoveCreateUIComponentCallback(entry);
+            auto it = OnCreateUIComponent_callbacks.begin();
+            while (it != OnCreateUIComponent_callbacks.end()) {
+                if (it->altitude > altitude)
+                    break;
+                it++;
+            }
+            OnCreateUIComponent_callbacks.insert(it, { altitude, entry, callback});
         }
         void RemoveCreateUIComponentCallback(HookEntry* entry)
         {
-            if (OnCreateUIComponent_callbacks.find(entry) != OnCreateUIComponent_callbacks.end())
-                OnCreateUIComponent_callbacks.erase(entry);
+            for (auto it = OnCreateUIComponent_callbacks.begin(), end = OnCreateUIComponent_callbacks.end(); it != end; it++) {
+                if (it->entry == entry) {
+                    OnCreateUIComponent_callbacks.erase(it);
+                    return;
+                }  
+            }
         }
     }
 

@@ -413,7 +413,8 @@ namespace GW {
             return item && !IsStorageItem(item) || CanAccessXunlaiChest();
         }
         bool PickUpItem(const Item* item, uint32_t CallTarget /*= 0*/) {
-            return Agents::PickUpItem(Agents::GetAgentByID(item->agent_id), CallTarget);
+            uint32_t packet[] = { item->agent_id, CallTarget == 1 };
+            return UI::SendUIMessage(GW::UI::UIMessage::kSendInteractItem, packet);
         }
 
         bool DropItem(const Item* item, uint32_t quantity) {

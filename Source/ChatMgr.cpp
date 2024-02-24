@@ -47,208 +47,105 @@ namespace {
             s[i] = towlower(s[i]);
     }
 
-    std::unordered_map<HookEntry*, Chat::SendChatCallback>     SendChat_callbacks;
-    std::unordered_map<HookEntry*, Chat::LocalMessageCallback> LocalMessage_callbacks;
-    std::unordered_map<HookEntry*, Chat::WhisperCallback>      Whisper_callbacks;
-    std::unordered_map<HookEntry*, Chat::PrintChatCallback>    PrintChat_callbacks;
-    std::unordered_map<HookEntry*, Chat::StartWhisperCallback> StartWhisper_callbacks;
-    struct ChatLogCallbackEntry {
-        int altitude;
-        HookEntry* entry;
-        Chat::ChatLogCallback callback;
-    };
-    std::vector<ChatLogCallbackEntry> ChatLog_callbacks;
+    typedef Chat::Color* (__cdecl* GetChannelColor_pt)(Chat::Color* color, uint32_t chan);
+    GetChannelColor_pt GetSenderColor_Func = 0, GetSenderColor_Ret = 0;
+    GetChannelColor_pt GetMessageColor_Func = 0, GetMessageColor_Ret = 0;
 
-    typedef Chat::Color* (__cdecl *GetChannelColor_pt)(Chat::Color *color, Chat::Channel chan);
-    GetChannelColor_pt RetGetSenderColor;
-    GetChannelColor_pt GetSenderColor_Func;
-    Chat::Color* __cdecl OnGetSenderColor(Chat::Color *color, Chat::Channel chan) {
+    std::unordered_map<std::wstring, GW::HookEntry*> chat_command_hook_entries;
+
+    Chat::Color* __cdecl OnGetSenderColor_Func(Chat::Color* color, Chat::Channel chan) {
         HookBase::EnterHook();
-        const auto it = ChatSenderColor.find(chan);
-        if (it != ChatSenderColor.end()) {
-            *color = it->second;
-        }
-        else {
-            RetGetSenderColor(color, chan);
-        }
+        GW::UI::UIPacket::kGetColor packet = { color, chan };
+        GW::UI::SendUIMessage(GW::UI::UIMessage::kGetSenderColor, &packet);
         HookBase::LeaveHook();
-        return color;
-    };
+        return packet.color;
+    }
 
-
-    GetChannelColor_pt RetGetMessageColor;
-    GetChannelColor_pt GetMessageColor_Func;
-    Chat::Color* __cdecl OnGetMessageColor(Chat::Color *color, Chat::Channel chan) {
+    Chat::Color* __cdecl OnGetMessageColor_Func(Chat::Color* color, Chat::Channel chan) {
         HookBase::EnterHook();
-        const auto it = ChatMessageColor.find(chan);
-        if (it != ChatMessageColor.end()) {
-            *color = it->second;
-        }
-        else {
-            RetGetMessageColor(color, chan);
-        }
+        GW::UI::UIPacket::kGetColor packet = { color, chan };
+        GW::UI::SendUIMessage(GW::UI::UIMessage::kGetMessageColor, &packet);
         HookBase::LeaveHook();
-        return color;
-    };
+        return packet.color;
+    }
 
-    typedef void(__cdecl *LocalMessage_pt)(int channel, wchar_t *message);
-    LocalMessage_pt LocalMessage_Func;
-    LocalMessage_pt RetLocalMessage;
-    void __cdecl OnLocalMessage(int channel, wchar_t *message) {
+    typedef void(__cdecl* SendChat_pt)(wchar_t* message, uint32_t agent_id);
+    SendChat_pt SendChat_Func = 0, SendChat_Ret = 0;
+
+
+    void ChatMessageToChatCommand(wchar_t* message, GW::UI::UIPacket::kSendChatCommand* packet) {
+        int command_args_length;
+        wchar_t** command_args = CommandLineToArgvW(message + 1, &command_args_length);
+        std::wstring chat_command = command_args[0];
+        ::wstring_tolower(chat_command);
+
+        *packet = {
+            chat_command.data(),
+            message,
+            command_args_length,
+            command_args
+        };
+    }
+
+    void __cdecl OnSendChat_Func(wchar_t *message, uint32_t agent_id) {
         HookBase::EnterHook();
-        HookStatus status;
-        for (auto& it : LocalMessage_callbacks) {
-            it.second(&status, channel, message);
-            ++status.altitude;
-        }
-        if (!status.blocked)
-            RetLocalMessage(channel, message);
+        GW::UI::UIPacket::kSendChatMessage packet = { message, agent_id };
+        GW::UI::SendUIMessage(GW::UI::UIMessage::kSendChatMessage, &packet);
         HookBase::LeaveHook();
     }
 
-    typedef void(__cdecl *SendChat_pt)(wchar_t *message, uint32_t agent_id);
-    SendChat_pt SendChat_Func;
-    SendChat_pt RetSendChat;
-    void __cdecl OnSendChat(wchar_t *message, uint32_t agent_id) {
+    typedef void(__cdecl *RecvWhisper_pt)(uint32_t transaction_id, wchar_t *player_name, wchar_t* message);
+    RecvWhisper_pt RecvWhisper_Func = 0, RecvWhisper_Ret = 0;
+
+    void __cdecl OnRecvWhisper_Func(uint32_t transaction_id, wchar_t *player_name, wchar_t* message) {
         HookBase::EnterHook();
-        if (*message == '/') {
-            int argc;
-            wchar_t** argv = CommandLineToArgvW(message + 1, &argc);
-            std::wstring cmd = argv[0];
-            ::wstring_tolower(cmd);
-
-            const auto callback = SlashCmdList.find(cmd);
-            if (callback != SlashCmdList.end()) {
-                const auto capture_input = callback->second(message, argc, argv);
-                if (!capture_input) {
-                    RetSendChat(message, agent_id);
-                }
-                LocalFree(argv);
-                HookBase::LeaveHook();
-                return;
-            }
-            LocalFree(argv);
-        }
-
-        HookStatus status;
-        for (auto& it : SendChat_callbacks) {
-            it.second(&status, GW::Chat::GetChannel(*message), &message[1]);
-            ++status.altitude;
-        }
-        if (!status.blocked)
-            RetSendChat(message, agent_id);
+        uint32_t packet[] = { transaction_id, (uint32_t)player_name, (uint32_t)message };
+        GW::UI::SendUIMessage(GW::UI::UIMessage::kRecvWhisper, packet);
         HookBase::LeaveHook();
     }
 
-    typedef void(__cdecl *WriteWhisper_pt)(uint32_t, wchar_t *, wchar_t *);
-    WriteWhisper_pt RetWriteWhisper;
-    WriteWhisper_pt WriteWhisper_Func;
-    void __cdecl OnWriteWhisper(uint32_t unk, wchar_t *from, wchar_t *msg) {
-        HookBase::EnterHook();
-        HookStatus status;
-        for (auto& it : Whisper_callbacks) {
-            it.second(&status, from, msg);
-            ++status.altitude;
-        }
-        if (!status.blocked)
-            RetWriteWhisper(unk, from, msg);
-        HookBase::LeaveHook();
-    }
+    typedef void(__fastcall* StartWhisper_pt)(GW::UI::Frame* ctx, uint32_t edx, wchar_t* name);
+    StartWhisper_pt StartWhisper_Func = 0, StartWhisper_Ret = 0;
 
-    typedef void(__fastcall* StartWhisper_pt)(void* ctx, uint32_t edx, wchar_t* name);
-    StartWhisper_pt StartWhisper_Func;
-    StartWhisper_pt RetStartWhisper;
-    void __fastcall OnStartWhisper(void* ctx, uint32_t edx, wchar_t* name) {
+    void __fastcall OnStartWhisper_Func(GW::UI::Frame* ctx, uint32_t, wchar_t* name) {
         GW::HookBase::EnterHook();
-        HookStatus status;
-        for (auto& it : StartWhisper_callbacks) {
-            it.second(&status, name);
-            ++status.altitude;
-        }
-        if (!status.blocked)
-            RetStartWhisper(ctx, edx, name);
+        wchar_t* packet[] = {name};
+        GW::UI::SendUIMessage(GW::UI::UIMessage::kStartWhisper, packet, ctx);
         GW::HookBase::LeaveHook();
     }
-
-    bool add_next_message_to_chat_log = true;
 
     typedef void(_cdecl* AddToChatLog_pt)(wchar_t* message, uint32_t channel);
-    AddToChatLog_pt AddToChatLog_Func;
-    AddToChatLog_pt RetAddToChatLog;
-    void OnAddToChatLog(wchar_t* message, uint32_t channel) {
+    AddToChatLog_pt AddToChatLog_Func = 0, AddToChatLog_Ret = 0;
+
+    void __cdecl OnAddToChatLog_Func(wchar_t* message, uint32_t channel) {
         GW::HookBase::EnterHook();
-        HookStatus status;
-        auto it = ChatLog_callbacks.begin();
-
-        status.blocked = !add_next_message_to_chat_log;
-
-        Chat::ChatMessage* logged_message = 0;
-        // Pre callbacks
-        while (it != ChatLog_callbacks.end()) {
-            if (it->altitude > 0)
-                break;
-            it->callback(&status, message,channel, logged_message);
-            ++status.altitude;
-            it++;
-        }
-
-        if (!status.blocked) {
-            GW::Chat::ChatBuffer* log = Chat::GetChatLog();
-            size_t log_idx = log ? log->next : 0;
-            RetAddToChatLog(message, channel);
-            if(log && log->next != log_idx)
-                logged_message = log->messages[log_idx];
-        }
-
-        // Post callbacks
-        while (it != ChatLog_callbacks.end()) {
-            it->callback(&status, message, channel, logged_message);
-            ++status.altitude;
-            it++;
-        }
+        uint32_t packet[] = { (uint32_t)message, channel };
+        GW::UI::SendUIMessage(GW::UI::UIMessage::kLogChatMessage, packet);
         GW::HookBase::LeaveHook();
     }
 
+    typedef void (__fastcall *PrintChat_pt)(UI::Frame *frame, uint32_t edx, Chat::Channel channel, wchar_t *message, FILETIME timestamp, bool is_reprint);
+    PrintChat_pt PrintChat_Func = 0, PrintChat_Ret = 0;
 
-    typedef void (__fastcall *PrintChat_pt)(void *ctx, uint32_t edx,
-        Chat::Channel channel, wchar_t *str, FILETIME timestamp, int reprint);
-    PrintChat_pt RetPrintChat;
-    PrintChat_pt PrintChat_Func;
-    void* PrintChat_Context = nullptr;
-    // Used for fetching PrintChat_Context in chat window
-    const wchar_t* PrintChat_Context_Sample_String = L"\x108\x107\x200B\x1";
-    void __fastcall OnPrintChat(void *ctx, uint32_t edx,
-        Chat::Channel channel, wchar_t *str, FILETIME timestamp, int reprint)
+    void __fastcall OnPrintChat_Func(UI::Frame *frame, uint32_t, Chat::Channel channel, wchar_t *message, FILETIME timestamp, bool is_reprint)
     {
         HookBase::EnterHook();
-        GWCA_ASSERT(ChatBuffer_Addr && 0 <= channel && channel < Chat::Channel::CHANNEL_COUNT);
-        PrintChat_Context = ctx;
-        if (channel == Chat::Channel::CHANNEL_GWCA1 && wcscmp(str, PrintChat_Context_Sample_String) == 0) {
-            HookBase::LeaveHook();
-            return; // Spoof packet from GetChatWindowContext();
-        }
-        HookStatus status;
-        wchar_t** str_p = &str;
-        for (auto& it : PrintChat_callbacks) {
-            it.second(&status, channel, str_p, timestamp, reprint);
-            ++status.altitude;
-        }
-        if (status.blocked) {
-            //RetPrintChat(ctx, edx, channel, str, timestamp, reprint);
-            HookBase::LeaveHook();
-            return;
-        }
+        GW::UI::UIPacket::kPrintChatMessage packet = { channel, message, timestamp, is_reprint };
+        GW::UI::SendUIMessage(GW::UI::UIMessage::kPrintChatMessage, &packet, frame);
+        HookBase::LeaveHook();
+    }
 
-        if (!ShowTimestamps) {
-            RetPrintChat(ctx, edx, channel, *str_p, timestamp, reprint);
-            HookBase::LeaveHook();
+    wchar_t* rewritten_message_buffer = nullptr;
+
+    void OnUIMessage_Pre_AddTimestampToChatMessage(GW::HookStatus*, GW::UI::UIMessage, void* wparam, void*) {
+        const auto packet = (GW::UI::UIPacket::kPrintChatMessage*)wparam;
+        if (!ShowTimestamps)
             return;
-        }
 
         FILETIME   timestamp2;
         SYSTEMTIME localtime;
 
-        FileTimeToLocalFileTime(&timestamp, &timestamp2);
+        FileTimeToLocalFileTime(&packet->timestamp, &timestamp2);
         FileTimeToSystemTime(&timestamp2, &localtime);
 
         WORD hour = localtime.wHour;
@@ -262,7 +159,7 @@ namespace {
         wchar_t time_buffer[29];
         if (localtime.wYear == 0) {
             Timestamp_seconds ? std::memcpy(time_buffer, L"[lbracket]--:--:--[rbracket]", sizeof(wchar_t) * 29)
-                              : std::memcpy(time_buffer, L"[lbracket]--:--[rbracket]", sizeof(wchar_t) * 26);
+                : std::memcpy(time_buffer, L"[lbracket]--:--[rbracket]", sizeof(wchar_t) * 26);
         }
         else {
             if(Timestamp_seconds)
@@ -270,17 +167,21 @@ namespace {
             else
                 swprintf(time_buffer, 29, L"[lbracket]%02d:%02d[rbracket]", hour, minute);
         }
-        wchar_t* message_buffer;
-        size_t buf_len = 21 + 29 + wcslen(*str_p);
-        message_buffer = new wchar_t[buf_len];
-        if (ChannelThatParseColorTag[channel]) {
-            swprintf(message_buffer, buf_len, L"\x108\x107<c=#%06x>%s </c>\x01\x02%s", (TimestampsColor & 0x00FFFFFF), time_buffer, *str_p);
+        size_t buf_len = 21 + 29 + wcslen(packet->message);
+        GWCA_ASSERT(rewritten_message_buffer == nullptr);
+        rewritten_message_buffer = new wchar_t[buf_len];
+        if (ChannelThatParseColorTag[packet->channel]) {
+            swprintf(rewritten_message_buffer, buf_len, L"\x108\x107<c=#%06x>%s </c>\x01\x02%s", (TimestampsColor & 0x00FFFFFF), time_buffer, packet->message);
         } else {
-            swprintf(message_buffer, buf_len, L"\x108\x107%s \x01\x02%s", time_buffer, *str_p);
+            swprintf(rewritten_message_buffer, buf_len, L"\x108\x107%s \x01\x02%s", time_buffer, packet->message);
         }
-        RetPrintChat(ctx, edx, channel, message_buffer, timestamp, reprint);
-        HookBase::LeaveHook();
-        delete[] message_buffer;
+        packet->message = rewritten_message_buffer;
+
+    }
+    void OnUIMessage_Post_AddTimestampToChatMessage(GW::HookStatus*, GW::UI::UIMessage, void*, void*) {
+        if (rewritten_message_buffer)
+            delete[] rewritten_message_buffer;
+        rewritten_message_buffer = nullptr;
     }
 
 
@@ -289,7 +190,7 @@ namespace {
     // When a control is terminated ( message 0xB ) it doesn't clear the IsTyping_FrameId that we're using. Clear it manually.
     void OnUICallback_AssignEditableText(UI::InteractionMessage* message, void* wParam, void* lParam) {
         HookBase::EnterHook();
-        if (message->message_id == 0xb && IsTyping_FrameId && *IsTyping_FrameId == message->action_type) {
+        if (message->message_id == UI::UIMessage::kDestroyFrame && IsTyping_FrameId && *IsTyping_FrameId == message->action_type) {
             *IsTyping_FrameId = 0;
             //GWCA_INFO("IsTyping_FrameId manually cleared");
         }
@@ -297,21 +198,111 @@ namespace {
         HookBase::LeaveHook();
     }
 
+    GW::HookEntry UIMessage_Entry;
+    const UI::UIMessage ui_messages_to_hook[] = {
+        UI::UIMessage::kGetSenderColor,
+        UI::UIMessage::kGetMessageColor,
+        UI::UIMessage::kSendChatCommand,
+        UI::UIMessage::kSendChatMessage,
+        UI::UIMessage::kStartWhisper,
+        UI::UIMessage::kPrintChatMessage,
+        UI::UIMessage::kLogChatMessage,
+        UI::UIMessage::kRecvWhisper
+    };
+    void OnUIMessage(GW::HookStatus* status, UI::UIMessage message_id, void* wparam, void* lparam) {
+        if (status->blocked)
+            return;
+        uint32_t* pack = (uint32_t*)wparam;
+        switch (message_id) {
+        case UI::UIMessage::kGetSenderColor: {
+            const auto packet = (GW::UI::UIPacket::kGetColor*)wparam;
+            if (GetSenderColor_Ret) {
+                GetSenderColor_Ret(packet->color, packet->channel);
+                return;
+            }
+        } break;
+        case UI::UIMessage::kGetMessageColor: {
+            const auto packet = (GW::UI::UIPacket::kGetColor*)wparam;
+            if (GetMessageColor_Ret) {
+                GetMessageColor_Ret(packet->color, packet->channel);
+                return;
+            }
+        } break;
+        case UI::UIMessage::kSendChatCommand: {
+            const auto packet = (GW::UI::UIPacket::kSendChatCommand*)wparam;
+            if (SendChat_Ret) {
+                SendChat_Ret(packet->message,(uint32_t)lparam);
+                return;
+            }
+        } break;
+        case UI::UIMessage::kSendChatMessage: {
+            const auto message = (wchar_t*)pack[0];
+            if (Chat::GetChannel(*message) == Chat::CHANNEL_COMMAND) {
+                GW::UI::UIPacket::kSendChatCommand packet;
+                ChatMessageToChatCommand(message, &packet);
+                status->blocked = !GW::UI::SendUIMessage(GW::UI::UIMessage::kSendChatCommand, &packet, lparam);
+                LocalFree(packet.command_args);
+                return;
+            }
+            if (SendChat_Ret) {
+                SendChat_Ret((wchar_t*)pack[0], (uint32_t)pack[1]);
+                return;
+            }
+        } break;
+        case UI::UIMessage::kStartWhisper: {
+            if (StartWhisper_Ret) {
+                const auto frame = lparam ? (UI::Frame*)lparam : UI::GetFrameByLabel(L"Chat");
+                if (frame) {
+                    StartWhisper_Ret(frame, 0, (wchar_t*)wparam);
+                    return;
+                }
+            }
+        } break;
+        case UI::UIMessage::kPrintChatMessage: {
+            const auto packet = (GW::UI::UIPacket::kPrintChatMessage*)wparam;
+            if (PrintChat_Ret) {
+                const auto frame = lparam ? (UI::Frame*)lparam : UI::GetFrameByLabel(L"Log");
+                if (frame) {
+                    PrintChat_Ret(frame, 0, packet->channel,packet->message,packet->timestamp,packet->is_reprint);
+                    return;
+                }
+            }
+        } break;
+        case UI::UIMessage::kLogChatMessage: {
+            if (AddToChatLog_Ret) {
+                AddToChatLog_Ret((wchar_t*)pack[0], pack[1]);
+                return;
+            }
+        } break;
+        case UI::UIMessage::kRecvWhisper: {
+            if (RecvWhisper_Ret) {
+                RecvWhisper_Ret(pack[0], (wchar_t*)pack[1], (wchar_t*)pack[2]);
+                return;
+            }
+        } break;
+        }
+        status->blocked = true;
+    }
+
+    void DisableHook(void* hook) {
+        if (hook)
+            HookBase::DisableHooks(hook);
+    }
+    void EnableHook(void* hook) {
+        if (hook)
+            HookBase::EnableHooks(hook);
+    }
+
+
     void Init() {
         GetSenderColor_Func = (GetChannelColor_pt)Scanner::Find("\xC7\x00\x60\xC0\xFF\xFF\x5D\xC3", "xxxxxxxx", -0x1C);
         GetMessageColor_Func = (GetChannelColor_pt)Scanner::Find("\xC7\x00\xB0\xB0\xB0\xFF\x5D\xC3", "xxxxxxxx", -0x27);
-
-        // The last 4 bytes of the patterns are the "SendUIMessage" message id (i.e. 0x1000007E)
-        LocalMessage_Func = (LocalMessage_pt)Scanner::Find("\x8D\x45\xF8\x6A\x00\x50\x68\x7E\x00\x00\x10", "xxxxxxxxxxx", -0x3D);
         SendChat_Func = (SendChat_pt)Scanner::Find("\x8D\x85\xE0\xFE\xFF\xFF\x50\x68\x1C\x01", "xxxxxxxxx", -0x3E);
         StartWhisper_Func = (StartWhisper_pt)GW::Scanner::Find("\xFC\x53\x56\x8B\xF1\x57\x6A\x05\xFF\x36\xE8", "xxxxxxxxxxx", -0xF);
-        WriteWhisper_Func = (WriteWhisper_pt)Scanner::Find("\x83\xC4\x04\x8D\x58\x2E", "xxxxxx", -0x18);
         PrintChat_Func = (PrintChat_pt)Scanner::Find("\x3D\x00\x00\x00\x00\x73\x2B\x6A", "x??xxxxx", -0x46);
         AddToChatLog_Func = (AddToChatLog_pt)GW::Scanner::Find("\x40\x25\xff\x01\x00\x00", "xxxxxx", -0x97);
         ChatBuffer_Addr = *(Chat::ChatBuffer***)Scanner::Find("\x8B\x45\x08\x83\x7D\x0C\x07\x74", "xxxxxxxx", -4);
-
-
-
+        RecvWhisper_Func = (RecvWhisper_pt)Scanner::Find("\x83\xc4\x04\x8d\x58\x2e\x8b\xc3", "xxxxxxxx", -0x18);
 
         uintptr_t address = Scanner::FindAssertion("p:\\code\\engine\\controls\\ctledit.cpp","charCount >= 1",0x37);
         if (address && Scanner::IsValidPtr(*(uintptr_t*) address))
@@ -323,10 +314,9 @@ namespace {
 
         GWCA_INFO("[SCAN] GetSenderColor = %p", GetSenderColor_Func);
         GWCA_INFO("[SCAN] GetMessageColor = %p", GetMessageColor_Func);
-        GWCA_INFO("[SCAN] LocalMessage = %p", LocalMessage_Func);
         GWCA_INFO("[SCAN] SendChat = %p", SendChat_Func);
         GWCA_INFO("[SCAN] StartWhisper = %p", StartWhisper_Func);
-        GWCA_INFO("[SCAN] WriteWhisper = %p", WriteWhisper_Func);
+        GWCA_INFO("[SCAN] RecvWhisper_Func = %p", RecvWhisper_Func);
         GWCA_INFO("[SCAN] PrintChat = %p", PrintChat_Func);
         GWCA_INFO("[SCAN] AddToChatLog_Func = %p", AddToChatLog_Func);
         GWCA_INFO("[SCAN] ChatBuffer_Addr = %p", ChatBuffer_Addr);
@@ -336,10 +326,9 @@ namespace {
 #ifdef _DEBUG
         GWCA_ASSERT(GetSenderColor_Func);
         GWCA_ASSERT(GetMessageColor_Func);
-        GWCA_ASSERT(LocalMessage_Func);
         GWCA_ASSERT(SendChat_Func);
         GWCA_ASSERT(StartWhisper_Func);
-        GWCA_ASSERT(WriteWhisper_Func);
+        GWCA_ASSERT(RecvWhisper_Func);
         GWCA_ASSERT(PrintChat_Func);
         GWCA_ASSERT(AddToChatLog_Func);
         GWCA_ASSERT(ChatBuffer_Addr);
@@ -347,68 +336,62 @@ namespace {
         GWCA_ASSERT(UICallback_AssignEditableText_Func);
 #endif
 
-        HookBase::CreateHook(StartWhisper_Func, OnStartWhisper, (void**)& RetStartWhisper);
-        HookBase::CreateHook(GetSenderColor_Func, OnGetSenderColor, (void **)&RetGetSenderColor);
-        HookBase::CreateHook(GetMessageColor_Func, OnGetMessageColor, (void **)&RetGetMessageColor);
-        HookBase::CreateHook(LocalMessage_Func, OnLocalMessage, (void **)&RetLocalMessage);
-        HookBase::CreateHook(SendChat_Func, OnSendChat, (void **)&RetSendChat);
-        HookBase::CreateHook(WriteWhisper_Func, OnWriteWhisper, (void **)&RetWriteWhisper);
-        HookBase::CreateHook(PrintChat_Func, OnPrintChat, (void **)&RetPrintChat);
-        HookBase::CreateHook(AddToChatLog_Func, OnAddToChatLog, (void**)&RetAddToChatLog);
+        HookBase::CreateHook(StartWhisper_Func, OnStartWhisper_Func, (void**)& StartWhisper_Ret);
+        HookBase::CreateHook(GetSenderColor_Func, OnGetSenderColor_Func, (void **)&GetSenderColor_Ret);
+        HookBase::CreateHook(GetMessageColor_Func, OnGetMessageColor_Func, (void **)&GetMessageColor_Ret);
+        HookBase::CreateHook(SendChat_Func, OnSendChat_Func, (void **)&SendChat_Ret);
+        HookBase::CreateHook(RecvWhisper_Func, OnRecvWhisper_Func, (void **)&RecvWhisper_Ret);
+        HookBase::CreateHook(PrintChat_Func, OnPrintChat_Func, (void **)&PrintChat_Ret);
+        HookBase::CreateHook(AddToChatLog_Func, OnAddToChatLog_Func, (void**)&AddToChatLog_Ret);
         HookBase::CreateHook(UICallback_AssignEditableText_Func, OnUICallback_AssignEditableText, (void**)& UICallback_AssignEditableText_Ret);
     }
 
     void EnableHooks() {
-        if (StartWhisper_Func)
-            HookBase::EnableHooks(StartWhisper_Func);
-        if (GetSenderColor_Func)
-            HookBase::EnableHooks(GetSenderColor_Func);
-        if (GetMessageColor_Func)
-            HookBase::EnableHooks(GetMessageColor_Func);
-        if (LocalMessage_Func)
-            HookBase::EnableHooks(LocalMessage_Func);
-        if (SendChat_Func)
-            HookBase::EnableHooks(SendChat_Func);
-        if (WriteWhisper_Func)
-            HookBase::EnableHooks(WriteWhisper_Func);
-        if (PrintChat_Func)
-            HookBase::EnableHooks(PrintChat_Func);
-        if (AddToChatLog_Func)
-            HookBase::EnableHooks(AddToChatLog_Func);
-        if (UICallback_AssignEditableText_Func)
-            HookBase::EnableHooks(UICallback_AssignEditableText_Func);
+        EnableHook(StartWhisper_Func);
+        EnableHook(GetSenderColor_Func);
+        EnableHook(GetMessageColor_Func);
+        EnableHook(SendChat_Func);
+        EnableHook(RecvWhisper_Func);
+        EnableHook(PrintChat_Func);
+        EnableHook(AddToChatLog_Func);
+        EnableHook(UICallback_AssignEditableText_Func);
+
+        UI::RegisterUIMessageCallback((GW::HookEntry*)OnUIMessage_Pre_AddTimestampToChatMessage, UI::UIMessage::kPrintChatMessage, OnUIMessage_Pre_AddTimestampToChatMessage, -0x4000);
+        UI::RegisterUIMessageCallback((GW::HookEntry*)OnUIMessage_Post_AddTimestampToChatMessage, UI::UIMessage::kPrintChatMessage, OnUIMessage_Post_AddTimestampToChatMessage, 0x4000);
+
+        for (auto ui_message : ui_messages_to_hook) {
+            UI::RegisterUIMessageCallback(&UIMessage_Entry, ui_message, OnUIMessage, 0x1);
+        }
     }
     void DisableHooks() {
-        if (StartWhisper_Func)
-            HookBase::DisableHooks(StartWhisper_Func);
-        if (GetSenderColor_Func)
-            HookBase::DisableHooks(GetSenderColor_Func);
-        if (GetMessageColor_Func)
-            HookBase::DisableHooks(GetMessageColor_Func);
-        if (LocalMessage_Func)
-            HookBase::DisableHooks(LocalMessage_Func);
-        if (SendChat_Func)
-            HookBase::DisableHooks(SendChat_Func);
-        if (WriteWhisper_Func)
-            HookBase::DisableHooks(WriteWhisper_Func);
-        if (PrintChat_Func)
-            HookBase::DisableHooks(PrintChat_Func);
-        if (AddToChatLog_Func)
-            HookBase::DisableHooks(AddToChatLog_Func);
-        if(UICallback_AssignEditableText_Func)
-            HookBase::DisableHooks(UICallback_AssignEditableText_Func);
+        DisableHook(StartWhisper_Func);
+        DisableHook(GetSenderColor_Func);
+        DisableHook(GetMessageColor_Func);
+        DisableHook(SendChat_Func);
+        DisableHook(RecvWhisper_Func);
+        DisableHook(PrintChat_Func);
+        DisableHook(AddToChatLog_Func);
+        DisableHook(UICallback_AssignEditableText_Func);
+
+        UI::RemoveUIMessageCallback((GW::HookEntry*)OnUIMessage_Pre_AddTimestampToChatMessage);
+        UI::RemoveUIMessageCallback((GW::HookEntry*)OnUIMessage_Post_AddTimestampToChatMessage);
+
+        UI::RemoveUIMessageCallback(&UIMessage_Entry);
     }
 
     void Exit() {
         HookBase::RemoveHook(StartWhisper_Func);
         HookBase::RemoveHook(GetSenderColor_Func);
         HookBase::RemoveHook(GetMessageColor_Func);
-        HookBase::RemoveHook(LocalMessage_Func);
         HookBase::RemoveHook(SendChat_Func);
-        HookBase::RemoveHook(WriteWhisper_Func);
+        HookBase::RemoveHook(RecvWhisper_Func);
         HookBase::RemoveHook(PrintChat_Func);
         HookBase::RemoveHook(AddToChatLog_Func);
         HookBase::RemoveHook(UICallback_AssignEditableText_Func);
+
+        while (chat_command_hook_entries.size()) {
+            Chat::DeleteCommand(chat_command_hook_entries.begin()->first.c_str());
+        }
     }
 }
 
@@ -438,99 +421,14 @@ namespace GW {
     Chat::Channel Chat::GetChannel(wchar_t opcode) {
         return GetChannel((char)opcode);
     }
-    void Chat::RegisterSendChatCallback(
-        HookEntry *entry,
-        const SendChatCallback& callback)
-    {
-        SendChat_callbacks.insert({entry, callback});
-    }
-
-    void Chat::RemoveSendChatCallback(
-        HookEntry* entry)
-    {
-        auto it = SendChat_callbacks.find(entry);
-        if (it != SendChat_callbacks.end())
-            SendChat_callbacks.erase(it);
-    }
-
-    void Chat::RegisterLocalMessageCallback(
-        HookEntry *entry,
-        const LocalMessageCallback& callback)
-    {
-        LocalMessage_callbacks.insert({entry, callback});
-    }
-
-    void Chat::RemoveLocalMessageCallback(
-        HookEntry *entry)
-    {
-        auto it = LocalMessage_callbacks.find(entry);
-        if (it != LocalMessage_callbacks.end())
-            LocalMessage_callbacks.erase(it);
-    }
-
-    void Chat::RegisterWhisperCallback(
-        HookEntry *entry,
-        const WhisperCallback& callback)
-    {
-        Whisper_callbacks.insert({entry, callback});
-    }
-
-    void Chat::RegisterPrintChatCallback(
-        HookEntry* entry,
-        const PrintChatCallback& callback)
-        {
-            PrintChat_callbacks.insert({ entry, callback });
-        }
-    void Chat::RegisterChatLogCallback(
-        HookEntry* entry,
-        const ChatLogCallback& callback,
-        int altitude)
-    {
-        ChatLog_callbacks.push_back({ altitude, entry, callback });
-    }
-    void Chat::RemoveChatLogCallback(
-        HookEntry* entry)
-    {
-        auto it = ChatLog_callbacks.begin();
-        while (it != ChatLog_callbacks.end()) {
-            if (it->entry == entry) {
-                ChatLog_callbacks.erase(it);
-                break;
-            }
-            it++;
-        }
-    }
-
-    void Chat::RemoveWhisperCallback(
-        HookEntry *entry)
-    {
-        auto it = Whisper_callbacks.find(entry);
-        if (it != Whisper_callbacks.end())
-            Whisper_callbacks.erase(it);
-    }
-
-    void Chat::RegisterStartWhisperCallback(
-        HookEntry* entry,
-        const StartWhisperCallback& callback)
-    {
-        StartWhisper_callbacks.insert({entry, callback});
-    }
-
-    void Chat::RemoveStartWhisperCallback(
-        HookEntry *entry)
-    {
-        auto it = StartWhisper_callbacks.find(entry);
-        if (it != StartWhisper_callbacks.end())
-            StartWhisper_callbacks.erase(it);
-    }
 
     Chat::ChatBuffer* Chat::GetChatLog() {
         return *ChatBuffer_Addr;
     }
 
-    void Chat::AddToChatLog(wchar_t* message, uint32_t channel) {
-        if (AddToChatLog_Func)
-            AddToChatLog_Func(message, channel);
+    bool Chat::AddToChatLog(wchar_t* message, uint32_t channel) {
+        uint32_t packet[] = { (uint32_t)message, channel };
+        return GW::UI::SendUIMessage(UI::UIMessage::kLogChatMessage, packet);
     }
 
     Chat::Color Chat::SetSenderColor(Channel chan, Color col) {
@@ -548,13 +446,26 @@ namespace GW {
     }
 
     void Chat::GetChannelColors(Channel chan, Color *sender, Color *message) {
-        if (sender) OnGetSenderColor(sender, chan);
-        if (message) OnGetMessageColor(message, chan);
+        GW::UI::UIPacket::kGetColor packet = { sender, chan };
+        if (sender) {
+            packet.color = sender;
+            GW::UI::SendUIMessage(UI::UIMessage::kGetSenderColor, &packet);
+        }
+        if (message) {
+            packet.color = message;
+            GW::UI::SendUIMessage(UI::UIMessage::kGetMessageColor, &packet);
+        }
     }
-
-    void Chat::GetDefaultColors(Channel chan, Color *sender, Color *message) {
-        RetGetMessageColor(message, chan);
-        RetGetSenderColor(sender, chan);
+    void Chat::GetDefaultColors(Channel chan, Color* sender, Color* message) {
+        GW::UI::UIPacket::kGetColor packet = { sender, chan };
+        if (sender) {
+            packet.color = sender;
+            GW::UI::SendUIMessage(UI::UIMessage::kGetSenderColor, &packet, nullptr, true);
+        }
+        if (message) {
+            packet.color = message;
+            GW::UI::SendUIMessage(UI::UIMessage::kGetMessageColor, &packet, nullptr, true);
+        }
     }
 
     bool Chat::GetIsTyping() {
@@ -574,8 +485,8 @@ namespace GW {
         buffer[0] = static_cast<wchar_t>(channel);
         wcsncpy(&buffer[1], msg, len);
         buffer[len + 1] = 0;
-        SendChat_Func(buffer, 0);
-        return true;
+        uint32_t packet[] = { (uint32_t)buffer, 0 };
+        return GW::UI::SendUIMessage(UI::UIMessage::kSendChatMessage, packet);
     }
 
     bool Chat::SendChat(char channel, const char *msg) {
@@ -595,8 +506,8 @@ namespace GW {
         if (!(written > 0 && written < 140))
             return false;
         buffer[written] = 0;
-        SendChat_Func(buffer, 0);
-        return true;
+        uint32_t packet[] = { (uint32_t)buffer, 0 };
+        return GW::UI::SendUIMessage(UI::UIMessage::kSendChatMessage, packet);
     }
 
     bool Chat::SendChat(const char *from, const char *msg) {
@@ -608,8 +519,8 @@ namespace GW {
         if (!(written > 0 && written < 140))
             return false;
         buffer[written] = 0;
-        SendChat_Func(buffer, 0);
-        return true;
+        uint32_t packet[] = { (uint32_t)buffer, 0 };
+        return GW::UI::SendUIMessage(UI::UIMessage::kSendChatMessage, packet);
     }
 
     // Change to WriteChatF(Channel chan, const wchar_t *from, const wchar_t *frmt, ..)
@@ -644,7 +555,7 @@ namespace GW {
         if(sender_encoded)
             delete[] sender_encoded;
     }
-    void Chat::WriteChatEnc(Channel channel, const wchar_t* message_encoded, const wchar_t* sender_encoded, bool transient) {
+    void Chat::WriteChatEnc(Channel channel, const wchar_t* message_encoded, const wchar_t* sender_encoded, bool) {
         UI::UIChatMessage param;
         param.channel = param.channel2 = channel;
         param.message = (wchar_t*)message_encoded;
@@ -669,45 +580,40 @@ namespace GW {
             delete_message = true;
             GWCA_ASSERT(swprintf(param.message, len, format, sender_encoded, message_encoded) >= 0);
         }
-        add_next_message_to_chat_log = !transient;
         UI::SendUIMessage(UI::UIMessage::kWriteToChatLog, &param);
-        add_next_message_to_chat_log = true;
         if (delete_message)
             delete[] param.message;
     }
 
-    void Chat::CreateCommand(const wchar_t* cmd, CmdCB callback)
-    {
-        std::wstring cpy{cmd};
-        ::wstring_tolower(cpy);
-        SlashCmdList[std::move(cpy)] = std::move(callback);
+    void Chat::CreateCommand(const wchar_t* cmd, Chat::voidCmdCB callback) {
+        DeleteCommand(cmd);
+        GW::HookEntry* hook_entry = new GW::HookEntry();
+        chat_command_hook_entries[cmd] = hook_entry;
+        GW::UI::RegisterUIMessageCallback(hook_entry, GW::UI::UIMessage::kSendChatCommand, [cmd, callback](GW::HookStatus* status, UI::UIMessage, void* wparam, void*) {
+            auto packet = (GW::UI::UIPacket::kSendChatCommand*)wparam;
+            if (wcscmp(packet->chat_command, cmd) != 0)
+                return;
+            callback(packet->message, packet->command_args_length, packet->command_args);
+            status->blocked = true;
+            });
     }
-
-    void Chat::CreateCommand(const wchar_t* cmd, voidCmdCB callback)
-    {
-        std::wstring cpy{cmd};
-        ::wstring_tolower(cpy);
-        SlashCmdList[std::move(cpy)] = [cb = std::move(callback)](const wchar_t* a, const int b, wchar_t** c) {
-            cb(a, b, c);
-            return true;
-        };
+    void Chat::CreateCommand(const wchar_t* cmd, Chat::CmdCB callback) {
+        DeleteCommand(cmd);
+        GW::HookEntry* hook_entry = new GW::HookEntry();
+        chat_command_hook_entries[cmd] = hook_entry;
+        GW::UI::RegisterUIMessageCallback(hook_entry, GW::UI::UIMessage::kSendChatCommand, [cmd, callback](GW::HookStatus* status, UI::UIMessage, void* wparam, void*) {
+            auto packet = (GW::UI::UIPacket::kSendChatCommand*)wparam;
+            if (wcscmp(packet->chat_command, cmd) != 0)
+                return;
+            status->blocked = callback(packet->message, packet->command_args_length, packet->command_args);
+            });
     }
-
-    Chat::CmdCB Chat::GetCommand(const wchar_t* cmd)
-    {
-        std::wstring cpy{cmd};
-        ::wstring_tolower(cpy);
-        if (SlashCmdList.find(cpy) != SlashCmdList.end()) {
-            return SlashCmdList[std::move(cpy)];
-        }
-        return nullptr;
-    }
-
-    void Chat::DeleteCommand(const wchar_t* cmd)
-    {
-        std::wstring cpy{cmd};
-        ::wstring_tolower(cpy);
-        SlashCmdList.erase(cpy);
+    void Chat::DeleteCommand(const wchar_t* cmd) {
+        const auto found = chat_command_hook_entries.find(cmd);
+        if (found == chat_command_hook_entries.end())
+            return;
+        GW::UI::RemoveUIMessageCallback(found->second);
+        delete found->second;
     }
 
     void Chat::ToggleTimestamps(bool enable) {

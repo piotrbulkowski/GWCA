@@ -3,6 +3,8 @@
 #include <GWCA/Utilities/Hook.h>
 #include <GWCA/Utilities/Export.h>
 
+#include <GWCA/GameContainers/List.h>
+
 namespace GW {
     struct Module;
     extern Module ChatModule;
@@ -56,7 +58,7 @@ namespace GW {
         GWCA_API Chat::ChatBuffer* GetChatLog();
 
         // Adds a message to chat log, bypassing chat window.
-        GWCA_API void AddToChatLog(wchar_t* message, uint32_t channel);
+        GWCA_API bool AddToChatLog(wchar_t* message, uint32_t channel);
 
         GWCA_API bool GetIsTyping();
 
@@ -81,7 +83,6 @@ namespace GW {
         GWCA_API void CreateCommand(const wchar_t* cmd, CmdCB callback);
         // always block the command from being sent to the chat
         GWCA_API void CreateCommand(const wchar_t* cmd, voidCmdCB callback);
-        GWCA_API CmdCB GetCommand(const wchar_t* cmd);
         GWCA_API void DeleteCommand(const wchar_t* cmd);
 
         GWCA_API void ToggleTimestamps(bool enable);
@@ -95,50 +96,5 @@ namespace GW {
 
         GWCA_API Channel GetChannel(char opcode);
         GWCA_API Channel GetChannel(wchar_t opcode);
-        // SendChat callback can modify the msg before it is send.
-        // Pay attention to not overflow the buffer.
-        typedef HookCallback<Channel, wchar_t*> SendChatCallback;
-        GWCA_API void RegisterSendChatCallback(
-            HookEntry* entry,
-            const SendChatCallback& callback);
-
-        GWCA_API void RemoveSendChatCallback(
-            HookEntry* entry);
-
-        typedef HookCallback<int, wchar_t*> LocalMessageCallback;
-        GWCA_API void RegisterLocalMessageCallback(
-            HookEntry* entry,
-            const LocalMessageCallback& callback);
-
-        GWCA_API void RemoveLocalMessageCallback(
-            HookEntry* entry);
-
-        typedef HookCallback<wchar_t*, wchar_t*> WhisperCallback;
-        GWCA_API void RegisterWhisperCallback(
-            HookEntry* entry,
-            const WhisperCallback& callback);
-
-        GWCA_API void RemoveWhisperCallback(
-            HookEntry* entry);
-
-        typedef HookCallback<Channel, wchar_t**, FILETIME, int> PrintChatCallback;
-        GWCA_API void RegisterPrintChatCallback(
-            HookEntry* entry,
-            const PrintChatCallback& callback);
-
-        typedef HookCallback<wchar_t*> StartWhisperCallback;
-        GWCA_API void RegisterStartWhisperCallback(
-            HookEntry* entry,
-            const StartWhisperCallback& callback);
-
-        GWCA_API void RemoveStartWhisperCallback(
-            HookEntry* entry);
-
-        typedef HookCallback<wchar_t*, uint32_t, ChatMessage*> ChatLogCallback;
-        GWCA_API void RegisterChatLogCallback(
-            HookEntry* entry,
-            const ChatLogCallback& callback,
-            int altitude = -0x8000);
-        GWCA_API void RemoveChatLogCallback(HookEntry* entry);
     };
 }

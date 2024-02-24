@@ -5,6 +5,8 @@
 #include <GWCA/GameContainers/Array.h>
 #include <GWCA/GameContainers/GamePos.h>
 
+#include <GWCA/Managers/MerchantMgr.h>
+
 namespace GW {
 
     struct Module;
@@ -13,9 +15,15 @@ namespace GW {
     namespace Constants {
         enum class Language;
     }
+    namespace Chat {
+        enum Channel : int;
+        typedef uint32_t Color;
+    }
 
     namespace UI {
         typedef GW::Array<unsigned char> ArrayByte;
+
+        enum class UIMessage : uint32_t;
 
         typedef void(__cdecl* DecodeStr_Callback)(void* param, wchar_t* s);
 
@@ -41,16 +49,125 @@ namespace GW {
         };
 
         struct InteractionMessage {
-            InteractionMessage(uint32_t _message_id) : message_id(_message_id) {
+            InteractionMessage(UI::UIMessage _message_id) : message_id(_message_id) {
                 action_type = 0xF;
                 wParam = (void**)&wParam; // Naughty, but not got this mapped yet and needed to pass checks
             }
             uint32_t action_type;
-            uint32_t message_id; // Same as UIMessage from UIMgr, but includes things like mouse move, click etc
+            UI::UIMessage message_id; // Same as UIMessage from UIMgr, but includes things like mouse move, click etc
             void** wParam;
         };
 
         typedef void(__cdecl* UIInteractionCallback)(InteractionMessage* message, void* wParam, void* lParam);
+
+        
+        struct Frame {
+            uint32_t field0_0x0;
+            uint32_t frame_id;
+            uint32_t frame_layout;
+            uint32_t field3_0xc;
+            uint32_t field4_0x10;
+            uint32_t field5_0x14;
+            uint32_t field6_0x18;
+            uint32_t field7_0x1c;
+            uint32_t type;
+            uint32_t template_type;
+            uint32_t field10_0x28;
+            uint32_t field11_0x2c;
+            uint32_t field12_0x30;
+            uint32_t field13_0x34;
+            uint32_t field14_0x38;
+            uint32_t field15_0x3c;
+            uint32_t field16_0x40;
+            uint32_t field17_0x44;
+            uint32_t field18_0x48;
+            uint32_t field19_0x4c;
+            uint32_t field20_0x50;
+            uint32_t field21_0x54;
+            uint32_t field22_0x58;
+            uint32_t field23_0x5c;
+            uint32_t field24_0x60;
+            uint32_t field25_0x64;
+            uint32_t field26_0x68;
+            uint32_t field27_0x6c;
+            uint32_t field28_0x70;
+            uint32_t field29_0x74;
+            uint32_t field30_0x78;
+            GW::Array<void*> field31_0x7c;
+            uint32_t field32_0x8c;
+            uint32_t field33_0x90;
+            uint32_t field34_0x94;
+            uint32_t field35_0x98;
+            uint32_t field36_0x9c;
+            GW::Array<UIInteractionCallback> frame_callbacks;
+            uint32_t field38_0xb0;
+            uint32_t field39_0xb4;
+            uint32_t field40_0xb8;
+            uint32_t field41_0xbc;
+            uint32_t field42_0xc0;
+            uint32_t field43_0xc4;
+            uint32_t field44_0xc8;
+            uint32_t field45_0xcc;
+            uint32_t field46_0xd0;
+            uint32_t field47_0xd4;
+            uint32_t field48_0xd8;
+            uint32_t field49_0xdc;
+            uint32_t field50_0xe0;
+            uint32_t field51_0xe4;
+            uint32_t field52_0xe8;
+            uint32_t field53_0xec;
+            uint32_t field54_0xf0;
+            uint32_t field55_0xf4;
+            uint32_t field56_0xf8;
+            uint32_t field57_0xfc;
+            uint32_t field58_0x100;
+            uint32_t field59_0x104;
+            uint32_t field60_0x108;
+            uint32_t field61_0x10c;
+            uint32_t field62_0x110;
+            uint32_t field63_0x114;
+            uint32_t field64_0x118;
+            uint32_t field65_0x11c;
+            void * code_table_head;
+            uint32_t field67_0x124;
+            uint32_t field68_0x128;
+            uint32_t frame_hash_id;
+            uint32_t field70_0x130;
+            uint32_t field71_0x134;
+            uint32_t field72_0x138;
+            uint32_t field73_0x13c;
+            uint32_t field74_0x140;
+            uint32_t field75_0x144;
+            uint32_t field76_0x148;
+            uint32_t field77_0x14c;
+            uint32_t field78_0x150;
+            uint32_t field79_0x154;
+            uint32_t field80_0x158;
+            uint32_t field81_0x15c;
+            uint32_t field82_0x160;
+            uint32_t field83_0x164;
+            uint32_t field84_0x168;
+            uint32_t field85_0x16c;
+            uint32_t field86_0x170;
+            uint32_t field87_0x174;
+            uint32_t field88_0x178;
+            uint32_t field89_0x17c;
+            uint32_t field90_0x180;
+            uint32_t field91_0x184;
+            uint32_t field92_0x188;
+            uint32_t field93_0x18c;
+            uint32_t field94_0x190;
+            uint32_t field95_0x194;
+            uint32_t field96_0x198;
+            uint32_t field97_0x19c;
+            uint32_t field98_0x1a0;
+            uint32_t field99_0x1a4;
+            uint32_t field100_0x1a8;
+        };
+        static_assert(sizeof(Frame) == 0x1ac);
+
+
+
 
         struct AgentNameTagInfo {
             /* +h0000 */ uint32_t agent_id;
@@ -115,6 +232,11 @@ namespace GW {
         };
 
         enum class UIMessage : uint32_t {
+            kInitFrame                  = 0x9,
+            kDestroyFrame               = 0xb,
+            kKeyDown                    = 0x1e, // wparam = UIPacket::kKeyAction*
+            kKeyUp                      = 0x20, // wparam = UIPacket::kKeyAction*
+            kMouseAction                = 0x2f, // wparam = UIPacket::kMouseAction
             kUpdateAgentEffects         = 0x10000000 | 0x9,
             kRerenderAgentModel         = 0x10000000 | 0x7, // wparam = uint32_t agent_id
             kShowAgentNameTag           = 0x10000000 | 0x19, // wparam = AgentNameTagInfo*
@@ -137,8 +259,8 @@ namespace GW {
             kSkillActivated             = 0x10000000 | 0x5b, // wparam ={ uint32_t agent_id , uint32_t skill_id }
             kTitleProgressUpdated       = 0x10000000 | 0x65, // wparam = title_id
             kExperienceGained           = 0x10000000 | 0x66, // wparam = experience amount
-            kWriteToChatLog             = 0x10000000 | 0x7E,
-            kPlayerChatMessage          = 0x10000000 | 0x81, // wparam = { uint32_t channel, wchar_t* message, uint32_t player_number }
+            kWriteToChatLog             = 0x10000000 | 0x7E, // wparam = UIPacket::kWriteToChatLog*
+            kPlayerChatMessage          = 0x10000000 | 0x81, // wparam = UIPacket::kPlayerChatMessage*
             kFriendUpdated              = 0x10000000 | 0x89, // wparam = { GW::Friend*, ... }
             kMapLoaded                  = 0x10000000 | 0x8A,
             kOpenWhisper                = 0x10000000 | 0x90, // wparam = wchar* name
@@ -186,17 +308,132 @@ namespace GW {
             kOpenTemplate               = 0x10000000 | 0x1B9, // wparam = GW::UI::ChatTemplate*
 
             // GWCA Client to Server commands. Only added the ones that are used for hooks, everything else goes straight into GW
-            kSendDialog                 = 0x30000000 | 0x1,  // wparam = dialog_id
-            kSendEnterMission           = 0x30000000 | 0x2,  // wparam = arena_id
-            kSendLoadSkillbar           = 0x30000000 | 0x3,  // wparam = { uint32_t agent_id, uint32_t* skill_ids }
-            kSendPingWeaponSet          = 0x30000000 | 0x4,  // wparam = { uint32_t agent_id, uint32_t weapon_item_id, uint32_t offhand_item_id }
-            kSendMoveItem               = 0x30000000 | 0x5,  // wparam = { uint32_t item_id, uint32_t quantity, uint32_t bag_id, uint32_t slot }
-            kSendMerchantRequestQuote   = 0x30000000 | 0x6,  // wparam = { Merchant::TransactionType type,uint32_t gold_give,Merchant::TransactionInfo give,uint32_t gold_recv,Merchant::TransactionInfo recv }
-            kSendMerchantTransactItem   = 0x30000000 | 0x7,  // wparam = { Merchant::TransactionType type, uint32_t unknown, Merchant::QuoteInfo give, Merchant::QuoteInfo recv }
-            kSendUseItem                = 0x30000000 | 0x8,  // wparam = uint32_t item_id
+            
+            kSendEnterMission           = 0x30000000 | 0x2,  // wparam = uint32_t arena_id
+            kSendLoadSkillbar           = 0x30000000 | 0x3,  // wparam = UIPacket::kSendLoadSkillbar*
+            kSendPingWeaponSet          = 0x30000000 | 0x4,  // wparam = UIPacket::kSendPingWeaponSet*
+            kSendMoveItem               = 0x30000000 | 0x5,  // wparam = UIPacket::kSendMoveItem*
+            kSendMerchantRequestQuote   = 0x30000000 | 0x6,  // wparam = UIPacket::kSendMerchantRequestQuote*
+            kSendMerchantTransactItem   = 0x30000000 | 0x7,  // wparam = UIPacket::kSendMerchantTransactItem*
+            kSendUseItem                = 0x30000000 | 0x8,  // wparam = UIPacket::kSendUseItem*
             kSendSetActiveQuest         = 0x30000000 | 0x9,  // wparam = uint32_t quest_id
-            kSendAbandonQuest           = 0x30000000 | 0x10,  // wparam = uint32_t quest_id
+            kSendAbandonQuest           = 0x30000000 | 0xA, // wparam = uint32_t quest_id
+            kSendChangeTarget           = 0x30000000 | 0xB, // wparam = uint32_t agent_id // e.g. tell the gw client to focus on a different target
+            kSendMoveToWorldPoint       = 0x30000000 | 0xC, // wparam = GW::GamePos* // e.g. Clicking on the ground in the 3d world to move there
+            kSendInteractNPC            = 0x30000000 | 0xD, // wparam = UIPacket::kInteractAgent*
+            kSendInteractGadget         = 0x30000000 | 0xE, // wparam = UIPacket::kInteractAgent*
+            kSendInteractItem           = 0x30000000 | 0xF, // wparam = UIPacket::kInteractAgent*
+            kSendInteractEnemy          = 0x30000000 | 0x10, // wparam = UIPacket::kInteractAgent*
+            kSendInteractPlayer         = 0x30000000 | 0x11, // wparam = uint32_t agent_id // NB: calling target is a separate packet
+            kSendCallTarget             = 0x30000000 | 0x13, // wparam = { uint32_t call_type, uint32_t agent_id } // also used to broadcast morale, death penalty, "I'm following X", etc
+            kSendAgentDialog            = 0x30000000 | 0x14, // wparam = uint32_t agent_id // e.g. switching tabs on a merchant window, choosing a response to an NPC dialog
+            kSendGadgetDialog           = 0x30000000 | 0x15, // wparam = uint32_t agent_id // e.g. opening locked chest with a key
+            kSendDialog                 = 0x30000000 | 0x16, // wparam = dialog_id // internal use
+
+            kStartWhisper               = 0x30000000 | 0x17, // wparam = UIPacket::kStartWhisper*
+            kGetSenderColor             = 0x30000000 | 0x18, // wparam = UIPacket::kGetColor* // Get chat sender color depending on channel, output object passed by reference
+            kGetMessageColor            = 0x30000000 | 0x19, // wparam = UIPacket::kGetColor* // Get chat message color depending on channel, output object passed by reference
+            kSendChatCommand            = 0x30000000 | 0x1A, // wparam = UIPacket::kSendChatCommand*, lparam = agent_id
+            kSendChatMessage            = 0x30000000 | 0x1B, // wparam = UIPacket::kSendChatMessage*
+            kPrintChatMessage           = 0x30000000 | 0x1C, // wparam = UIPacket::kPrintChatMessage*
+            kLogChatMessage             = 0x30000000 | 0x1D, // wparam = UIPacket::kLogChatMessage*
+            kRecvWhisper                = 0x30000000 | 0x1E, // wparam = UIPacket::kRecvWhisper*
         };
+
+        namespace UIPacket {
+            struct kKeyAction {
+                uint32_t gw_key;
+                uint32_t h0004;
+                uint32_t h0008;
+            };
+            struct kMouseAction {
+                uint32_t child_frame_id;
+                uint32_t child_frame_id_dupe;
+                uint32_t current_state; // 0x5 = hovered, 0x6 = mouse down
+            };
+            struct kWriteToChatLog {
+                GW::Chat::Channel channel;
+                wchar_t* message;
+                GW::Chat::Channel channel_dupe;
+            };
+            struct kPlayerChatMessage {
+                uint32_t channel;
+                wchar_t* message;
+                uint32_t player_number;
+            };
+            struct kSendChatCommand {
+                wchar_t* chat_command;
+                wchar_t* message;
+                int command_args_length;
+                wchar_t** command_args;
+            };
+
+            struct kInteractAgent {
+                uint32_t agent_id;
+                bool call_target;
+            };
+
+            struct kGetColor {
+                Chat::Color* color;
+                GW::Chat::Channel channel;
+            };
+
+            struct kSendLoadSkillbar {
+                uint32_t agent_id;
+                uint32_t* skill_ids;
+            };
+            struct kSendPingWeaponSet {
+                uint32_t agent_id;
+                uint32_t weapon_item_id;
+                uint32_t offhand_item_id;
+            };
+            struct kSendMoveItem {
+                uint32_t item_id;
+                uint32_t quantity;
+                uint32_t bag_id;
+                uint32_t slot;
+            };
+            struct kSendMerchantRequestQuote {
+                Merchant::TransactionType type;
+                uint32_t gold_give;
+                Merchant::TransactionInfo give;
+                uint32_t gold_recv;
+                Merchant::TransactionInfo recv;
+            };
+            struct kSendMerchantTransactItem {
+                Merchant::TransactionType type;
+                uint32_t h0004;
+                Merchant::QuoteInfo give;
+                uint32_t gold_recv;
+                Merchant::QuoteInfo recv;
+            };
+            struct kSendUseItem {
+                uint32_t item_id;
+                uint16_t quantity; // Unused, but would be cool
+            };
+            struct kSendChatMessage {
+                wchar_t* message;
+                uint32_t agent_id;
+            };
+            struct kPrintChatMessage {
+                GW::Chat::Channel channel;
+                wchar_t* message;
+                FILETIME timestamp;
+                bool is_reprint;
+            };
+            struct kLogChatMessage {
+                wchar_t* message;
+                GW::Chat::Channel channel;
+            };
+            struct kRecvWhisper {
+                uint32_t transaction_id;
+                wchar_t* from;
+                wchar_t* message;
+            };
+            struct kStartWhisper {
+                wchar_t* player_name;
+            };
+        }
 
         enum class NumberCommandLineParameter : uint32_t {
             Unk1,
@@ -598,8 +835,14 @@ namespace GW {
             wchar_t* component_label;
         };
 
-        // SendMessage for Guild Wars UI messages, most UI interactions will use this.
-        GWCA_API bool SendUIMessage(UI::UIMessage msgid, void* wParam = nullptr, void* lParam = nullptr);
+        GWCA_API Frame* GetChildFrame(uint32_t parent_frame_id, uint32_t child_offset);
+        GWCA_API Frame* GetFrameById(uint32_t frame_id);
+        GWCA_API Frame* GetFrameByLabel(const wchar_t* frame_label);
+
+        GWCA_API bool SendFrameUIMessage(UI::Frame* frame, UI::UIMessage msgid, void* wParam, void* lParam = nullptr);
+
+        // SendMessage for Guild Wars UI messages, most UI interactions will use this. Returns true if not blocked
+        GWCA_API bool SendUIMessage(UI::UIMessage msgid, void* wParam = nullptr, void* lParam = nullptr, bool skip_hooks = false);
 
         GWCA_API bool Keydown(ControlAction key);
         GWCA_API bool Keyup(ControlAction key);
@@ -649,11 +892,13 @@ namespace GW {
 
 
         typedef HookCallback<uint32_t> KeyCallback;
+        // Listen for a gw hotkey press
         GWCA_API void RegisterKeydownCallback(
             HookEntry* entry,
             const KeyCallback& callback);
         GWCA_API void RemoveKeydownCallback(
             HookEntry* entry);
+        // Listen for a gw hotkey release
         GWCA_API void RegisterKeyupCallback(
             HookEntry* entry,
             const KeyCallback& callback);
@@ -661,6 +906,8 @@ namespace GW {
             HookEntry* entry);
 
         typedef HookCallback<UIMessage, void *, void *> UIMessageCallback;
+
+        // Add a listener for a broadcasted UI message. If blocked here, will not cascade to individual listening frames.
         GWCA_API void RegisterUIMessageCallback(
             HookEntry *entry,
             UIMessage message_id,
@@ -670,12 +917,27 @@ namespace GW {
         GWCA_API void RemoveUIMessageCallback(
             HookEntry *entry);
 
+        typedef HookCallback<const Frame*, UIMessage, void *, void *> FrameUIMessageCallback;
+
+        // Add a listener for every frame that receives a UI message. Triggered onces for every frame that is listening for this message id.
+        GWCA_API void RegisterFrameUIMessageCallback(
+            HookEntry *entry,
+            UIMessage message_id,
+            const FrameUIMessageCallback& callback,
+            int altitude = -0x8000);
+
+        GWCA_API void RemoveFrameUIMessageCallback(
+            HookEntry *entry);
+
+
+
         GWCA_API TooltipInfo* GetCurrentTooltip();
 
         typedef std::function<void (CreateUIComponentPacket*)> CreateUIComponentCallback;
         GWCA_API void RegisterCreateUIComponentCallback(
             HookEntry *entry,
-            const CreateUIComponentCallback& callback);
+            const CreateUIComponentCallback& callback,
+            int altitude = -0x8000);
 
         GWCA_API void RemoveCreateUIComponentCallback(
             HookEntry *entry);

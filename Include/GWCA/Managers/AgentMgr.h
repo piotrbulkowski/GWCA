@@ -39,9 +39,6 @@ namespace GW {
         // Returns last dialog id sent to the server. Requires the hook.
         GWCA_API bool GetIsAgentTargettable(const GW::Agent* agent);
 
-        // Returns last dialog id sent to the server. Requires the hook.
-        GWCA_API uint32_t GetLastDialogId();
-
         // === Agent Array ===
 
         // Get Agent ID of currently observed player
@@ -96,21 +93,7 @@ namespace GW {
         GWCA_API bool Move(float x, float y, uint32_t zplane = 0);
         GWCA_API bool Move(GamePos pos);
 
-        // Go to an NPC and begin interaction.
-        GWCA_API bool GoNPC(const Agent *agent, uint32_t call_target = 0);
-
-        // Go to an item
-        GWCA_API bool PickUpItem(const Agent* agent, uint32_t call_target = 0);
-
-        // Walk to a player.
-        GWCA_API bool GoPlayer(const Agent *agent, uint32_t call_target = 0);
-
-        // Go to a chest/signpost (yellow nametag) specified by (Agent).
-        // Also sets agent as your open chest target.
-        GWCA_API bool GoSignpost(const Agent *agent, uint32_t call_target = 0);
-
-        // Call target of specified agent without interacting with the agent.
-        GWCA_API bool CallTarget(const Agent *agent, CallTargetType type = CallTargetType::AttackingOrTargetting);
+        bool InteractAgent(const Agent* agent, bool call_target = false);
 
         // Returns name of player with selected login_number.
         GWCA_API wchar_t *GetPlayerNameByLoginNumber(uint32_t login_number);

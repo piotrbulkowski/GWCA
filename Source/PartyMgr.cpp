@@ -69,7 +69,7 @@ namespace {
         bool blocked = false;
         if (!tick_work_as_toggle)
             goto finish;
-        switch (message->message_id) {
+        switch ((int)message->message_id) {
         case 0x22:  // Ready state icon clicked
             PartyMgr::Tick(!PartyMgr::GetIsPlayerTicked());
             blocked = true;
