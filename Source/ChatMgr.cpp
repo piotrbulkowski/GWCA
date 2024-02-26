@@ -41,9 +41,9 @@ namespace {
     std::map<Chat::Channel, Chat::Color> ChatSenderColor;
     std::map<Chat::Channel, Chat::Color> ChatMessageColor;
 
-    void wstring_tolower(std::wstring& s)
+    void wcs_tolower(wchar_t* s)
     {
-        for (size_t i = 0; i < s.size(); i++)
+        for (size_t i = 0; s[i]; i++)
             s[i] = towlower(s[i]);
     }
 
@@ -76,11 +76,10 @@ namespace {
     void ChatMessageToChatCommand(wchar_t* message, GW::UI::UIPacket::kSendChatCommand* packet) {
         int command_args_length;
         wchar_t** command_args = CommandLineToArgvW(message + 1, &command_args_length);
-        std::wstring chat_command = command_args[0];
-        ::wstring_tolower(chat_command);
+        wcs_tolower(command_args[0]);
 
         *packet = {
-            chat_command.data(),
+            command_args[0],
             message,
             command_args_length,
             command_args
@@ -344,6 +343,13 @@ namespace {
         HookBase::CreateHook(PrintChat_Func, OnPrintChat_Func, (void **)&PrintChat_Ret);
         HookBase::CreateHook(AddToChatLog_Func, OnAddToChatLog_Func, (void**)&AddToChatLog_Ret);
         HookBase::CreateHook(UICallback_AssignEditableText_Func, OnUICallback_AssignEditableText, (void**)& UICallback_AssignEditableText_Ret);
+
+        for (auto& it : ChatSenderColor) {
+            GetSenderColor_Ret(&it.second, it.first);
+        }
+        for (auto& it : ChatMessageColor) {
+            GetMessageColor_Ret(&it.second, it.first);
+        }
     }
 
     void EnableHooks() {
@@ -449,22 +455,21 @@ namespace GW {
         GW::UI::UIPacket::kGetColor packet = { sender, chan };
         if (sender) {
             packet.color = sender;
+            *packet.color = ChatSenderColor[chan];
             GW::UI::SendUIMessage(UI::UIMessage::kGetSenderColor, &packet);
         }
         if (message) {
             packet.color = message;
+            *packet.color = ChatMessageColor[chan];
             GW::UI::SendUIMessage(UI::UIMessage::kGetMessageColor, &packet);
         }
     }
     void Chat::GetDefaultColors(Channel chan, Color* sender, Color* message) {
-        GW::UI::UIPacket::kGetColor packet = { sender, chan };
-        if (sender) {
-            packet.color = sender;
-            GW::UI::SendUIMessage(UI::UIMessage::kGetSenderColor, &packet, nullptr, true);
+        if (sender && GetSenderColor_Ret) {
+            GetSenderColor_Ret(sender, chan);
         }
-        if (message) {
-            packet.color = message;
-            GW::UI::SendUIMessage(UI::UIMessage::kGetMessageColor, &packet, nullptr, true);
+        if (message && GetMessageColor_Ret) {
+            GetMessageColor_Ret(sender, chan);
         }
     }
 
@@ -585,20 +590,8 @@ namespace GW {
             delete[] param.message;
     }
 
-    void Chat::CreateCommand(const wchar_t* cmd, Chat::voidCmdCB callback) {
-        DeleteCommand(cmd);
-        GW::HookEntry* hook_entry = new GW::HookEntry();
-        chat_command_hook_entries[cmd] = hook_entry;
-        GW::UI::RegisterUIMessageCallback(hook_entry, GW::UI::UIMessage::kSendChatCommand, [cmd, callback](GW::HookStatus* status, UI::UIMessage, void* wparam, void*) {
-            auto packet = (GW::UI::UIPacket::kSendChatCommand*)wparam;
-            if (wcscmp(packet->chat_command, cmd) != 0)
-                return;
-            callback(packet->message, packet->command_args_length, packet->command_args);
-            status->blocked = true;
-            });
-    }
-    void Chat::CreateCommand(const wchar_t* cmd, Chat::CmdCB callback) {
-        DeleteCommand(cmd);
+    void Chat::CreateCommand(GW::HookEntry* hook_entry, const wchar_t*, Chat::CmdCB callback) {
+        /*DeleteCommand(cmd);
         GW::HookEntry* hook_entry = new GW::HookEntry();
         chat_command_hook_entries[cmd] = hook_entry;
         GW::UI::RegisterUIMessageCallback(hook_entry, GW::UI::UIMessage::kSendChatCommand, [cmd, callback](GW::HookStatus* status, UI::UIMessage, void* wparam, void*) {
@@ -606,7 +599,7 @@ namespace GW {
             if (wcscmp(packet->chat_command, cmd) != 0)
                 return;
             status->blocked = callback(packet->message, packet->command_args_length, packet->command_args);
-            });
+            });*/
     }
     void Chat::DeleteCommand(const wchar_t* cmd) {
         const auto found = chat_command_hook_entries.find(cmd);
