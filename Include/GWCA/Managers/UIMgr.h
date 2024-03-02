@@ -333,7 +333,6 @@ namespace GW {
             kStartWhisper               = 0x30000000 | 0x17, // wparam = UIPacket::kStartWhisper*
             kGetSenderColor             = 0x30000000 | 0x18, // wparam = UIPacket::kGetColor* // Get chat sender color depending on channel, output object passed by reference
             kGetMessageColor            = 0x30000000 | 0x19, // wparam = UIPacket::kGetColor* // Get chat message color depending on channel, output object passed by reference
-            kSendChatCommand            = 0x30000000 | 0x1A, // wparam = UIPacket::kSendChatCommand*, lparam = agent_id
             kSendChatMessage            = 0x30000000 | 0x1B, // wparam = UIPacket::kSendChatMessage*
             kPrintChatMessage           = 0x30000000 | 0x1C, // wparam = UIPacket::kPrintChatMessage*
             kLogChatMessage             = 0x30000000 | 0x1D, // wparam = UIPacket::kLogChatMessage*
@@ -360,12 +359,6 @@ namespace GW {
                 uint32_t channel;
                 wchar_t* message;
                 uint32_t player_number;
-            };
-            struct kSendChatCommand {
-                wchar_t* chat_command;
-                wchar_t* message;
-                int command_args_length;
-                wchar_t** command_args;
             };
 
             struct kInteractAgent {

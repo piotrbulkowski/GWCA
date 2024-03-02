@@ -77,9 +77,13 @@ namespace GW {
         GWCA_API void WriteChatEnc(Channel channel, const wchar_t* message, const wchar_t* sender = nullptr, bool transient = false);
 
 
-        typedef void (__cdecl* CmdCB)(const wchar_t* cmd, const int argc, LPWSTR* argv);
+        // Typedef for callbacks that handle chat commands; always blocks gw command
+        typedef void (__cdecl* ChatCommandCallback)(const wchar_t* cmd, const int argc, const LPWSTR* argv);
+        // Typedef for callbacks that handle chat commands; return true to block sending the command to gw
+        typedef bool(__cdecl* BoolChatCommandCallback)(const wchar_t* cmd, const int argc, const LPWSTR* argv);
         // Hook into a chat command. Chat commands that are registered here aren't sent to the game.
-        GWCA_API void CreateCommand(const wchar_t* cmd, CmdCB callback);
+        GWCA_API void CreateCommand(const wchar_t* cmd, BoolChatCommandCallback callback);
+        GWCA_API void CreateCommand(const wchar_t* cmd, ChatCommandCallback callback);
         GWCA_API void DeleteCommand(const wchar_t* cmd);
 
         GWCA_API void ToggleTimestamps(bool enable);
