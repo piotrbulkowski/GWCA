@@ -64,8 +64,8 @@ namespace {
     GwReset_pt RetGwReset;
     GwReset_pt GwReset_Func;
 
-    std::function<void (IDirect3DDevice9*)> render_callback;
-    std::function<void (IDirect3DDevice9*)> reset_callback;
+    GW::Render::RenderCallback render_callback = nullptr;
+    GW::Render::RenderCallback reset_callback = nullptr;
 
     bool __cdecl OnGwEndScene(gwdx* ctx, void* unk)
     {
@@ -217,12 +217,17 @@ namespace GW {
         return atan2(1.0f, dividend / tan(cam->GetFieldOfView() * 0.5f)) * 2.0f;
     }
 
-    void Render::SetRenderCallback(const std::function<void(IDirect3DDevice9*)>& callback)
+    Render::RenderCallback Render::GetRenderCallback()
+    {
+        return render_callback;
+    }
+
+    void Render::SetRenderCallback(RenderCallback callback)
     {
         render_callback = callback;
     }
 
-    void Render::SetResetCallback(const std::function<void(IDirect3DDevice9*)>& callback)
+    void Render::SetResetCallback(RenderCallback callback)
     {
         reset_callback = callback;
     }

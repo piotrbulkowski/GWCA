@@ -94,15 +94,20 @@ namespace GW
             if (module->init_module)
                 module->init_module();
         }
+        _initialized = true;
 
+        EnableHooks();
+        return true;
+    }
+
+    void EnableHooks()
+    {
+        if (!_initialized) return;
         HookBase::EnableHooks();
         for (const Module* module : modules) {
             if (module->enable_hooks)
                 module->enable_hooks();
         }
-
-        _initialized = true;
-        return true;
     }
 
     void DisableHooks()

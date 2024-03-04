@@ -12,6 +12,8 @@ namespace GW {
 
     namespace Render {
 
+        typedef void(__cdecl* RenderCallback) (IDirect3DDevice9*);
+
         typedef struct Mat4x3f {
             float _11;
             float _12;
@@ -53,10 +55,12 @@ namespace GW {
         //
         // Important: if you use this, you should call  GW::Terminate()
         // or at least GW::Render::RestoreHooks() from within the callback
-        GWCA_API void SetRenderCallback(const std::function<void(IDirect3DDevice9*)>& callback);
+        GWCA_API void SetRenderCallback(RenderCallback callback);
+
+        GWCA_API RenderCallback GetRenderCallback();
 
         // Set up a callback for directx device reset
-        GWCA_API void SetResetCallback(const std::function<void(IDirect3DDevice9*)>& callback);
+        GWCA_API void SetResetCallback(RenderCallback callback);
 
         // Check if gw is in fullscreen
         // Note: requires one or both callbacks to be set and called before
