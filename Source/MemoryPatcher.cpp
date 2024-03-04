@@ -31,6 +31,7 @@ namespace GW {
     }
 
     void MemoryPatcher::SetPatch(uintptr_t addr, const char *patch, size_t size) {
+        Reset();
         GWCA_ASSERT(!IsValid());
 
         m_addr = reinterpret_cast<void *>(addr);
