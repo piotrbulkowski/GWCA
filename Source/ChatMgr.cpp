@@ -126,9 +126,12 @@ namespace {
 
     wchar_t* rewritten_message_buffer = nullptr;
 
-    void OnUIMessage_Pre_AddTimestampToChatMessage(GW::HookStatus*, GW::UI::UIMessage, void* wparam, void*) {
+    void OnUIMessage_Pre_AddTimestampToChatMessage(GW::HookStatus*, GW::UI::UIMessage message_id, void* wparam, void*) {
+        GWCA_ASSERT(message_id == GW::UI::UIMessage::kPrintChatMessage);
         const auto packet = (GW::UI::UIPacket::kPrintChatMessage*)wparam;
         if (!ShowTimestamps)
+            return;
+        if (packet->message == rewritten_message_buffer)
             return;
 
         FILETIME   timestamp2;
@@ -157,7 +160,7 @@ namespace {
                 swprintf(time_buffer, 29, L"[lbracket]%02d:%02d[rbracket]", hour, minute);
         }
         size_t buf_len = 21 + 29 + wcslen(packet->message);
-        GWCA_ASSERT(rewritten_message_buffer == nullptr);
+
         rewritten_message_buffer = new wchar_t[buf_len];
         if (ChannelThatParseColorTag[packet->channel]) {
             swprintf(rewritten_message_buffer, buf_len, L"\x108\x107<c=#%06x>%s </c>\x01\x02%s", (TimestampsColor & 0x00FFFFFF), time_buffer, packet->message);
