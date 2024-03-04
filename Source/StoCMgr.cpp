@@ -101,8 +101,13 @@ namespace {
     void EnableHooks() {
         EnterCriticalSection(&mutex);
         hooks_enabled = true;
-        for (uint32_t i = 0; i < stoc_handler_count; ++i)
+        // Hook any packet entries that have already been registered
+        for (uint32_t i = 0; original_functions && i < stoc_handler_count; ++i) {
             original_functions[i] = game_server_handlers->at(i);
+            if (packet_entries[i].size()) {
+                game_server_handlers->at(i).handler_func = StoCHandler_Func;
+            }
+        }
         LeaveCriticalSection(&mutex);
     }
 
@@ -112,8 +117,6 @@ namespace {
         if (original_functions) {
             for (uint32_t i = 0; game_server_handlers && i < game_server_handlers->size(); ++i)
                 game_server_handlers->at(i).handler_func = original_functions[i].handler_func;
-            delete[] original_functions;
-            original_functions = nullptr;
         }
         LeaveCriticalSection(&mutex);
     }
@@ -134,16 +137,11 @@ namespace {
         stoc_handler_count = game_server_handlers->size();
         // Because GW registers new handlers module by module, we may have caught it too soon; sanity check to make sure the header count is over 300
         GWCA_ASSERT(stoc_handler_count == STOC_HEADER_COUNT);
-        original_functions = new StoCHandler[stoc_handler_count];
+        if(!original_functions)
+            original_functions = new StoCHandler[stoc_handler_count];
         packet_entries.resize(stoc_handler_count);
 
-        // Hook any packet entries that have already been registered
-        for (uint32_t i = 0; i < stoc_handler_count; ++i) {
-            original_functions[i] = game_server_handlers->at(i);
-            if (packet_entries[i].size()) {
-                game_server_handlers->at(i).handler_func = StoCHandler_Func;
-            }
-        }
+        EnableHooks();
         LeaveCriticalSection(&mutex);
     }
     void Init() {
@@ -155,6 +153,7 @@ namespace {
     }
     void Exit() {
         DisableHooks();
+        delete[] original_functions;
         DeleteCriticalSection(&mutex);
     }
 }
