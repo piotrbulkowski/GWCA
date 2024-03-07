@@ -1173,6 +1173,7 @@ namespace GW {
             const UIMessageCallback& callback,
             int altitude)
         {
+            RemoveUIMessageCallback(entry, message_id);
             if (UIMessage_callbacks.find(message_id) == UIMessage_callbacks.end()) {
                 UIMessage_callbacks[message_id] = std::vector<CallbackEntry>();
             }
@@ -1185,19 +1186,28 @@ namespace GW {
             UIMessage_callbacks[message_id].insert(it, { altitude, entry, callback});
         }
 
-        void RemoveUIMessageCallback(
-            HookEntry *entry)
+        void RemoveUIMessageCallback(HookEntry *entry, UIMessage message_id)
         {
-            for (auto& it : UIMessage_callbacks) {
-                auto it2 = it.second.begin();
-                while (it2 != it.second.end()) {
+            if (message_id == UIMessage::kNone) {
+                for (auto& it : UIMessage_callbacks) {
+                    RemoveUIMessageCallback(entry, it.first);
+                }
+            }
+            else {
+                auto found = UIMessage_callbacks.find(message_id);
+                if (found == UIMessage_callbacks.end())
+                    return;
+                clear_entry:
+                auto it2 = found->second.begin();
+                while (it2 != found->second.end()) {
                     if (it2->entry == entry) {
-                        it.second.erase(it2);
-                        break;
+                        found->second.erase(it2);
+                        goto clear_entry;
                     }
                     it2++;
                 }
             }
+
         }
 
         TooltipInfo* GetCurrentTooltip() {

@@ -164,6 +164,7 @@ namespace GW {
         HookEntry *entry,
         const GameThreadCallback& callback)
     {
+        RemoveGameThreadCallback(entry);
         GameThread_callbacks.insert({entry, callback});
     }
 
@@ -171,7 +172,9 @@ namespace GW {
         HookEntry *entry)
     {
         auto it = GameThread_callbacks.find(entry);
-        if (it != GameThread_callbacks.end())
+        while (it != GameThread_callbacks.end()) {
             GameThread_callbacks.erase(it);
+            it = GameThread_callbacks.find(entry);
+        }
     }
 } // namespace GW

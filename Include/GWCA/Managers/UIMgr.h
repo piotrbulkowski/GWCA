@@ -232,6 +232,7 @@ namespace GW {
         };
 
         enum class UIMessage : uint32_t {
+            kNone = 0x0,
             kInitFrame                  = 0x9,
             kDestroyFrame               = 0xb,
             kKeyDown                    = 0x1e, // wparam = UIPacket::kKeyAction*
@@ -318,7 +319,7 @@ namespace GW {
             kSendUseItem                = 0x30000000 | 0x8,  // wparam = UIPacket::kSendUseItem*
             kSendSetActiveQuest         = 0x30000000 | 0x9,  // wparam = uint32_t quest_id
             kSendAbandonQuest           = 0x30000000 | 0xA, // wparam = uint32_t quest_id
-            kSendChangeTarget           = 0x30000000 | 0xB, // wparam = uint32_t agent_id // e.g. tell the gw client to focus on a different target
+            kSendChangeTarget           = 0x30000000 | 0xB, // wparam = UIPacket::kSendChangeTarget* // e.g. tell the gw client to focus on a different target
             kSendMoveToWorldPoint       = 0x30000000 | 0xC, // wparam = GW::GamePos* // e.g. Clicking on the ground in the 3d world to move there
             kSendInteractNPC            = 0x30000000 | 0xD, // wparam = UIPacket::kInteractAgent*
             kSendInteractGadget         = 0x30000000 | 0xE, // wparam = UIPacket::kInteractAgent*
@@ -364,6 +365,11 @@ namespace GW {
             struct kInteractAgent {
                 uint32_t agent_id;
                 bool call_target;
+            };
+
+            struct kSendChangeTarget {
+                uint32_t target_id;
+                uint32_t auto_target_id;
             };
 
             struct kGetColor {
@@ -908,7 +914,7 @@ namespace GW {
             int altitude = -0x8000);
 
         GWCA_API void RemoveUIMessageCallback(
-            HookEntry *entry);
+            HookEntry *entry, UIMessage message_id = UIMessage::kNone);
 
         typedef HookCallback<const Frame*, UIMessage, void *, void *> FrameUIMessageCallback;
 
