@@ -331,7 +331,7 @@ namespace GW {
             if (map_id == Constants::MapID::None) {
                 map_id = GetMapID();
             }
-            return area_info_addr ? &area_info_addr[(uint32_t)map_id] : nullptr;
+            return area_info_addr && map_id > Constants::MapID::None && map_id < Constants::MapID::Count ? &area_info_addr[(uint32_t)map_id] : nullptr;
         }
 
         bool GetIsInCinematic() {
@@ -344,7 +344,7 @@ namespace GW {
         }
 
         bool EnterChallenge() {
-            return UI::SendUIMessage(UI::UIMessage::kSendEnterMission, (void*)0x36d);
+            return UI::SendUIMessage(UI::UIMessage::kSendEnterMission, (void*)Constants::MapID::Count);
         }
 
         bool CancelEnterChallenge() {
