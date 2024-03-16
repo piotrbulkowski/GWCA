@@ -327,11 +327,12 @@ namespace {
         HookBase::CreateHook(AddToChatLog_Func, OnAddToChatLog_Func, (void**)&AddToChatLog_Ret);
         HookBase::CreateHook(UICallback_AssignEditableText_Func, OnUICallback_AssignEditableText, (void**)& UICallback_AssignEditableText_Ret);
 
-        for (auto& it : ChatSenderColor) {
-            GetSenderColor_Ret(&it.second, it.first);
-        }
-        for (auto& it : ChatMessageColor) {
-            GetMessageColor_Ret(&it.second, it.first);
+        for (size_t i = 0; i < (size_t)GW::Chat::Channel::CHANNEL_COUNT; i++) {
+            const auto chan = (GW::Chat::Channel)i;
+            ChatSenderColor[chan] = 0;
+            GetSenderColor_Ret(&ChatSenderColor[chan], chan);
+            ChatMessageColor[chan] = 0;
+            GetMessageColor_Ret(&ChatMessageColor[chan], chan);
         }
     }
 
