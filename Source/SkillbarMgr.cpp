@@ -590,12 +590,8 @@ namespace GW {
         }
 
         bool UseSkill(uint32_t slot, uint32_t target) {
-            if (target)
+            if (target && target != Agents::GetTargetId())
                 Agents::ChangeTarget(target);
-            const auto frame = UI::GetFrameByLabel(L"Skillbar");
-            const auto skill_frame = UI::GetChildFrame(frame->frame_id, slot);
-            (skill_frame);
-            // TODO: Use by click instead of keypress
             return UI::Keypress((GW::UI::ControlAction)((uint32_t)GW::UI::ControlAction_UseSkill1 + slot));
         }
 

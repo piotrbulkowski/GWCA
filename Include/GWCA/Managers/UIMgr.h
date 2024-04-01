@@ -62,8 +62,8 @@ namespace GW {
 
         
         struct Frame {
-            uint32_t field0_0x0;
-            uint32_t frame_id;
+            uint32_t field1_0x0;
+            uint32_t field2_0x4;
             uint32_t frame_layout;
             uint32_t field3_0xc;
             uint32_t field4_0x10;
@@ -101,7 +101,7 @@ namespace GW {
             uint32_t field36_0x9c;
             GW::Array<UIInteractionCallback> frame_callbacks;
             uint32_t field38_0xb0;
-            uint32_t field39_0xb4;
+            uint32_t frame_id; // Offset in the global frame array
             uint32_t field40_0xb8;
             uint32_t field41_0xbc;
             uint32_t field42_0xc0;
@@ -834,7 +834,7 @@ namespace GW {
             wchar_t* component_label;
         };
 
-        GWCA_API Frame* GetChildFrame(uint32_t parent_frame_id, uint32_t child_offset);
+        GWCA_API Frame* GetChildFrame(Frame* parent, uint32_t child_offset);
         GWCA_API Frame* GetFrameById(uint32_t frame_id);
         GWCA_API Frame* GetFrameByLabel(const wchar_t* frame_label);
 

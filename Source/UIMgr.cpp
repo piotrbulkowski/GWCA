@@ -537,6 +537,10 @@ namespace {
         return PreferencesInitialised_Addr && *(uint32_t*)PreferencesInitialised_Addr == 1;
     }
 
+    UI::Frame* GetButtonActionFrame() {
+        return UI::GetChildFrame(UI::GetFrameByLabel(L"Game"),6);
+    }
+
     bool IsFrameValid(UI::Frame* frame) {
         return frame && (int)frame != -1;
     }
@@ -554,13 +558,10 @@ namespace GW {
     };
     namespace UI {
 
-        Frame* GetChildFrame(uint32_t parent_frame_id, uint32_t child_offset) {
-            if (!GetChildFrameId_Func)
+        Frame* GetChildFrame(Frame* parent, uint32_t child_offset) {
+            if (!(GetChildFrameId_Func && parent))
                 return nullptr;
-            const auto frame = GetFrameById(parent_frame_id);
-            if (!frame)
-                return nullptr;
-            const auto found_id = GetChildFrameId_Func(parent_frame_id, child_offset);
+            const auto found_id = GetChildFrameId_Func(parent->frame_id, child_offset);
             return GetFrameById(found_id);
         }
 
@@ -722,12 +723,12 @@ namespace GW {
         bool Keydown(ControlAction key) {
             KeypressPacket action;
             action.key = key;
-            return SendFrameUIMessage(GetFrameById(7), UI::UIMessage::kKeyDown, &action);
+            return SendFrameUIMessage(GetButtonActionFrame(), UI::UIMessage::kKeyDown, &action);
         }
         bool Keyup(ControlAction key) {
             KeypressPacket action;
             action.key = key;
-            return SendFrameUIMessage(GetFrameById(7), UI::UIMessage::kKeyUp, &action);
+            return SendFrameUIMessage(GetButtonActionFrame(), UI::UIMessage::kKeyUp, &action);
         }
 
         bool SetWindowVisible(WindowID window_id,bool is_visible) {
