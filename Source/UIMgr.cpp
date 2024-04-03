@@ -107,8 +107,14 @@ namespace {
     SendFrameUIMessage_pt SendFrameUIMessage_Func = 0;
     SendFrameUIMessage_pt SendFrameUIMessage_Ret = 0;
 
-    typedef void(__cdecl* DrawOnCompass_pt)(uint32_t session_id, uint32_t pt_count, uint32_t* pts);
-    DrawOnCompass_pt DrawOnCompass_Func = 0;
+    typedef void(__cdecl* DrawOnCompass_pt)(uint32_t session_id, uint32_t pt_count, int* pts);
+    DrawOnCompass_pt DrawOnCompass_Func = 0, DrawOnCompass_Ret = 0;
+
+    void __cdecl OnDrawOnCompass(uint32_t session_id, uint32_t pt_count, int* pts) {
+        GW::Hook::EnterHook();
+        DrawOnCompass_Ret(session_id, pt_count, pts);
+        GW::Hook::LeaveHook();
+    }
 
     struct KeypressPacket {
         uint32_t key = 0;
@@ -498,6 +504,7 @@ namespace {
         HookBase::CreateHook(SendUIMessage_Func, OnSendUIMessage, (void **)&RetSendUIMessage);
         HookBase::CreateHook(CreateUIComponent_Func, OnCreateUIComponent, (void**)&CreateUIComponent_Ret);
         HookBase::CreateHook(SendFrameUIMessage_Func, OnSendFrameUIMessage, (void**)&SendFrameUIMessage_Ret);
+        HookBase::CreateHook(DrawOnCompass_Func, OnDrawOnCompass, (void**)&DrawOnCompass_Ret);
     }
 
     void EnableHooks() {
@@ -509,10 +516,14 @@ namespace {
             HookBase::EnableHooks(SendUIMessage_Func);
         if (CreateUIComponent_Func)
             HookBase::EnableHooks(CreateUIComponent_Func);
+        if (DrawOnCompass_Func)
+            HookBase::EnableHooks(DrawOnCompass_Func);
         UI::RegisterUIMessageCallback(&open_template_hook, UI::UIMessage::kOpenTemplate, OnOpenTemplate_UIMessage);
     }
     void DisableHooks() {
         UI::RemoveUIMessageCallback(&open_template_hook);
+        if (DrawOnCompass_Func)
+            HookBase::DisableHooks(DrawOnCompass_Func);
         if (AsyncDecodeStringPtr)
             HookBase::DisableHooks(AsyncDecodeStringPtr);
         if (SetTooltip_Func)
@@ -758,20 +769,20 @@ namespace GW {
             return true;
         }
         
-        bool DrawOnCompass(unsigned session_id, unsigned pt_count, GW::Vec2f *pts)
+        bool DrawOnCompass(unsigned session_id, unsigned pt_count, int *pts)
         {
             if (!DrawOnCompass_Func)
                 return false;
-            DrawOnCompass_Func(session_id, pt_count, (uint32_t*)pts);
+            DrawOnCompass_Func(session_id, pt_count, pts);
             return true;
         }
         bool DrawOnCompass(unsigned session_id, unsigned pt_count, CompassPoint *pts)
         {
-            Vec2f* pts_conv = new Vec2f[pt_count];
+            int* pts_conv = new int[pt_count * 2];
             // Legacy code was to pass short* for coordinates direct to CtoS. New hook needs them in int* coordinates, fill with 0xf
             for (uint32_t i = 0; i < pt_count; i++) {
-                pts_conv[i].x = (float)(pts[i].x | 0xffff0000);
-                pts_conv[i].y = (float)(pts[i].y | 0xffff0000);
+                pts_conv[i * 2] = pts[i].x;
+                pts_conv[i * 2 + 1] = pts[i].y;
             }
             bool res = DrawOnCompass(session_id, pt_count, pts_conv);
             delete[] pts_conv;
