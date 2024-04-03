@@ -25,6 +25,13 @@ namespace GW {
 
         enum class UIMessage : uint32_t;
 
+        struct CompassPoint {
+            CompassPoint() : x(0), y(0) {}
+            CompassPoint(int _x, int _y) : x(_x), y(_y) {}
+            int x;
+            int y;
+        };
+
         typedef void(__cdecl* DecodeStr_Callback)(void* param, wchar_t* s);
 
         struct ChatTemplate {
@@ -266,6 +273,7 @@ namespace GW {
             kMapLoaded                  = 0x10000000 | 0x8A,
             kOpenWhisper                = 0x10000000 | 0x90, // wparam = wchar* name
             kLogout                     = 0x10000000 | 0x9b, // wparam = { bool unknown, bool character_select }
+            kCompassDraw                = 0x10000000 | 0x9c, // wparam = UIPacket::kCompassDraw*
             kDialogBody                 = 0x10000000 | 0xA4, // wparam = DialogBodyInfo*
             kDialogButton               = 0x10000000 | 0xA1, // wparam = DialogButtonInfo*
             kTargetNPCPartyMember       = 0x10000000 | 0xB1, // wparam = { uint32_t unk, uint32_t agent_id }
@@ -431,6 +439,12 @@ namespace GW {
             };
             struct kStartWhisper {
                 wchar_t* player_name;
+            };
+            struct kCompassDraw {
+                uint32_t player_number;
+                uint32_t session_id;
+                uint32_t number_of_points;
+                CompassPoint* points;
             };
         }
 
@@ -786,12 +800,7 @@ namespace GW {
         };
         static_assert(sizeof(FloatingWindow) == 0x24);
 
-        struct CompassPoint {
-            CompassPoint() : x(0), y(0) {}
-            CompassPoint(short _x, short _y) : x(_x), y(_y) {}
-            short x;
-            short y;
-        };
+
 
         enum class TooltipType : uint32_t {
             None = 0x0,
@@ -851,7 +860,6 @@ namespace GW {
         GWCA_API bool SetWindowVisible(UI::WindowID window_id, bool is_visible);
         GWCA_API bool SetWindowPosition(UI::WindowID window_id, UI::WindowPosition* info);
 
-        GWCA_API bool DrawOnCompass(unsigned session_id, unsigned pt_count, Vec2f* pts);
         GWCA_API bool DrawOnCompass(unsigned session_id, unsigned pt_count, CompassPoint* pts);
 
         // Call from GameThread to be safe

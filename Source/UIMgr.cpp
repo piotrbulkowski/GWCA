@@ -107,10 +107,10 @@ namespace {
     SendFrameUIMessage_pt SendFrameUIMessage_Func = 0;
     SendFrameUIMessage_pt SendFrameUIMessage_Ret = 0;
 
-    typedef void(__cdecl* DrawOnCompass_pt)(uint32_t session_id, uint32_t pt_count, int* pts);
+    typedef void(__cdecl* DrawOnCompass_pt)(uint32_t session_id, uint32_t pt_count, UI::CompassPoint* pts);
     DrawOnCompass_pt DrawOnCompass_Func = 0, DrawOnCompass_Ret = 0;
 
-    void __cdecl OnDrawOnCompass(uint32_t session_id, uint32_t pt_count, int* pts) {
+    void __cdecl OnDrawOnCompass(uint32_t session_id, uint32_t pt_count, UI::CompassPoint* pts) {
         GW::Hook::EnterHook();
         DrawOnCompass_Ret(session_id, pt_count, pts);
         GW::Hook::LeaveHook();
@@ -769,24 +769,12 @@ namespace GW {
             return true;
         }
         
-        bool DrawOnCompass(unsigned session_id, unsigned pt_count, int *pts)
+        bool DrawOnCompass(unsigned session_id, unsigned pt_count, CompassPoint* pts)
         {
             if (!DrawOnCompass_Func)
                 return false;
             DrawOnCompass_Func(session_id, pt_count, pts);
             return true;
-        }
-        bool DrawOnCompass(unsigned session_id, unsigned pt_count, CompassPoint *pts)
-        {
-            int* pts_conv = new int[pt_count * 2];
-            // Legacy code was to pass short* for coordinates direct to CtoS. New hook needs them in int* coordinates, fill with 0xf
-            for (uint32_t i = 0; i < pt_count; i++) {
-                pts_conv[i * 2] = pts[i].x;
-                pts_conv[i * 2 + 1] = pts[i].y;
-            }
-            bool res = DrawOnCompass(session_id, pt_count, pts_conv);
-            delete[] pts_conv;
-            return res;
         }
 
         void LoadSettings(size_t size, uint8_t *data) {
