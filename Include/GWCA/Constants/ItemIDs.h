@@ -49,6 +49,15 @@ namespace GW {
             constexpr int TemperedGlassVial = 939;
             constexpr int VialofInk = 944;
 
+            // XP scrolls
+            constexpr int ScrollOfAdventurersInsight = 5853;
+            constexpr int ScrollOfBerserkersInsight = 5595;
+            constexpr int ScrollOfHerosInsight = 5594;
+            constexpr int ScrollOfHuntersInsight = 5976;
+            constexpr int ScrollOfRampagersInsight = 5975;
+            constexpr int ScrollOfSlayersInsight = 5611;
+            constexpr int ScrollOfTheLightbringer = 21233;
+
             // pcons
             constexpr int SkalefinSoup = 17061;
             constexpr int PahnaiSalad = 17062;
