@@ -56,11 +56,7 @@ namespace GW {
         };
 
         struct InteractionMessage {
-            InteractionMessage(UI::UIMessage _message_id) : message_id(_message_id) {
-                action_type = 0xF;
-                wParam = (void**)&wParam; // Naughty, but not got this mapped yet and needed to pass checks
-            }
-            uint32_t action_type;
+            uint32_t frame_id;
             UI::UIMessage message_id; // Same as UIMessage from UIMgr, but includes things like mouse move, click etc
             void** wParam;
         };

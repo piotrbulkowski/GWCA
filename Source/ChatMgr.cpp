@@ -182,7 +182,7 @@ namespace {
     // When a control is terminated ( message 0xB ) it doesn't clear the IsTyping_FrameId that we're using. Clear it manually.
     void OnUICallback_AssignEditableText(UI::InteractionMessage* message, void* wParam, void* lParam) {
         HookBase::EnterHook();
-        if (message->message_id == UI::UIMessage::kDestroyFrame && IsTyping_FrameId && *IsTyping_FrameId == message->action_type) {
+        if (message->message_id == UI::UIMessage::kDestroyFrame && IsTyping_FrameId && *IsTyping_FrameId == message->frame_id) {
             *IsTyping_FrameId = 0;
             //GWCA_INFO("IsTyping_FrameId manually cleared");
         }
