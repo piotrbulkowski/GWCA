@@ -97,6 +97,10 @@ namespace GW {
             Storage_8, Storage_9, Storage_10, Storage_11, Storage_12,
             Storage_13, Storage_14, Equipped_Items, Max
         };
+        inline Bag operator++(Bag bag) {
+            if (bag == Bag::Max) return Bag::Max;
+            return static_cast<Bag>(static_cast<uint8_t>(bag) + 1);
+        }
         inline Bag operator++(Bag& bag, int) {
             if (bag == Bag::Max) return Bag::Max;
             const auto cur = bag;
