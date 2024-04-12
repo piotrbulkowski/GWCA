@@ -49,24 +49,24 @@ namespace GW {
     struct ItemData {
         uint32_t model_file_id = 0;
         GW::Constants::ItemType type = (GW::Constants::ItemType)0xff;
-        GW::DyeInfo dye = { 0 };
+        GW::DyeInfo dye = {};
         uint32_t value = 0;
         uint32_t interaction = 0;
     };
-    static_assert(sizeof(ItemData) == 0x10, "struct ItemData has incorect size");
+    static_assert(sizeof(ItemData) == 0x10, "struct ItemData has incorrect size");
 
     struct Bag { // total: 0x28/40
         /* +h0000 */ Constants::BagType bag_type;
         /* +h0004 */ uint32_t index;
-        /* +h0008 */ Constants::Bag bag_id;
+        /* +h0008 */ uint32_t _unknown0;
         /* +h000C */ uint32_t container_item;
         /* +h0010 */ uint32_t items_count;
-        /* +h0014 */ Bag  *bag_array;
+        /* +h0014 */ Bag      *bag_array;
         /* +h0018 */ ItemArray items;
 
-        inline bool IsInventoryBag() const { return (bag_type == Constants::BagType::Inventory); }
-        inline bool IsStorageBag()   const { return (bag_type == Constants::BagType::Storage); }
-        inline bool IsMaterialStorage()   const { return (bag_type == Constants::BagType::MaterialStorage); }
+        bool IsInventoryBag()       const { return bag_type == Constants::BagType::Inventory; }
+        bool IsStorageBag()         const { return bag_type == Constants::BagType::Storage; }
+        bool IsMaterialStorage()    const { return bag_type == Constants::BagType::MaterialStorage; }
 
         static const size_t npos = (size_t)-1;
 
@@ -74,6 +74,11 @@ namespace GW {
 
         size_t find1(uint32_t model_id, size_t pos = 0) const;
         size_t find2(const Item *item, size_t pos = 0) const;
+
+        [[nodiscard]] Constants::Bag bag_id() const
+        {
+            return static_cast<Constants::Bag>(index + 1);
+        }
     };
     static_assert(sizeof(Bag) == 40, "struct Bag has incorrect size");
 

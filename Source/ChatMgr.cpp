@@ -211,15 +211,15 @@ namespace {
                 GWCA_ASSERT(argv && argc);
                 wcs_tolower(*argv);
 
-                for (auto it : chat_command_hook_entries) {
-                    if (it.first != *argv)
+                for (auto [command_str, callback_handler] : chat_command_hook_entries) {
+                    if (command_str != *argv)
                         continue;
-                    if (it.second.voidcb) {
-                        it.second.voidcb(message, argc, argv);
+                    if (callback_handler.voidcb) {
+                        callback_handler.voidcb(message, argc, argv);
                         status->blocked = true;
                     }
                     else {
-                        if (it.second.boolcb(message, argc, argv)) {
+                        if (callback_handler.boolcb(message, argc, argv)) {
                             status->blocked = true;
                         }
                     }
