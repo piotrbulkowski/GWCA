@@ -178,22 +178,26 @@ namespace {
         } break;
         case UI::UIMessage::kSendInteractGadget: {
             if (InteractGadget_Ret) {
-                InteractGadget_Ret(pack[0],pack[1]);
+                const auto packet = (UI::UIPacket::kInteractAgent*)wparam;
+                InteractGadget_Ret(packet->agent_id,packet->call_target);
             }
         } break;
         case UI::UIMessage::kSendInteractItem: {
             if (InteractItem_Ret) {
-                InteractItem_Ret(pack[0],pack[1]);
+                const auto packet = (UI::UIPacket::kInteractAgent*)wparam;
+                InteractItem_Ret(packet->agent_id,packet->call_target);
             }
         } break;
         case UI::UIMessage::kSendInteractNPC: {
             if (InteractNPC_Ret) {
-                InteractNPC_Ret(pack[0],pack[1]);
+                const auto packet = (UI::UIPacket::kInteractAgent*)wparam;
+                InteractNPC_Ret(packet->agent_id,packet->call_target);
             }
         } break;
         case UI::UIMessage::kSendInteractEnemy: {
             if (InteractEnemy_Ret) {
-                InteractEnemy_Ret(pack[0],pack[1]);
+                const auto packet = (UI::UIPacket::kInteractAgent*)wparam;
+                InteractEnemy_Ret(packet->agent_id,packet->call_target);
             }
         } break;
         case UI::UIMessage::kSendInteractPlayer: {
