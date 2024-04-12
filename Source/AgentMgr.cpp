@@ -148,7 +148,8 @@ namespace {
         uint32_t* pack = (uint32_t*)wparam;
         switch (message_id) {
         case UI::UIMessage::kDialogBody: {
-            dialog_agent_id = pack[1];
+            const auto packet = (UI::DialogBodyInfo*)wparam;
+            dialog_agent_id = packet->agent_id;
         } break;
         case UI::UIMessage::kSendAgentDialog: {
             if (SendAgentDialog_Ret) {
