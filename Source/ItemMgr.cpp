@@ -462,7 +462,12 @@ namespace GW {
             if ((uint32_t)bag_id >= (uint32_t)Constants::BagMax)
                 return nullptr;
             Bag** bags = GetBagArray();
-            return bags ? bags[(unsigned)bag_id] : nullptr;
+            const auto bag = bags[(unsigned)bag_id];
+#if _DEBUG
+            if (bag)
+                GWCA_ASSERT(bag->bag_id() == bag_id);
+#endif
+            return bag;
         }
         Bag* GetBagByIndex(uint32_t bag_index) {
             return GetBag((Constants::Bag)(bag_index + 1));
