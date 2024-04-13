@@ -127,7 +127,7 @@ namespace GW {
 
         inline bool GetHasEnterButton()         const { return (flags & 0x100) != 0 || (flags & 0x40000) != 0; }
         inline bool GetIsOnWorldMap()           const { return (flags & 0x20) == 0; }
-        inline bool GetIsPvP()                  const { return (flags & 0x1) != 0; }
+        inline bool GetIsPvP()                  const { return (flags & 0x40001) != 0; } // 0x40000 = Explorable, 0x1 = Outpost
         inline bool GetIsGuildHall()            const { return (flags & 0x800000) != 0; }
         inline bool GetIsVanquishableArea()     const { return (flags & 0x10000000) != 0; }
         inline bool GetIsUnlockable()           const { return (flags & 0x10000) != 0; }
