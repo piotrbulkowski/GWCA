@@ -112,7 +112,6 @@ namespace GW
 
     void DisableHooks()
     {
-        if (!_initialized) return;
         HookBase::DisableHooks();
         for (const Module* module : modules) {
             if (module->disable_hooks)
