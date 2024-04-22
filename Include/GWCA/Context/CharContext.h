@@ -6,7 +6,7 @@
 namespace GW {
     namespace Constants {
         enum class Language;
-        enum class MapID;
+        enum class MapID : uint32_t;
     }
     struct CharContext;
     GWCA_API CharContext* GetCharContext();

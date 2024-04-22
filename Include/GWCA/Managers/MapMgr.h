@@ -15,7 +15,7 @@ namespace GW {
     typedef Array<MissionMapIcon> MissionMapIconArray;
 
     namespace Constants {
-        enum class MapID;
+        enum class MapID : uint32_t;
         enum class District;
         enum class InstanceType;
         enum class Language;
