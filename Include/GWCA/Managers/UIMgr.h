@@ -371,9 +371,18 @@ namespace GW {
                 bool call_target;
             };
 
+            struct kSendInteractPlayer {
+                uint32_t agent_id;
+            };
+
             struct kSendChangeTarget {
                 uint32_t target_id;
                 uint32_t auto_target_id;
+            };
+
+            struct kSendCallTarget {
+                uint32_t call_type;
+                uint32_t agent_id;
             };
 
             struct kGetColor {

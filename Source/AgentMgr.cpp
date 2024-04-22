@@ -145,65 +145,66 @@ namespace {
     void OnUIMessage(GW::HookStatus* status, UI::UIMessage message_id, void* wparam, void*) {
         if (status->blocked)
             return;
-        uint32_t* pack = (uint32_t*)wparam;
         switch (message_id) {
         case UI::UIMessage::kDialogBody: {
-            const auto packet = (UI::DialogBodyInfo*)wparam;
+            const auto packet = static_cast<UI::DialogBodyInfo*>(wparam);
             dialog_agent_id = packet->agent_id;
         } break;
         case UI::UIMessage::kSendAgentDialog: {
             if (SendAgentDialog_Ret) {
-                SendAgentDialog_Ret((uint32_t)pack);
+                SendAgentDialog_Ret((uint32_t)wparam);
             }
         } break;
         case UI::UIMessage::kSendChangeTarget: {
             if (ChangeTarget_Ret) {
-                const auto packet = (UI::UIPacket::kSendChangeTarget*)wparam;
+                const auto packet = static_cast<UI::UIPacket::kSendChangeTarget*>(wparam);
                 ChangeTarget_Ret(packet->target_id, packet->auto_target_id);
             }
         } break;
         case UI::UIMessage::kSendGadgetDialog: {
             if (SendGadgetDialog_Ret) {
-                SendGadgetDialog_Ret((uint32_t)pack);
+                SendGadgetDialog_Ret((uint32_t)wparam);
             }
         } break;
         case UI::UIMessage::kSendMoveToWorldPoint: {
             if (MoveToWorldPoint_Ret) {
-                MoveToWorldPoint_Ret((GamePos*)pack);
+                MoveToWorldPoint_Ret((GamePos*)wparam);
             }
         } break;
         case UI::UIMessage::kSendCallTarget: {
+            const auto packet = static_cast<UI::UIPacket::kSendCallTarget*>(wparam);
             if (CallTarget_Ret) {
-                CallTarget_Ret(pack[0],pack[1]);
+                CallTarget_Ret(packet->call_type, packet->agent_id);
             }
         } break;
         case UI::UIMessage::kSendInteractGadget: {
             if (InteractGadget_Ret) {
-                const auto packet = (UI::UIPacket::kInteractAgent*)wparam;
-                InteractGadget_Ret(packet->agent_id,packet->call_target);
+                const auto packet = static_cast<UI::UIPacket::kInteractAgent*>(wparam);
+                InteractGadget_Ret(packet->agent_id, packet->call_target);
             }
         } break;
         case UI::UIMessage::kSendInteractItem: {
             if (InteractItem_Ret) {
-                const auto packet = (UI::UIPacket::kInteractAgent*)wparam;
-                InteractItem_Ret(packet->agent_id,packet->call_target);
+                const auto packet = static_cast<UI::UIPacket::kInteractAgent*>(wparam);
+                InteractItem_Ret(packet->agent_id, packet->call_target);
             }
         } break;
         case UI::UIMessage::kSendInteractNPC: {
             if (InteractNPC_Ret) {
-                const auto packet = (UI::UIPacket::kInteractAgent*)wparam;
-                InteractNPC_Ret(packet->agent_id,packet->call_target);
+                const auto packet = static_cast<UI::UIPacket::kInteractAgent*>(wparam);
+                InteractNPC_Ret(packet->agent_id, packet->call_target);
             }
         } break;
         case UI::UIMessage::kSendInteractEnemy: {
             if (InteractEnemy_Ret) {
-                const auto packet = (UI::UIPacket::kInteractAgent*)wparam;
+                const auto packet = static_cast<UI::UIPacket::kInteractAgent*>(wparam);
                 InteractEnemy_Ret(packet->agent_id,packet->call_target);
             }
         } break;
         case UI::UIMessage::kSendInteractPlayer: {
             if (InteractPlayer_Ret) {
-                InteractPlayer_Ret((uint32_t)pack);
+            const auto packet = static_cast<UI::UIPacket::kSendInteractPlayer*>(wparam);
+                InteractPlayer_Ret(packet->agent_id);
             }
         } break;
         }

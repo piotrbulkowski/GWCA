@@ -2,7 +2,6 @@
 
 #include <GWCA/Utilities/Debug.h>
 #include <GWCA/Utilities/Hooker.h>
-#include <GWCA/Utilities/Macros.h>
 #include <GWCA/Utilities/Scanner.h>
 
 #include <GWCA/Managers/Module.h>
@@ -171,8 +170,7 @@ namespace {
 
     }
     void OnUIMessage_Post_AddTimestampToChatMessage(GW::HookStatus*, GW::UI::UIMessage, void*, void*) {
-        if (rewritten_message_buffer)
-            delete[] rewritten_message_buffer;
+        delete[] rewritten_message_buffer;
         rewritten_message_buffer = nullptr;
     }
 
@@ -191,7 +189,7 @@ namespace {
     }
 
     GW::HookEntry UIMessage_Entry;
-    const UI::UIMessage ui_messages_to_hook[] = {
+    constexpr std::array ui_messages_to_hook = {
         UI::UIMessage::kSendChatMessage,
         UI::UIMessage::kStartWhisper,
         UI::UIMessage::kPrintChatMessage,
@@ -201,13 +199,12 @@ namespace {
     void OnUIMessage(GW::HookStatus* status, UI::UIMessage message_id, void* wparam, void* lparam) {
         if (status->blocked)
             return;
-        uint32_t* pack = (uint32_t*)wparam;
         switch (message_id) {
         case UI::UIMessage::kSendChatMessage: {
-            const auto msg = reinterpret_cast<UI::UIPacket::kSendChatMessage*>(pack);
-            if (Chat::GetChannel(*msg->message) == Chat::CHANNEL_COMMAND) {
+            const auto packet = static_cast<UI::UIPacket::kSendChatMessage*>(wparam);
+            if (Chat::GetChannel(*packet->message) == Chat::CHANNEL_COMMAND) {
                 int argc = 0;
-                LPWSTR* argv = CommandLineToArgvW(msg->message + 1, &argc);
+                LPWSTR* argv = CommandLineToArgvW(packet->message + 1, &argc);
                 GWCA_ASSERT(argv && argc);
                 wcs_tolower(*argv);
 
@@ -215,11 +212,11 @@ namespace {
                     if (command_str != *argv)
                         continue;
                     if (callback_handler.voidcb) {
-                        callback_handler.voidcb(msg->message, argc, argv);
+                        callback_handler.voidcb(packet->message, argc, argv);
                         status->blocked = true;
                     }
                     else {
-                        if (callback_handler.boolcb(msg->message, argc, argv)) {
+                        if (callback_handler.boolcb(packet->message, argc, argv)) {
                             status->blocked = true;
                         }
                     }
@@ -227,21 +224,22 @@ namespace {
                 LocalFree(argv);
             }
             if (!status->blocked && SendChat_Ret) {
-                SendChat_Ret(msg->message, msg->agent_id);
+                SendChat_Ret(packet->message, packet->agent_id);
                 return;
             }
         } break;
         case UI::UIMessage::kStartWhisper: {
             if (StartWhisper_Ret) {
+                const auto packet = static_cast<UI::UIPacket::kStartWhisper*>(wparam);
                 const auto frame = lparam ? (UI::Frame*)lparam : UI::GetFrameByLabel(L"Chat");
                 if (frame) {
-                    StartWhisper_Ret(frame, 0, *(wchar_t**)wparam);
+                    StartWhisper_Ret(frame, 0, packet->player_name);
                     return;
                 }
             }
         } break;
         case UI::UIMessage::kPrintChatMessage: {
-            const auto packet = (GW::UI::UIPacket::kPrintChatMessage*)wparam;
+            const auto packet = static_cast<GW::UI::UIPacket::kPrintChatMessage*>(wparam);
             if (PrintChat_Ret) {
                 const auto frame = lparam ? (UI::Frame*)lparam : UI::GetFrameByLabel(L"Log");
                 if (frame) {
@@ -251,14 +249,16 @@ namespace {
             }
         } break;
         case UI::UIMessage::kLogChatMessage: {
+            const auto packet = static_cast<UI::UIPacket::kLogChatMessage*>(wparam);
             if (AddToChatLog_Ret) {
-                AddToChatLog_Ret((wchar_t*)pack[0], pack[1]);
+                AddToChatLog_Ret(packet->message, packet->channel);
                 return;
             }
         } break;
         case UI::UIMessage::kRecvWhisper: {
+            const auto packet = static_cast<UI::UIPacket::kRecvWhisper*>(wparam);
             if (RecvWhisper_Ret) {
-                RecvWhisper_Ret(pack[0], (wchar_t*)pack[1], (wchar_t*)pack[2]);
+                RecvWhisper_Ret(packet->transaction_id, packet->from, packet->message);
                 return;
             }
         } break;

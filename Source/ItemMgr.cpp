@@ -113,16 +113,16 @@ namespace {
 
     void OnPingWeaponSet(uint32_t agent_id, uint32_t weapon_item_id, uint32_t offhand_item_id) {
         GW::Hook::EnterHook();
-        uint32_t pack[3] = { agent_id,weapon_item_id,offhand_item_id };
+        const auto packet = UI::UIPacket::kSendPingWeaponSet{agent_id, weapon_item_id, offhand_item_id};
         // Pass this through UI, we'll pick it up in OnSendDialog_UIMessage
-        UI::SendUIMessage(UI::UIMessage::kSendPingWeaponSet, (void*)&pack);
+        UI::SendUIMessage(UI::UIMessage::kSendPingWeaponSet, (void*)&packet);
         GW::Hook::LeaveHook();
     };
     void OnPingWeaponSet_UIMessage(GW::HookStatus* status, UI::UIMessage message_id, void* wparam, void*) {
         GWCA_ASSERT(message_id == UI::UIMessage::kSendPingWeaponSet && wparam);
-        uint32_t* pack = (uint32_t*)wparam;
+        const auto packet = static_cast<UI::UIPacket::kSendPingWeaponSet*>(wparam);
         if (!status->blocked) {
-            PingWeaponSet_Ret(pack[0], pack[1], pack[2]);
+            PingWeaponSet_Ret(packet->agent_id, packet->weapon_item_id, packet->offhand_item_id);
         }
     }
 
