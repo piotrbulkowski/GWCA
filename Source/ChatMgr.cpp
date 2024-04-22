@@ -204,10 +204,10 @@ namespace {
         uint32_t* pack = (uint32_t*)wparam;
         switch (message_id) {
         case UI::UIMessage::kSendChatMessage: {
-            const auto message = (wchar_t*)pack[0];
-            if (Chat::GetChannel(*message) == Chat::CHANNEL_COMMAND) {
+            const auto msg = reinterpret_cast<UI::UIPacket::kSendChatMessage*>(pack);
+            if (Chat::GetChannel(*msg->message) == Chat::CHANNEL_COMMAND) {
                 int argc = 0;
-                LPWSTR* argv = CommandLineToArgvW(message + 1, &argc);
+                LPWSTR* argv = CommandLineToArgvW(msg->message + 1, &argc);
                 GWCA_ASSERT(argv && argc);
                 wcs_tolower(*argv);
 
@@ -215,11 +215,11 @@ namespace {
                     if (command_str != *argv)
                         continue;
                     if (callback_handler.voidcb) {
-                        callback_handler.voidcb(message, argc, argv);
+                        callback_handler.voidcb(msg->message, argc, argv);
                         status->blocked = true;
                     }
                     else {
-                        if (callback_handler.boolcb(message, argc, argv)) {
+                        if (callback_handler.boolcb(msg->message, argc, argv)) {
                             status->blocked = true;
                         }
                     }
@@ -227,7 +227,7 @@ namespace {
                 LocalFree(argv);
             }
             if (!status->blocked && SendChat_Ret) {
-                SendChat_Ret((wchar_t*)pack[0], (uint32_t)pack[1]);
+                SendChat_Ret(msg->message, msg->agent_id);
                 return;
             }
         } break;
