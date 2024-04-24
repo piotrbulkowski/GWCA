@@ -64,7 +64,7 @@ namespace {
         GWCA_ASSERT(LeaveGameThread_Func);
 #endif
 
-        GW::HookBase::CreateHook(LeaveGameThread_Func, OnLeaveGameThread, (void **)&LeaveGameThread_Ret);
+        GW::HookBase::CreateHook((void**)&LeaveGameThread_Func, OnLeaveGameThread, (void **)&LeaveGameThread_Ret);
         /*
                 uintptr_t address = Scanner::Find("\x2B\xCE\x8B\x15\x00\x00\x00\x00\xF7\xD9\x1B\xC9", "xxxx????xxxx", +4);
         GWCA_INFO("[SCAN] BasePointerLocation = %p", (void *)address);

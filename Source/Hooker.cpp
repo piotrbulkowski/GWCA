@@ -3,6 +3,7 @@
 #include <MinHook.h>
 #include <GWCA/Utilities/Hooker.h>
 #include <GWCA/Utilities/Debug.h>
+#include <GWCA/Utilities/Scanner.h>
 
 static std::atomic<int> init_count;
 static std::atomic<int> in_hook_count;
@@ -48,9 +49,13 @@ void GW::HookBase::DisableHooks(void *target)
     MH_DisableHook(target);
 }
 
-int GW::HookBase::CreateHook(void *target, void *detour, void **trampoline)
+int GW::HookBase::CreateHook(void** target, void* detour, void** trampoline)
 {
-    return target ? MH_CreateHook(target, detour, trampoline) : -1;
+    if (!(target && *target))
+        return -1;
+    if (const auto nested = Scanner::FunctionFromNearCall(*(uintptr_t*)target, false))
+        *target = (void*)nested;
+    return MH_CreateHook(*target, detour, trampoline);
 }
 
 void GW::HookBase::RemoveHook(void *target)

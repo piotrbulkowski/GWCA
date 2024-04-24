@@ -141,7 +141,7 @@ namespace {
         GWCA_ASSERT(RemoveFriend_Func);
 #endif
 
-        HookBase::CreateHook(FriendEventHandler_Func, OnFriendEventHandler, (void**)&FriendEventHandler_Ret);
+        HookBase::CreateHook((void**)&FriendEventHandler_Func, OnFriendEventHandler, (void**)&FriendEventHandler_Ret);
     }
 
     void EnableHooks() {

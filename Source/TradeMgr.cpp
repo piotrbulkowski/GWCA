@@ -107,8 +107,8 @@ namespace {
         GWCA_ASSERT(TradeCancel_Func);
 #endif
 
-        HookBase::CreateHook(OfferTradeItem_Func, OnOfferTradeItem, (void**)&RetOfferTradeItem);
-        HookBase::CreateHook(UpdateTradeCart_Func, OnUpdateTradeWindow, (void**)&RetUpdateTradeCart);
+        HookBase::CreateHook((void**)&OfferTradeItem_Func, OnOfferTradeItem, (void**)&RetOfferTradeItem);
+        HookBase::CreateHook((void**)&UpdateTradeCart_Func, OnUpdateTradeWindow, (void**)&RetUpdateTradeCart);
     }
     void EnableHooks() {
         if(OfferTradeItem_Func)

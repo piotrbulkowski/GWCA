@@ -126,9 +126,9 @@ namespace {
         GWCA_ASSERT(ScreenCapture_Func);
 #endif
 
-        HookBase::CreateHook(GwEndScene_Func, OnGwEndScene, (void**)&RetGwEndScene);
-        HookBase::CreateHook(ScreenCapture_Func, OnScreenCapture, (void**)&RetScreenCapture);
-        HookBase::CreateHook(GwReset_Func, OnGwReset, (void**)&RetGwReset);
+        HookBase::CreateHook((void**)&GwEndScene_Func, OnGwEndScene, (void**)&RetGwEndScene);
+        HookBase::CreateHook((void**)&ScreenCapture_Func, OnScreenCapture, (void**)&RetScreenCapture);
+        HookBase::CreateHook((void**)&GwReset_Func, OnGwReset, (void**)&RetGwReset);
     }
 
     void EnableHooks()

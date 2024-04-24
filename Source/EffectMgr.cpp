@@ -50,7 +50,7 @@ namespace {
         GWCA_ASSERT(DropBuff_Func);
 #endif
 
-        HookBase::CreateHook(PostProcessEffect_Func, OnPostProcessEffect, (void**)&RetPostProcessEffect);
+        HookBase::CreateHook((void**)&PostProcessEffect_Func, OnPostProcessEffect, (void**)&RetPostProcessEffect);
     }
 
     void DisableHooks() {

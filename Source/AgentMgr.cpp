@@ -253,16 +253,16 @@ namespace {
             // NB: What is UI message 0x100001a0 ?
             InteractGadget_Func = (InteractCallableAgent_pt)Scanner::FunctionFromNearCall(address + 0x120);
         }
-        HookBase::CreateHook(CallTarget_Func, OnCallTarget_Func, (void**)&CallTarget_Ret);
-        HookBase::CreateHook(InteractNPC_Func, OnInteractNPC_Func, (void**)&InteractNPC_Ret);
-        HookBase::CreateHook(InteractEnemy_Func, OnInteractEnemy_Func, (void**)&InteractEnemy_Ret);
-        HookBase::CreateHook(InteractGadget_Func, OnInteractGadget_Func, (void**)&InteractGadget_Ret);
-        HookBase::CreateHook(InteractPlayer_Func, OnInteractPlayer_Func, (void**)&InteractPlayer_Ret);
-        HookBase::CreateHook(MoveToWorldPoint_Func, OnMoveToWorldPoint_Func, (void**)&MoveToWorldPoint_Ret);
+        HookBase::CreateHook((void**)&CallTarget_Func, OnCallTarget_Func, (void**)&CallTarget_Ret);
+        HookBase::CreateHook((void**)&InteractNPC_Func, OnInteractNPC_Func, (void**)&InteractNPC_Ret);
+        HookBase::CreateHook((void**)&InteractEnemy_Func, OnInteractEnemy_Func, (void**)&InteractEnemy_Ret);
+        HookBase::CreateHook((void**)&InteractGadget_Func, OnInteractGadget_Func, (void**)&InteractGadget_Ret);
+        HookBase::CreateHook((void**)&InteractPlayer_Func, OnInteractPlayer_Func, (void**)&InteractPlayer_Ret);
+        HookBase::CreateHook((void**)&MoveToWorldPoint_Func, OnMoveToWorldPoint_Func, (void**)&MoveToWorldPoint_Ret);
 
-        HookBase::CreateHook(SendAgentDialog_Func, OnSendAgentDialog_Func, (void**)&SendAgentDialog_Ret);
-        HookBase::CreateHook(SendGadgetDialog_Func, OnSendGadgetDialog_Func, (void**)&SendGadgetDialog_Ret);
-        HookBase::CreateHook(ChangeTarget_Func, OnChangeTarget_Func, (void**)&ChangeTarget_Ret);
+        HookBase::CreateHook((void**)&SendAgentDialog_Func, OnSendAgentDialog_Func, (void**)&SendAgentDialog_Ret);
+        HookBase::CreateHook((void**)&SendGadgetDialog_Func, OnSendGadgetDialog_Func, (void**)&SendGadgetDialog_Ret);
+        HookBase::CreateHook((void**)&ChangeTarget_Func, OnChangeTarget_Func, (void**)&ChangeTarget_Ret);
 
         GWCA_INFO("[SCAN] TargetAgentIdPtr = %p", TargetAgentIdPtr);
         GWCA_INFO("[SCAN] MouseOverAgentIdPtr = %p", MouseOverAgentIdPtr);

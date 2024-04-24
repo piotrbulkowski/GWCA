@@ -6,7 +6,7 @@
 namespace GW {
     namespace Constants {
         enum class QuestID : uint32_t;
-        enum class MapID : uint32_t;
+        enum class MapID;
     }
 
     struct Quest { // total: 0x34/52

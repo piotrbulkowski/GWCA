@@ -53,7 +53,7 @@ namespace {
 #endif
         GWCA_ASSERT(game_srv_object_addr);
 #endif
-        HookBase::CreateHook(SendPacket_Func, CtoSHandler_Func, (void**)&RetSendPacket);
+        HookBase::CreateHook((void**)&SendPacket_Func, CtoSHandler_Func, (void**)&RetSendPacket);
 
     }
     void EnableHooks() {

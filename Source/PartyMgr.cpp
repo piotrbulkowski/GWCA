@@ -174,7 +174,7 @@ namespace {
         GWCA_ASSERT(ReturnToOutpost_Func);
         GWCA_ASSERT(LockPetTarget_Func);
 #endif
-        HookBase::CreateHook(TickButtonUICallback, OnTickButtonUICallback, (void**)&TickButtonUICallback_Ret);
+        HookBase::CreateHook((void**)&TickButtonUICallback, OnTickButtonUICallback, (void**)&TickButtonUICallback_Ret);
     }
 
     void EnableHooks() {

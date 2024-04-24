@@ -108,22 +108,30 @@ bool GW::Scanner::IsValidPtr(uintptr_t address, Section section) {
     return address && address > sections[section].start && address < sections[section].end;
 }
 
-uintptr_t GW::Scanner::FunctionFromNearCall(uintptr_t call_instruction_address) {
+uintptr_t GW::Scanner::FunctionFromNearCall(uintptr_t call_instruction_address, bool check_valid_ptr) {
     if (!call_instruction_address)
         return 0;
-    if (((*(uintptr_t*)call_instruction_address) & 0x000000e8) != 0x000000e8
-        && ((*(uintptr_t*)call_instruction_address) & 0x000000e9) != 0x000000e9)
+    uintptr_t function_address = 0;
+    switch (((*(uintptr_t*)call_instruction_address) & 0x000000ff)) {
+    case 0xe8:   // CALL
+    case 0xe9: { // JMP long
+        const auto near_address = *(uintptr_t*)(call_instruction_address + 1);
+        function_address = (near_address)+(call_instruction_address + 5);
+    } break;
+    case 0xeb: { // JMP short
+        const auto near_address = *(char*)(call_instruction_address + 1);
+        function_address = (near_address)+(call_instruction_address + 2);
+    } break;
+    default:
         return 0; // Not a near call instruction
-    uintptr_t near_address = *(uintptr_t*)(call_instruction_address + 1);
-    uintptr_t function_address = (near_address)+(call_instruction_address + 5);
-    if (!IsValidPtr(function_address, Section::TEXT))
+    }
+    if (check_valid_ptr && !IsValidPtr(function_address, Section::TEXT))
         return 0;
     // Check to see if there are any nested JMP's etc
-    uintptr_t nested_call = function_address;
-    while (nested_call && ((*(uintptr_t*)nested_call) & 0x000000e9) == 0x000000e9) {
-        nested_call = FunctionFromNearCall(nested_call);
+    if (const auto nested_call = FunctionFromNearCall(function_address, check_valid_ptr)) {
+        return nested_call;
     }
-    return nested_call ? nested_call : function_address;
+    return function_address;
 }
 
 void GW::Scanner::Initialize(HMODULE hModule) {

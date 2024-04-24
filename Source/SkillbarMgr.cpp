@@ -144,7 +144,7 @@ namespace {
         LoadSkills_Func = (LoadSkills_pt)Scanner::FunctionFromNearCall(address + 0x40);
 
         if (LoadSkills_Func) {
-            HookBase::CreateHook(LoadSkills_Func, OnLoadSkillbar, (void**)&RetLoadSkills);
+            HookBase::CreateHook((void**)&LoadSkills_Func, OnLoadSkillbar, (void**)&RetLoadSkills);
             UI::RegisterUIMessageCallback(&OnLoadSkillbar_HookEntry, UI::UIMessage::kSendLoadSkillbar, OnLoadSkillbar_UIMessage, 0x1);
         }
 

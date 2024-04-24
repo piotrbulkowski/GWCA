@@ -40,6 +40,15 @@
 #include <GWCA/Managers/FriendListMgr.h>
 #include <GWCA/Managers/EventMgr.h>
 #include <GWCA/Managers/QuestMgr.h>
+#include <thread>
+
+namespace {
+    std::thread terminating_thread;
+
+    void Terminate() {
+
+    }
+}
 
 namespace GW
 {
@@ -127,6 +136,14 @@ namespace GW
             if (module->exit_module)
                 module->exit_module();
         }
+
+        for (size_t i = 0; i < 10; i++) {
+            if (!HookBase::GetInHookCount())
+                break;
+            Sleep(16);
+        }
+        // If after waiting, we're still in a hook, presume that we're trying to disconnect GWCA inside one!
+        GWCA_ASSERT(!HookBase::GetInHookCount());
 
         HookBase::Deinitialize();
         _initialized = false;

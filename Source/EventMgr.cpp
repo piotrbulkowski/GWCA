@@ -67,7 +67,7 @@ namespace {
 
         uintptr_t address = Scanner::Find("\x68\x08\x08\x00\x00\x8d\x85\xf4\xf7\xff\xff", "xxxxxxxxxxx", 0x16);
         SendEventMessage_Func = (SendEventMessage_pt)Scanner::FunctionFromNearCall(address);
-        HookBase::CreateHook(SendEventMessage_Func, OnSendEventMessage, (void**)&SendEventMessage_Ret);
+        HookBase::CreateHook((void**)&SendEventMessage_Func, OnSendEventMessage, (void**)&SendEventMessage_Ret);
 
         GWCA_INFO("[SCAN] SendEventMessage_Func = %p", SendEventMessage_Func);
 

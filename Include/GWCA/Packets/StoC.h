@@ -21,7 +21,7 @@ namespace GW {
     }
     namespace Constants {
         enum class QuestID : uint32_t;
-        enum class MapID : uint32_t;
+        enum class MapID;
     }
     namespace Packet {
         namespace StoC {

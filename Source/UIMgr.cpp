@@ -501,10 +501,10 @@ namespace {
         GWCA_ASSERT(SetInGameUIScale_Func);
         GWCA_ASSERT(PreferencesInitialised_Addr);
 #endif
-        HookBase::CreateHook(SendUIMessage_Func, OnSendUIMessage, (void **)&RetSendUIMessage);
-        HookBase::CreateHook(CreateUIComponent_Func, OnCreateUIComponent, (void**)&CreateUIComponent_Ret);
-        HookBase::CreateHook(SendFrameUIMessage_Func, OnSendFrameUIMessage, (void**)&SendFrameUIMessage_Ret);
-        HookBase::CreateHook(DrawOnCompass_Func, OnDrawOnCompass, (void**)&DrawOnCompass_Ret);
+        HookBase::CreateHook((void**)&SendUIMessage_Func, OnSendUIMessage, (void **)&RetSendUIMessage);
+        HookBase::CreateHook((void**)&CreateUIComponent_Func, OnCreateUIComponent, (void**)&CreateUIComponent_Ret);
+        HookBase::CreateHook((void**)&SendFrameUIMessage_Func, OnSendFrameUIMessage, (void**)&SendFrameUIMessage_Ret);
+        HookBase::CreateHook((void**)&DrawOnCompass_Func, OnDrawOnCompass, (void**)&DrawOnCompass_Ret);
     }
 
     void EnableHooks() {

@@ -62,17 +62,18 @@ namespace {
 
         AbandonQuest_Func = (DoAction_pt)Scanner::FunctionFromNearCall(address + 0x100);
         if (AbandonQuest_Func) {
-            HookBase::CreateHook(AbandonQuest_Func, OnAbandonQuest, (void**)&AbandonQuest_Ret);
+            HookBase::CreateHook((void**)&AbandonQuest_Func, OnAbandonQuest, (void**)&AbandonQuest_Ret);
             UI::RegisterUIMessageCallback(&AbandonQuest_HookEntry, UI::UIMessage::kSendAbandonQuest, OnAbandonQuest_UIMessage, 0x1);
         }
-            
-        SetActiveQuest_Func = (DoAction_pt)Scanner::FunctionFromNearCall(address + 0x96);
+           
+
+        address = GW::Scanner::FunctionFromNearCall(address + 0x96);
+        SetActiveQuest_Func = (DoAction_pt)address;
         if (SetActiveQuest_Func) {
-            HookBase::CreateHook(SetActiveQuest_Func, OnSetActiveQuest, (void**)&SetActiveQuest_Ret);
+            HookBase::CreateHook((void**)&SetActiveQuest_Func, OnSetActiveQuest, (void**)&SetActiveQuest_Ret);
             UI::RegisterUIMessageCallback(&SetActiveQuest_HookEntry, UI::UIMessage::kSendSetActiveQuest, OnSetActiveQuest_UIMessage, 0x1);
 
-            address = ((uintptr_t)SetActiveQuest_Func) + 0x6b;
-            RequestQuestData_Func = (RequestQuestData_pt)GW::Scanner::FunctionFromNearCall(address);
+            RequestQuestData_Func = (RequestQuestData_pt)GW::Scanner::FunctionFromNearCall(address + 0x6b);
         }
 
         address = Scanner::Find("\x68\x4a\x01\x00\x10\xff\x77\x04", "xxxxxxxx", 0x7a);

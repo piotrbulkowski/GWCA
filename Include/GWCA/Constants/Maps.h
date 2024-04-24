@@ -2,7 +2,9 @@
 
 namespace GW {
     namespace Constants {
-        enum class MapID : uint32_t {
+
+
+        enum class MapID {
             None = 0,
             Gladiators_Arena,
             DEV_Test_Arena_1v1,

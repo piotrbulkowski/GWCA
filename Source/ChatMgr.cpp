@@ -318,14 +318,14 @@ namespace {
         GWCA_ASSERT(UICallback_AssignEditableText_Func);
 #endif
 
-        HookBase::CreateHook(StartWhisper_Func, OnStartWhisper_Func, (void**)& StartWhisper_Ret);
-        HookBase::CreateHook(GetSenderColor_Func, OnGetSenderColor_Func, (void **)&GetSenderColor_Ret);
-        HookBase::CreateHook(GetMessageColor_Func, OnGetMessageColor_Func, (void **)&GetMessageColor_Ret);
-        HookBase::CreateHook(SendChat_Func, OnSendChat_Func, (void **)&SendChat_Ret);
-        HookBase::CreateHook(RecvWhisper_Func, OnRecvWhisper_Func, (void **)&RecvWhisper_Ret);
-        HookBase::CreateHook(PrintChat_Func, OnPrintChat_Func, (void **)&PrintChat_Ret);
-        HookBase::CreateHook(AddToChatLog_Func, OnAddToChatLog_Func, (void**)&AddToChatLog_Ret);
-        HookBase::CreateHook(UICallback_AssignEditableText_Func, OnUICallback_AssignEditableText, (void**)& UICallback_AssignEditableText_Ret);
+        HookBase::CreateHook((void**)&StartWhisper_Func, OnStartWhisper_Func, (void**)& StartWhisper_Ret);
+        HookBase::CreateHook((void**)&GetSenderColor_Func, OnGetSenderColor_Func, (void **)&GetSenderColor_Ret);
+        HookBase::CreateHook((void**)&GetMessageColor_Func, OnGetMessageColor_Func, (void **)&GetMessageColor_Ret);
+        HookBase::CreateHook((void**)&SendChat_Func, OnSendChat_Func, (void **)&SendChat_Ret);
+        HookBase::CreateHook((void**)&RecvWhisper_Func, OnRecvWhisper_Func, (void **)&RecvWhisper_Ret);
+        HookBase::CreateHook((void**)&PrintChat_Func, OnPrintChat_Func, (void **)&PrintChat_Ret);
+        HookBase::CreateHook((void**)&AddToChatLog_Func, OnAddToChatLog_Func, (void**)&AddToChatLog_Ret);
+        HookBase::CreateHook((void**)&UICallback_AssignEditableText_Func, OnUICallback_AssignEditableText, (void**)& UICallback_AssignEditableText_Ret);
 
         for (size_t i = 0; i < (size_t)GW::Chat::Channel::CHANNEL_COUNT; i++) {
             const auto chan = (GW::Chat::Channel)i;

@@ -313,21 +313,21 @@ namespace {
         GWCA_ASSERT(unlocked_pvp_item_upgrade_array.m_size);
         GWCA_ASSERT(GetPvPItemUpgradeInfoName_Func);
 #endif
-        HookBase::CreateHook(ItemClick_Func, OnItemClick, (void**)&RetItemClick);
+        HookBase::CreateHook((void**)&ItemClick_Func, OnItemClick, (void**)&RetItemClick);
         if (PingWeaponSet_Func) {
-            HookBase::CreateHook(PingWeaponSet_Func, OnPingWeaponSet, (void**)&PingWeaponSet_Ret);
+            HookBase::CreateHook((void**)&PingWeaponSet_Func, OnPingWeaponSet, (void**)&PingWeaponSet_Ret);
             UI::RegisterUIMessageCallback(&OnPingWeaponSet_Entry, UI::UIMessage::kSendPingWeaponSet, OnPingWeaponSet_UIMessage, 0x1);
         }
         if (MoveItem_Func) {
-            HookBase::CreateHook(MoveItem_Func, OnMoveItem, (void**)&MoveItem_Ret);
+            HookBase::CreateHook((void**)&MoveItem_Func, OnMoveItem, (void**)&MoveItem_Ret);
             UI::RegisterUIMessageCallback(&OnMoveItem_Entry, UI::UIMessage::kSendMoveItem, OnMoveItem_UIMessage, 0x1);
         }
         if (UseItem_Func) {
-            HookBase::CreateHook(UseItem_Func, OnUseItem, (void**)&UseItem_Ret);
+            HookBase::CreateHook((void**)&UseItem_Func, OnUseItem, (void**)&UseItem_Ret);
             UI::RegisterUIMessageCallback(&OnUseItem_Entry, UI::UIMessage::kSendUseItem, OnUseItem_UIMessage, 0x1);
         }
         if (ChangeGold_Func) {
-            HookBase::CreateHook(ChangeGold_Func, OnChangeGold, (void**)&ChangeGold_Ret);
+            HookBase::CreateHook((void**)&ChangeGold_Func, OnChangeGold, (void**)&ChangeGold_Ret);
         }
     }
 
