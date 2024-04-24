@@ -9,7 +9,8 @@ namespace GW {
         explicit operator bool() const {
             return std::any_of(std::begin(k), std::end(k), [](uint32_t i) { return i != 0; });
         }
-    };    struct GuildPlayer { // total: 0x174/372
+    };
+    struct GuildPlayer { // total: 0x174/372
         /* +h0000 */ void* vtable;
         /* +h0004 */ wchar_t *name_ptr; // ptr to invitedname, why? dunno
         /* +h0008 */ wchar_t invited_name[20]; // name of character that was invited in
