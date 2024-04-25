@@ -20,7 +20,7 @@ namespace GW {
         /* +h001C */ AgentID locked_target_id;
         /* +h0020 */ uint32_t h0020; // type is unknown too, added for padding
     };
-    static_assert(sizeof(HeroFlag) == 0x24, "struct HeroFlag has incorect size");
+    static_assert(sizeof(HeroFlag) == 0x24, "struct HeroFlag has incorrect size");
 
     struct HeroInfo { // total: 0x78/120
         /* +h0000 */ uint32_t hero_id;
@@ -33,7 +33,7 @@ namespace GW {
         /* +h001C */ uint8_t  h001C[52];
         /* +h0050 */ wchar_t  name[20];
     };
-    static_assert(sizeof(HeroInfo) == 120, "struct HeroInfo has incorect size");
+    static_assert(sizeof(HeroInfo) == 120, "struct HeroInfo has incorrect size");
 
     typedef Array<HeroFlag> HeroFlagArray;
     typedef Array<HeroInfo> HeroInfoArray;

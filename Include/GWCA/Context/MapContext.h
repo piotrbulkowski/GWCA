@@ -20,7 +20,7 @@ namespace GW {
         /* +h00B4 */ uint32_t h00B4[0x38];
         /* +h0194 */ Array<MapProp*> propArray;
     };
-    static_assert(sizeof(PropsContext) == 0x1A4, "struct PropsContext has incorect size");
+    static_assert(sizeof(PropsContext) == 0x1A4, "struct PropsContext has incorrect size");
 
 
     struct MapContext {

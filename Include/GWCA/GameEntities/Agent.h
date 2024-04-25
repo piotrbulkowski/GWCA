@@ -157,8 +157,8 @@ namespace GW {
         /* +h00CC */ uint32_t h00CC;
         /* +h00D0 */ uint32_t extra_type;
     };
-    static_assert(sizeof(AgentItem) == 212, "struct AgentItem has incorect size");
-    static_assert(offsetof(AgentItem, owner) == 0xC4, "struct AgentItem offsets are incorect");
+    static_assert(sizeof(AgentItem) == 212, "struct AgentItem has incorrect size");
+    static_assert(offsetof(AgentItem, owner) == 0xC4, "struct AgentItem offsets are incorrect");
 
     struct AgentGadget : public Agent { // total: 0xE4/228
         /* +h00C4 */ uint32_t h00C4;
@@ -167,8 +167,8 @@ namespace GW {
         /* +h00D0 */ uint32_t gadget_id;
         /* +h00D4 */ uint32_t h00D4[4];
     };
-    static_assert(sizeof(AgentGadget) == 228, "struct AgentGadget has incorect size");
-    static_assert(offsetof(AgentGadget, h00C4) == 0xC4, "struct AgentGadget offsets are incorect");
+    static_assert(sizeof(AgentGadget) == 228, "struct AgentGadget has incorrect size");
+    static_assert(offsetof(AgentGadget, h00C4) == 0xC4, "struct AgentGadget offsets are incorrect");
 
     struct AgentLiving : public Agent { // total: 0x1C0/448
         /* +h00C4 */ AgentID owner;
@@ -264,8 +264,8 @@ namespace GW {
         inline bool IsPlayer()             const { return login_number != 0; }
         inline bool IsNPC()                const { return login_number == 0; }
     };
-    static_assert(sizeof(AgentLiving) == 0x1C0, "struct AgentLiving has incorect size");
-    static_assert(offsetof(AgentLiving, owner) == 0xC4, "struct AgentLiving offsets are incorect");
+    static_assert(sizeof(AgentLiving) == 0x1C0, "struct AgentLiving has incorrect size");
+    static_assert(offsetof(AgentLiving, owner) == 0xC4, "struct AgentLiving offsets are incorrect");
 
     AgentItem* Agent::GetAsAgentItem() {
         if (GetIsItemType())
@@ -356,7 +356,7 @@ namespace GW {
         uint32_t h0000[13];
         wchar_t *name_enc;
     };
-    static_assert(sizeof(AgentInfo) == 0x38, "struct AgentInfo has incorect size");
+    static_assert(sizeof(AgentInfo) == 0x38, "struct AgentInfo has incorrect size");
 
     typedef TList<Agent> AgentList;
     typedef Array<Agent *> AgentArray;

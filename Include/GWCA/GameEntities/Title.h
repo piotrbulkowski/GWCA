@@ -24,7 +24,7 @@ namespace GW {
         inline bool has_tiers() { return (props & 3) == 2; };
 
     };
-    static_assert(sizeof(Title) == 40, "struct Title has incorect size");
+    static_assert(sizeof(Title) == 40, "struct Title has incorrect size");
 
     struct TitleTier {
         uint32_t props;
@@ -32,7 +32,7 @@ namespace GW {
         wchar_t* tier_name_enc;
         inline bool is_percentage_based() { return (props & 1) != 0; };
     };
-    static_assert(sizeof(TitleTier) == 0xc, "struct TitleTier has incorect size");
+    static_assert(sizeof(TitleTier) == 0xc, "struct TitleTier has incorrect size");
 
     struct TitleClientData {
         uint32_t title_id;

@@ -17,7 +17,7 @@ namespace GW {
         bool connected() const { return (state & 1) > 0; }
         bool ticked()    const { return (state & 2) > 0; }
     };
-    static_assert(sizeof(PlayerPartyMember) == 12, "struct PlayerPartyMember has incorect size");
+    static_assert(sizeof(PlayerPartyMember) == 12, "struct PlayerPartyMember has incorrect size");
 
     struct HeroPartyMember { // total: 0x18/24
         /* +h0000 */ AgentID agent_id;
@@ -27,7 +27,7 @@ namespace GW {
         /* +h0010 */ uint32_t h0010;
         /* +h0014 */ uint32_t level;
     };
-    static_assert(sizeof(HeroPartyMember) == 24, "struct HeroPartyMember has incorect size");
+    static_assert(sizeof(HeroPartyMember) == 24, "struct HeroPartyMember has incorrect size");
 
     struct HenchmanPartyMember { // total: 0x34/52
         /* +h0000 */ AgentID agent_id;
@@ -35,7 +35,7 @@ namespace GW {
         /* +h002C */ Profession profession;
         /* +h0030 */ uint32_t level;
     };
-    static_assert(sizeof(HenchmanPartyMember) == 52, "struct HenchmanPartyMember has incorect size");
+    static_assert(sizeof(HenchmanPartyMember) == 52, "struct HenchmanPartyMember has incorrect size");
 
     typedef Array<HeroPartyMember> HeroPartyMemberArray;
     typedef Array<PlayerPartyMember> PlayerPartyMemberArray;
@@ -55,7 +55,7 @@ namespace GW {
         /* +h0044 */ uint32_t h0044[14];
         /* +h007C */ TLink<PartyInfo> invite_link;
     };
-    static_assert(sizeof(PartyInfo) == 132, "struct PartyInfo has incorect size");
+    static_assert(sizeof(PartyInfo) == 132, "struct PartyInfo has incorrect size");
 
     enum PartySearchType {
         PartySearchType_Hunting  = 0,

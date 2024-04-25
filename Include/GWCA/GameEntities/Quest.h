@@ -26,14 +26,14 @@ namespace GW {
         inline bool IsAreaPrimary() { return (log_state & 0x40) != 0; } // e.g. "Primary Echovald Forest Quests"
         inline bool IsPrimary() { return (log_state & 0x20) != 0; } // e.g. "Primary Quests"
     };
-    static_assert(sizeof(Quest) == 52, "struct Quest has incorect size");
+    static_assert(sizeof(Quest) == 52, "struct Quest has incorrect size");
 
     struct MissionObjective { // total: 0xC/12
         /* +h0000 */ uint32_t objective_id;
         /* +h0004 */ wchar_t *enc_str;
         /* +h0008 */ uint32_t type; // completed, bullet, etc...
     };
-    static_assert(sizeof(MissionObjective) == 12, "struct MissionObjective has incorect size");
+    static_assert(sizeof(MissionObjective) == 12, "struct MissionObjective has incorrect size");
 
     typedef Array<Quest> QuestLog;
 }

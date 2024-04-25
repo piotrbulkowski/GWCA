@@ -26,7 +26,7 @@ namespace GW {
         }
 
     };
-    static_assert(sizeof(Player) == 0x4c, "struct Player has incorect size");
+    static_assert(sizeof(Player) == 0x4c, "struct Player has incorrect size");
 
     typedef Array<Player> PlayerArray;
 }

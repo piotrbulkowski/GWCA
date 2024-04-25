@@ -14,7 +14,7 @@ namespace GW {
         /* +h0028 */ float XBR;
         /* +h002C */ float YB;
     };
-    static_assert(sizeof(PathingTrapezoid) == 48, "struct PathingTrapezoid has incorect size");
+    static_assert(sizeof(PathingTrapezoid) == 48, "struct PathingTrapezoid has incorrect size");
 
     struct PathingMap { // total: 0x54/84
         /* +h0000 */ uint32_t zplane; // ground plane = UINT_MAX, rest 0 based index
@@ -27,7 +27,7 @@ namespace GW {
         /* +h001C */ uint32_t trapezoid_count;
         /* +h0020 */ uint32_t h0020[13];
     };
-    static_assert(sizeof(PathingMap) == 84, "struct PathingMap has incorect size");
+    static_assert(sizeof(PathingMap) == 84, "struct PathingMap has incorrect size");
 
     struct PropByType {
         uint32_t object_id;
@@ -42,7 +42,7 @@ namespace GW {
         /* +h0010 */ uint32_t h0010;
         /* +h0014 */ uint32_t h0014;
     };
-    static_assert(sizeof(PropModelInfo) == 0x18, "struct PropModelInfo has incorect size");
+    static_assert(sizeof(PropModelInfo) == 0x18, "struct PropModelInfo has incorrect size");
 
     struct RecObject {
         /* +h0000 */ uint32_t h0000;
@@ -50,7 +50,7 @@ namespace GW {
         /* +h0008 */ uint32_t accessKey; // This is used by the game to make sure the data from the DAT matches the data in game
         // ...
     };
-    static_assert(sizeof(RecObject) == 0xC, "struct RecObject has incorect size");
+    static_assert(sizeof(RecObject) == 0xC, "struct RecObject has incorrect size");
 
     struct MapProp { // total: 0x54/84
         /* +h0000 */ uint32_t h0000[5];
@@ -74,7 +74,7 @@ namespace GW {
         /* +h008C */ uint32_t h008C;
     };
 
-    static_assert(sizeof(MapProp) == 0x90, "struct MapProp has incorect size");
+    static_assert(sizeof(MapProp) == 0x90, "struct MapProp has incorrect size");
 
     typedef Array<PathingMap> PathingMapArray;
 }

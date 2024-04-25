@@ -22,7 +22,7 @@ namespace GW {
         inline bool IsHenchman() { return (npc_flags & 0x10) != 0; }
         inline bool IsHero() { return (npc_flags & 0x20) != 0; }
     };
-    static_assert(sizeof(NPC) == 48, "struct NPC has incorect size");
+    static_assert(sizeof(NPC) == 48, "struct NPC has incorrect size");
 
     typedef Array<NPC> NPCArray;
 }

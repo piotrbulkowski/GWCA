@@ -18,7 +18,7 @@ namespace GW {
         /* +h0020 */ uint32_t h0020; // = 0
         /* +h0024 */ uint32_t h0024; // May concern the name
     };
-    static_assert(sizeof(MissionMapIcon) == 40, "struct MissionMapIcon has incorect size");
+    static_assert(sizeof(MissionMapIcon) == 40, "struct MissionMapIcon has incorrect size");
 
     typedef Array<MissionMapIcon> MissionMapIconArray;
 
@@ -133,5 +133,5 @@ namespace GW {
         inline bool GetIsUnlockable()           const { return (flags & 0x10000) != 0; }
         inline bool GetHasMissionMapsTo()    const { return (flags & 0x8000000) != 0; }
     };
-    static_assert(sizeof(AreaInfo) == 124, "struct AreaInfo has incorect size");
+    static_assert(sizeof(AreaInfo) == 124, "struct AreaInfo has incorrect size");
 }

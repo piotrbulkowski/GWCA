@@ -79,7 +79,7 @@ namespace GW {
         inline bool IsNonStacking() { return (special & 0x20000) != 0; }
         bool IsUnused() const;
     };
-    static_assert(sizeof(Skill) == 0xa0, "struct Skill has incorect size");
+    static_assert(sizeof(Skill) == 0xa0, "struct Skill has incorrect size");
 
     struct SkillbarSkill { // total: 0x14/20
         /* +h0000 */ uint32_t adrenaline_a;
@@ -90,7 +90,7 @@ namespace GW {
 
         uint32_t GetRecharge() const; // returns recharge time remaining in milliseconds, or 0 if recharged
     };
-    static_assert(sizeof(SkillbarSkill) == 20, "struct SkillbarSkill has incorect size");
+    static_assert(sizeof(SkillbarSkill) == 20, "struct SkillbarSkill has incorrect size");
 
     struct Skillbar { // total: 0xBC/188
         /* +h0000 */ uint32_t agent_id; // id of the agent whose skillbar this is
@@ -104,7 +104,7 @@ namespace GW {
 
         SkillbarSkill *GetSkillById(Constants::SkillID skill_id, size_t* slot_out = nullptr);
     };
-    static_assert(sizeof(Skillbar) == 188, "struct Skillbar has incorect size");
+    static_assert(sizeof(Skillbar) == 188, "struct Skillbar has incorrect size");
 
     typedef Array<Skillbar> SkillbarArray;
 
@@ -119,7 +119,7 @@ namespace GW {
         DWORD GetTimeElapsed() const;
         DWORD GetTimeRemaining() const;
     };
-    static_assert(sizeof(Effect) == 24, "struct Effect has incorect size");
+    static_assert(sizeof(Effect) == 24, "struct Effect has incorrect size");
 
     struct Buff { // total: 0x10/16
         /* +h0000 */ GW::Constants::SkillID skill_id; // skill id of the buff
@@ -127,7 +127,7 @@ namespace GW {
         /* +h0008 */ uint32_t buff_id; // id of buff in the buff array
         /* +h000C */ uint32_t target_agent_id; // agent id of the target (0 if no target)
     };
-    static_assert(sizeof(Buff) == 16, "struct Buff has incorect size");
+    static_assert(sizeof(Buff) == 16, "struct Buff has incorrect size");
 
     typedef Array<Buff> BuffArray;
     typedef Array<Effect> EffectArray;
@@ -137,7 +137,7 @@ namespace GW {
         /* +h0004 */ BuffArray buffs;
         /* +h0014 */ EffectArray effects;
     };
-    static_assert(sizeof(AgentEffects) == 36, "struct AgentEffects has incorect size");
+    static_assert(sizeof(AgentEffects) == 36, "struct AgentEffects has incorrect size");
 
     typedef Array<AgentEffects> AgentEffectsArray;
 }

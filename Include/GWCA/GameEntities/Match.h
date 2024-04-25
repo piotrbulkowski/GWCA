@@ -9,5 +9,5 @@ namespace GW {
         /* +h0010 */ uint32_t h0010[14];
         /* +h0048 */ wchar_t *team_names;
     };
-    static_assert(sizeof(ObserverMatch) == 76, "struct ObserverMatch has incorect size");
+    static_assert(sizeof(ObserverMatch) == 76, "struct ObserverMatch has incorrect size");
 }

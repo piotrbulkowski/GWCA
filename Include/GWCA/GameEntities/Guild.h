@@ -24,7 +24,7 @@ namespace GW {
         /* +h00E4 */ uint32_t status;
         /* +h00E8 */ uint32_t h00E8[35];
     };
-    static_assert(sizeof(GuildPlayer) == 372, "struct GuildPlayer has incorect size");
+    static_assert(sizeof(GuildPlayer) == 372, "struct GuildPlayer has incorrect size");
 
     typedef Array<GuildPlayer *> GuildRoster;
 
@@ -33,7 +33,7 @@ namespace GW {
         /* +h0004 */ uint32_t time2;
         /* +h0008 */ wchar_t name[256]; // Name of added/kicked person, then the adder/kicker, they seem to be in the same array
     };
-    static_assert(sizeof(GuildHistoryEvent) == 520, "struct GuildHistoryEvent has incorect size");
+    static_assert(sizeof(GuildHistoryEvent) == 520, "struct GuildHistoryEvent has incorrect size");
 
     typedef Array<GuildHistoryEvent *> GuildHistory;
 
@@ -57,7 +57,7 @@ namespace GW {
         /* +h00A4 */ uint32_t cape_emblem;
         /* +h00A8 */ uint32_t cape_trim;
     };
-    static_assert(sizeof(Guild) == 172, "struct Guild has incorect size");
+    static_assert(sizeof(Guild) == 172, "struct Guild has incorrect size");
 
     typedef Array<Guild *> GuildArray;
 }
