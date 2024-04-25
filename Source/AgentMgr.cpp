@@ -380,14 +380,18 @@ namespace GW {
     namespace Agents {
 
         bool GetIsAgentTargettable(const GW::Agent* agent) {
-            const auto living = agent ? agent->GetAsAgentLiving() : nullptr;
-            if (!living)
-                return false;
-            if (living->IsPlayer())
-                return true;
-            const GW::NPC* npc = GW::Agents::GetNPCByID(living->player_number);
-            if (npc && (npc->npc_flags & 0x10000) == 0)
-                return true;
+            if (!agent) return false;
+            if (const auto living = agent->GetAsAgentLiving()) {
+                if (living->IsPlayer())
+                    return true;
+                const GW::NPC* npc = GW::Agents::GetNPCByID(living->player_number);
+                if (npc && (npc->npc_flags & 0x10000) == 0)
+                    return true;
+            }
+            else if (const auto gadget = agent->GetAsAgentGadget()) {
+                if (GetAgentEncName(gadget))
+                    return true;
+            }
             return false;
         }
         bool SendDialog(uint32_t dialog_id) {
