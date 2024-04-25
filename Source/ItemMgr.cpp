@@ -138,22 +138,22 @@ namespace {
     };
     void OnMoveItem(uint32_t item_id, uint32_t quantity, uint32_t bag_index, uint32_t slot) {
         GW::Hook::EnterHook();
-        MoveItem_UIMessage pack = { item_id,quantity,(Constants::Bag)(bag_index + 1), slot };
-        UI::SendUIMessage(UI::UIMessage::kSendMoveItem, &pack);
+        MoveItem_UIMessage packet = { item_id,quantity,(Constants::Bag)(bag_index + 1), slot };
+        UI::SendUIMessage(UI::UIMessage::kSendMoveItem, &packet);
         GW::Hook::LeaveHook();
     };
     void OnMoveItem_UIMessage(GW::HookStatus* status, UI::UIMessage message_id, void* wparam, void*) {
         GWCA_ASSERT(message_id == UI::UIMessage::kSendMoveItem && wparam);
-        MoveItem_UIMessage* pack = (MoveItem_UIMessage*)wparam;
-        const auto bag = Items::GetBag(pack->bag_id);
+        MoveItem_UIMessage* packet = (MoveItem_UIMessage*)wparam;
+        const auto bag = Items::GetBag(packet->bag_id);
         GWCA_ASSERT(bag);
         // Make sure the user is allowed to move the item by the game
         if (!status->blocked && !CanAccessXunlaiChest()) {
-            if (IsStorageItem(Items::GetItemById(pack->item_id)) || IsStorageBag(bag))
+            if (IsStorageItem(Items::GetItemById(packet->item_id)) || IsStorageBag(bag))
                 status->blocked = true;
         }
         if (!status->blocked) {
-            MoveItem_Ret(pack->item_id, pack->quantity, bag->index, pack->slot);
+            MoveItem_Ret(packet->item_id, packet->quantity, bag->index, packet->slot);
         }
     }
 
@@ -412,9 +412,9 @@ namespace GW {
         bool CanInteractWithItem(const GW::Item* item) {
             return item && !IsStorageItem(item) || CanAccessXunlaiChest();
         }
-        bool PickUpItem(const Item* item, uint32_t CallTarget /*= 0*/) {
-            uint32_t packet[] = { item->agent_id, CallTarget == 1 };
-            return UI::SendUIMessage(GW::UI::UIMessage::kSendInteractItem, packet);
+        bool PickUpItem(const Item* item, uint32_t call_target /*= 0*/) {
+            auto packet = UI::UIPacket::kInteractAgent{ item->agent_id, call_target == 1 };
+            return UI::SendUIMessage(GW::UI::UIMessage::kSendInteractItem, &packet);
         }
 
         bool DropItem(const Item* item, uint32_t quantity) {

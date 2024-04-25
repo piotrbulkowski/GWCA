@@ -4,13 +4,14 @@
 #include <GWCA/Utilities/Export.h>
 #include <GWCA/GameContainers/Array.h>
 #include <GWCA/GameContainers/GamePos.h>
-
 #include <GWCA/Managers/MerchantMgr.h>
 
 namespace GW {
 
     struct Module;
     extern Module UIModule;
+
+    enum class CallTargetType : uint32_t;
 
     namespace Constants {
         enum class Language;
@@ -371,17 +372,13 @@ namespace GW {
                 bool call_target;
             };
 
-            struct kSendInteractPlayer {
-                uint32_t agent_id;
-            };
-
             struct kSendChangeTarget {
                 uint32_t target_id;
                 uint32_t auto_target_id;
             };
 
             struct kSendCallTarget {
-                uint32_t call_type;
+                CallTargetType call_type;
                 uint32_t agent_id;
             };
 

@@ -102,15 +102,15 @@ namespace {
     LoadSkills_pt RetLoadSkills = 0;
     struct OnLoadSkillbar_UIMessage_Packet {
         uint32_t agent_id;
-        uint32_t skill_ids[8] = { 0 };
+        uint32_t skill_ids[8] = {};
     };
     void OnLoadSkillbar(uint32_t agent_id, uint32_t skill_ids_count, uint32_t* skill_ids) {
         GW::Hook::EnterHook();
-        OnLoadSkillbar_UIMessage_Packet pack;
-        pack.agent_id = agent_id;
-        memcpy(pack.skill_ids, skill_ids, skill_ids_count * sizeof(*skill_ids));
+        OnLoadSkillbar_UIMessage_Packet packet;
+        packet.agent_id = agent_id;
+        memcpy(packet.skill_ids, skill_ids, skill_ids_count * sizeof(*skill_ids));
         // Pass this through UI, we'll pick it up in OnLoadSkillbar_UIMessage. Ensure tmp_skill_ids is an array of at least 8 skill ids.
-        UI::SendUIMessage(UI::UIMessage::kSendLoadSkillbar, &pack);
+        UI::SendUIMessage(UI::UIMessage::kSendLoadSkillbar, &packet);
         GW::Hook::LeaveHook();
     };
     void OnLoadSkillbar_UIMessage(GW::HookStatus* status, UI::UIMessage message_id, void* wparam, void*) {

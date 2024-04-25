@@ -159,7 +159,7 @@ namespace GW {
             Count
         };
 
-        constexpr Profession HeroProfs[] = {
+        constexpr std::array HeroProfs = {
             Profession::None,
             Profession::Mesmer, // Norgu
             Profession::Warrior,// Goren

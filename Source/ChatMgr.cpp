@@ -27,7 +27,7 @@ namespace {
 
     // There is maybe more.
     // Though, we can probably fix this.
-    bool ChannelThatParseColorTag[] = {
+    std::array ChannelThatParseColorTag = {
         true, true, true, true, true, true, true,
         false, // WARNING
         true, true, true, true, true,
@@ -87,8 +87,8 @@ namespace {
 
     void __cdecl OnRecvWhisper_Func(uint32_t transaction_id, wchar_t *player_name, wchar_t* message) {
         HookBase::EnterHook();
-        uint32_t packet[] = { transaction_id, (uint32_t)player_name, (uint32_t)message };
-        GW::UI::SendUIMessage(GW::UI::UIMessage::kRecvWhisper, packet);
+        auto packet = GW::UI::UIPacket::kRecvWhisper{ transaction_id, player_name, message };
+        GW::UI::SendUIMessage(GW::UI::UIMessage::kRecvWhisper, &packet);
         HookBase::LeaveHook();
     }
 
@@ -97,8 +97,8 @@ namespace {
 
     void __fastcall OnStartWhisper_Func(GW::UI::Frame* ctx, uint32_t, wchar_t* name) {
         GW::HookBase::EnterHook();
-        wchar_t* packet[] = {name};
-        GW::UI::SendUIMessage(GW::UI::UIMessage::kStartWhisper, packet, ctx);
+        auto packet = GW::UI::UIPacket::kStartWhisper{ name };
+        GW::UI::SendUIMessage(GW::UI::UIMessage::kStartWhisper, &packet, ctx);
         GW::HookBase::LeaveHook();
     }
 
@@ -107,8 +107,8 @@ namespace {
 
     void __cdecl OnAddToChatLog_Func(wchar_t* message, uint32_t channel) {
         GW::HookBase::EnterHook();
-        uint32_t packet[] = { (uint32_t)message, channel };
-        GW::UI::SendUIMessage(GW::UI::UIMessage::kLogChatMessage, packet);
+        auto packet = GW::UI::UIPacket::kLogChatMessage{ message, static_cast<Chat::Channel>(channel) };
+        GW::UI::SendUIMessage(GW::UI::UIMessage::kLogChatMessage, &packet);
         GW::HookBase::LeaveHook();
     }
 
@@ -127,7 +127,7 @@ namespace {
 
     void OnUIMessage_Pre_AddTimestampToChatMessage(GW::HookStatus*, GW::UI::UIMessage message_id, void* wparam, void*) {
         GWCA_ASSERT(message_id == GW::UI::UIMessage::kPrintChatMessage);
-        const auto packet = (GW::UI::UIPacket::kPrintChatMessage*)wparam;
+        const auto packet = static_cast<GW::UI::UIPacket::kPrintChatMessage*>(wparam);
         if (!ShowTimestamps)
             return;
         if (packet->message == rewritten_message_buffer)
@@ -417,8 +417,8 @@ namespace GW {
     }
 
     bool Chat::AddToChatLog(wchar_t* message, uint32_t channel) {
-        uint32_t packet[] = { (uint32_t)message, channel };
-        return GW::UI::SendUIMessage(UI::UIMessage::kLogChatMessage, packet);
+        auto packet = GW::UI::UIPacket::kLogChatMessage{ message, static_cast<Channel>(channel) };
+        return GW::UI::SendUIMessage(UI::UIMessage::kLogChatMessage, &packet);
     }
 
     Chat::Color Chat::SetSenderColor(Channel chan, Color col) {
@@ -470,8 +470,8 @@ namespace GW {
         buffer[0] = static_cast<wchar_t>(channel);
         wcsncpy(&buffer[1], msg, len);
         buffer[len + 1] = 0;
-        uint32_t packet[] = { (uint32_t)buffer, 0 };
-        return GW::UI::SendUIMessage(UI::UIMessage::kSendChatMessage, packet);
+        auto packet = GW::UI::UIPacket::kSendChatMessage{ buffer, 0 };
+        return GW::UI::SendUIMessage(UI::UIMessage::kSendChatMessage, &packet);
     }
 
     bool Chat::SendChat(char channel, const char *msg) {
@@ -491,8 +491,8 @@ namespace GW {
         if (!(written > 0 && written < 140))
             return false;
         buffer[written] = 0;
-        uint32_t packet[] = { (uint32_t)buffer, 0 };
-        return GW::UI::SendUIMessage(UI::UIMessage::kSendChatMessage, packet);
+        auto packet = GW::UI::UIPacket::kSendChatMessage{ buffer, 0 };
+        return GW::UI::SendUIMessage(UI::UIMessage::kSendChatMessage, &packet);
     }
 
     bool Chat::SendChat(const char *from, const char *msg) {
@@ -504,8 +504,8 @@ namespace GW {
         if (!(written > 0 && written < 140))
             return false;
         buffer[written] = 0;
-        uint32_t packet[] = { (uint32_t)buffer, 0 };
-        return GW::UI::SendUIMessage(UI::UIMessage::kSendChatMessage, packet);
+        auto packet = GW::UI::UIPacket::kSendChatMessage{ buffer, 0 };
+        return GW::UI::SendUIMessage(UI::UIMessage::kSendChatMessage, &packet);
     }
 
     // Change to WriteChatF(Channel chan, const wchar_t *from, const wchar_t *frmt, ..)

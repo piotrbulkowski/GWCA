@@ -732,7 +732,7 @@ namespace GW {
             return result;
         }
         bool Keydown(ControlAction key) {
-            KeypressPacket action;
+            KeypressPacket action {key};
             action.key = key;
             return SendFrameUIMessage(GetButtonActionFrame(), UI::UIMessage::kKeyDown, &action);
         }

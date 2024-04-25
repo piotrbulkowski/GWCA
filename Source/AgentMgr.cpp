@@ -76,26 +76,26 @@ namespace {
 
     void OnInteractNPC_Func(uint32_t agent_id, bool call_target) {
         GW::Hook::EnterHook();
-        uint32_t packet[] = { agent_id, call_target };
-        UI::SendUIMessage(GW::UI::UIMessage::kSendInteractNPC, packet);
+        auto packet = UI::UIPacket::kInteractAgent{ agent_id, call_target };
+        UI::SendUIMessage(GW::UI::UIMessage::kSendInteractNPC, &packet);
         GW::Hook::LeaveHook();
     }
     void OnInteractItem_Func(uint32_t agent_id, bool call_target) {
         GW::Hook::EnterHook();
-        uint32_t packet[] = { agent_id, call_target };
-        UI::SendUIMessage(GW::UI::UIMessage::kSendInteractItem, packet);
+        auto packet = UI::UIPacket::kInteractAgent{ agent_id, call_target };
+        UI::SendUIMessage(GW::UI::UIMessage::kSendInteractItem, &packet);
         GW::Hook::LeaveHook();
     }
     void OnInteractGadget_Func(uint32_t agent_id, bool call_target) {
         GW::Hook::EnterHook();
-        uint32_t packet[] = { agent_id, call_target };
-        UI::SendUIMessage(GW::UI::UIMessage::kSendInteractGadget, packet);
+        auto packet = UI::UIPacket::kInteractAgent{ agent_id, call_target };
+        UI::SendUIMessage(GW::UI::UIMessage::kSendInteractGadget, &packet);
         GW::Hook::LeaveHook();
     }
     void OnInteractEnemy_Func(uint32_t agent_id, bool call_target) {
         GW::Hook::EnterHook();
-        uint32_t packet[] = { agent_id, call_target };
-        UI::SendUIMessage(GW::UI::UIMessage::kSendInteractEnemy, packet);
+        auto packet = UI::UIPacket::kInteractAgent{ agent_id, call_target };
+        UI::SendUIMessage(GW::UI::UIMessage::kSendInteractEnemy, &packet);
         GW::Hook::LeaveHook();
     }
 
@@ -104,8 +104,8 @@ namespace {
 
     void OnCallTarget_Func(uint32_t type, uint32_t agent_id) {
         GW::Hook::EnterHook();
-        uint32_t packet[] = { type, agent_id };
-        UI::SendUIMessage(GW::UI::UIMessage::kSendCallTarget, packet);
+        UI::UIPacket::kSendCallTarget packet = { (CallTargetType)type, agent_id };
+        UI::SendUIMessage(GW::UI::UIMessage::kSendCallTarget, &packet);
         GW::Hook::LeaveHook();
     }
 
@@ -127,7 +127,7 @@ namespace {
     AgentList *AgentListPtr = nullptr;
 
     HookEntry UIMessage_Entry;
-    const UI::UIMessage ui_messages_to_hook[] = {
+    constexpr std::array ui_messages_to_hook = {
         UI::UIMessage::kDialogBody,
         UI::UIMessage::kSendAgentDialog,
         UI::UIMessage::kSendGadgetDialog,
@@ -172,39 +172,38 @@ namespace {
             }
         } break;
         case UI::UIMessage::kSendCallTarget: {
-            const auto packet = static_cast<UI::UIPacket::kSendCallTarget*>(wparam);
             if (CallTarget_Ret) {
-                CallTarget_Ret(packet->call_type, packet->agent_id);
+                if (const auto packet = static_cast<UI::UIPacket::kSendCallTarget*>(wparam))
+                    CallTarget_Ret((uint32_t)packet->call_type, packet->agent_id);
             }
         } break;
         case UI::UIMessage::kSendInteractGadget: {
             if (InteractGadget_Ret) {
-                const auto packet = static_cast<UI::UIPacket::kInteractAgent*>(wparam);
-                InteractGadget_Ret(packet->agent_id, packet->call_target);
+                if (const auto packet = static_cast<UI::UIPacket::kInteractAgent*>(wparam))
+                    InteractGadget_Ret(packet->agent_id, packet->call_target);
             }
         } break;
         case UI::UIMessage::kSendInteractItem: {
             if (InteractItem_Ret) {
-                const auto packet = static_cast<UI::UIPacket::kInteractAgent*>(wparam);
+                if (const auto packet = static_cast<UI::UIPacket::kInteractAgent*>(wparam))
                 InteractItem_Ret(packet->agent_id, packet->call_target);
             }
         } break;
         case UI::UIMessage::kSendInteractNPC: {
             if (InteractNPC_Ret) {
-                const auto packet = static_cast<UI::UIPacket::kInteractAgent*>(wparam);
-                InteractNPC_Ret(packet->agent_id, packet->call_target);
+                if (const auto packet = static_cast<UI::UIPacket::kInteractAgent*>(wparam))
+                    InteractNPC_Ret(packet->agent_id, packet->call_target);
             }
         } break;
         case UI::UIMessage::kSendInteractEnemy: {
             if (InteractEnemy_Ret) {
-                const auto packet = static_cast<UI::UIPacket::kInteractAgent*>(wparam);
-                InteractEnemy_Ret(packet->agent_id,packet->call_target);
+                if (const auto packet = static_cast<UI::UIPacket::kInteractAgent*>(wparam))
+                    InteractEnemy_Ret(packet->agent_id, packet->call_target);
             }
         } break;
         case UI::UIMessage::kSendInteractPlayer: {
             if (InteractPlayer_Ret) {
-            const auto packet = static_cast<UI::UIPacket::kSendInteractPlayer*>(wparam);
-                InteractPlayer_Ret(packet->agent_id);
+                InteractPlayer_Ret((uint32_t)wparam);
             }
         } break;
         }
@@ -497,8 +496,8 @@ namespace GW {
             if (living->IsPlayer()) {
                 if (!UI::SendUIMessage(UI::UIMessage::kSendInteractPlayer, (void*)agent->agent_id))
                     return false;
-                uint32_t call_packet[] = { (uint32_t)CallTargetType::Following, agent->agent_id };
-                return UI::SendUIMessage(UI::UIMessage::kSendCallTarget, call_packet);
+                auto call_packet = UI::UIPacket::kSendCallTarget{ CallTargetType::Following, agent->agent_id };
+                return UI::SendUIMessage(UI::UIMessage::kSendCallTarget, &call_packet);
             }
             if (living->allegiance == GW::Constants::Allegiance::Enemy) {
                 return UI::SendUIMessage(UI::UIMessage::kSendInteractEnemy, &packet);

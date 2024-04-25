@@ -760,7 +760,7 @@ namespace GW {
         };
 
         // This array needs testing lol.
-        const char* const NAME_FROM_ID[] = {
+        constexpr std::array NAME_FROM_ID = {
             "",
             "Gladiators Arena",
             "DEV Test Arena (1v1)",
