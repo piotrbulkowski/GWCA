@@ -48,8 +48,10 @@ namespace {
 
 
     void __cdecl OnLeaveGameThread(void* unk) {
+        HookBase::EnterHook();
         CallFunctions();
         LeaveGameThread_Ret(unk);
+        HookBase::LeaveHook();
     }
 
     void Init()
