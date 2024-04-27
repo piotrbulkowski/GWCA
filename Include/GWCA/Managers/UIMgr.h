@@ -346,6 +346,12 @@ namespace GW {
         };
 
         namespace UIPacket {
+            struct kLogout {
+                uint32_t unknown;
+                uint32_t character_select;
+            };
+            static_assert(sizeof(kLogout) == 0x8);
+
             struct kKeyAction {
                 uint32_t gw_key;
                 uint32_t h0004;
