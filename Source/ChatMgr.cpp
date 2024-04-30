@@ -470,8 +470,8 @@ namespace GW {
         buffer[0] = static_cast<wchar_t>(channel);
         wcsncpy(&buffer[1], msg, len);
         buffer[len + 1] = 0;
-        auto packet = GW::UI::UIPacket::kSendChatMessage{ buffer, 0 };
-        return GW::UI::SendUIMessage(UI::UIMessage::kSendChatMessage, &packet);
+        SendChat_Func(buffer, 0);
+        return true;
     }
 
     bool Chat::SendChat(char channel, const char *msg) {
@@ -491,8 +491,8 @@ namespace GW {
         if (!(written > 0 && written < 140))
             return false;
         buffer[written] = 0;
-        auto packet = GW::UI::UIPacket::kSendChatMessage{ buffer, 0 };
-        return GW::UI::SendUIMessage(UI::UIMessage::kSendChatMessage, &packet);
+        SendChat_Func(buffer,0);
+        return true;
     }
 
     bool Chat::SendChat(const char *from, const char *msg) {
@@ -504,8 +504,8 @@ namespace GW {
         if (!(written > 0 && written < 140))
             return false;
         buffer[written] = 0;
-        auto packet = GW::UI::UIPacket::kSendChatMessage{ buffer, 0 };
-        return GW::UI::SendUIMessage(UI::UIMessage::kSendChatMessage, &packet);
+        SendChat_Func(buffer, 0);
+        return true;
     }
 
     // Change to WriteChatF(Channel chan, const wchar_t *from, const wchar_t *frmt, ..)
