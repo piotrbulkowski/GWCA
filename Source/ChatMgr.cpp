@@ -417,8 +417,10 @@ namespace GW {
     }
 
     bool Chat::AddToChatLog(wchar_t* message, uint32_t channel) {
-        auto packet = GW::UI::UIPacket::kLogChatMessage{ message, static_cast<Channel>(channel) };
-        return GW::UI::SendUIMessage(UI::UIMessage::kLogChatMessage, &packet);
+        if (!(AddToChatLog_Func && message && *message))
+            return false;
+        AddToChatLog_Func(message, channel);
+        return true;
     }
 
     Chat::Color Chat::SetSenderColor(Channel chan, Color col) {
