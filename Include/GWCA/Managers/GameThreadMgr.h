@@ -25,5 +25,7 @@ namespace GW {
             HookEntry *entry);
 
         GWCA_API bool IsInGameThread();
+
+        GWCA_API void EnableHooks();
     };
 }
