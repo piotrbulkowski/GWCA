@@ -53,7 +53,7 @@ int GW::HookBase::CreateHook(void** target, void* detour, void** trampoline)
 {
     if (!(target && *target))
         return -1;
-    if (const auto nested = Scanner::FunctionFromNearCall(*(uintptr_t*)target, true))
+    if (const auto nested = Scanner::FunctionFromNearCall(*(uintptr_t*)target, false))
         *target = (void*)nested;
     return MH_CreateHook(*target, detour, trampoline);
 }
