@@ -179,9 +179,4 @@ namespace GW {
             it = GameThread_callbacks.find(entry);
         }
     }
-
-    void GameThread::EnableHooks()
-    {
-        ::EnableHooks();
-    }
 } // namespace GW
