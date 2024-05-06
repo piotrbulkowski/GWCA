@@ -24,7 +24,6 @@
 #include <GWCA/Managers/StoCMgr.h>
 #include <GWCA/Managers/AgentMgr.h>
 #include <GWCA/Managers/UIMgr.h>
-#include <GWCA/Context/AccountContext.h>
 
 namespace {
     using namespace GW;
@@ -131,29 +130,29 @@ namespace {
     MoveItem_pt MoveItem_Func = 0;
     MoveItem_pt MoveItem_Ret = 0;
     struct MoveItem_UIMessage { 
-        uint32_t item_id; 
-        uint32_t quantity; 
-        Constants::Bag bag_id; 
-        uint32_t slot; 
+        uint32_t item_id;
+        uint32_t quantity;
+        uint32_t bag_index; // equal to bag_id() - 1
+        uint32_t slot;
     };
     void OnMoveItem(uint32_t item_id, uint32_t quantity, uint32_t bag_index, uint32_t slot) {
         GW::Hook::EnterHook();
-        MoveItem_UIMessage packet = { item_id,quantity,(Constants::Bag)(bag_index + 1), slot };
+        MoveItem_UIMessage packet = { item_id, quantity, bag_index, slot };
         UI::SendUIMessage(UI::UIMessage::kSendMoveItem, &packet);
         GW::Hook::LeaveHook();
     };
     void OnMoveItem_UIMessage(GW::HookStatus* status, UI::UIMessage message_id, void* wparam, void*) {
         GWCA_ASSERT(message_id == UI::UIMessage::kSendMoveItem && wparam);
-        MoveItem_UIMessage* packet = (MoveItem_UIMessage*)wparam;
-        const auto bag = Items::GetBag(packet->bag_id);
-        GWCA_ASSERT(bag);
+        const auto packet = static_cast<MoveItem_UIMessage*>(wparam);
         // Make sure the user is allowed to move the item by the game
         if (!status->blocked && !CanAccessXunlaiChest()) {
-            if (IsStorageItem(Items::GetItemById(packet->item_id)) || IsStorageBag(bag))
+            const auto item = Items::GetItemById(packet->item_id);
+            const auto bag = Items::GetBagByIndex(packet->bag_index);
+            if (IsStorageItem(item) || IsStorageBag(bag))
                 status->blocked = true;
         }
         if (!status->blocked) {
-            MoveItem_Ret(packet->item_id, packet->quantity, bag->index, packet->slot);
+            MoveItem_Ret(packet->item_id, packet->quantity, packet->bag_index, packet->slot);
         }
     }
 
@@ -169,8 +168,6 @@ namespace {
     typedef void(__cdecl* ChangeGold_pt)(uint32_t character_gold, uint32_t storage_gold);
     ChangeGold_pt ChangeGold_Func = 0;
     ChangeGold_pt ChangeGold_Ret = 0;
-
-
 
     void __cdecl OnChangeGold(uint32_t character_gold, uint32_t storage_gold) {
         HookBase::EnterHook();
