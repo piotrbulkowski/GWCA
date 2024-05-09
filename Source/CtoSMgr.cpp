@@ -106,7 +106,7 @@ namespace GW {
         void* buffer_cpy = malloc(size);
         GWCA_ASSERT(buffer_cpy != NULL);
         memcpy(buffer_cpy, buffer, size);
-        GameThread::Enqueue([buffer_cpy, size]() {
+        GameThread::Enqueue([buffer_cpy, size] {
             SendPacket_Func(*(uint32_t*)game_srv_object_addr, size, buffer_cpy);
             free(buffer_cpy);
         });

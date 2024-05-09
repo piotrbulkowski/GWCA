@@ -918,7 +918,7 @@ namespace GW {
                 return false;
             if (!GameThread::IsInGameThread()) {
                 // NB: Setting preferences triggers UI message 0x10000013f - make sure its run on the game thread!
-                GameThread::Enqueue([pref, value]() { SetPreference(pref, value);});
+                GameThread::Enqueue([pref, value] { SetPreference(pref, value);});
                 return true;
             }
             uint32_t* opts = 0;
@@ -950,7 +950,7 @@ namespace GW {
             SetEnumPreference_Func((uint32_t)pref, value);
 
             // Post preference re rendering etc. Run on render loop to avoid issues.
-            GameThread::Enqueue([pref]() {
+            GameThread::Enqueue([pref] {
                 uint32_t value = GetPreference(pref);
                 switch (pref) {
                 case EnumPreference::AntiAliasing:
@@ -986,7 +986,7 @@ namespace GW {
                 return false;
             if (!GameThread::IsInGameThread()) {
                 // NB: Setting preferences triggers UI message 0x10000013f - make sure its run on the game thread!
-                GameThread::Enqueue([pref, value]() { SetPreference(pref, value);});
+                GameThread::Enqueue([pref, value] { SetPreference(pref, value);});
                 return true;
             }
             value = ClampPreference(pref, value); // Clamp here to avoid assertion error later.
@@ -1065,7 +1065,7 @@ namespace GW {
                 return false;
             if (!GameThread::IsInGameThread()) {
                 // NB: Setting preferences triggers UI message 0x10000013f - make sure its run on the game thread!
-                GameThread::Enqueue([pref, value]() { SetPreference(pref, value);});
+                GameThread::Enqueue([pref, value] { SetPreference(pref, value);});
                 return true;
             }
             SetStringPreference_Func((uint32_t)pref, value);
@@ -1077,17 +1077,17 @@ namespace GW {
                 return false;
             if (!GameThread::IsInGameThread()) {
                 // NB: Setting preferences triggers UI message 0x10000013f - make sure its run on the game thread!
-                GameThread::Enqueue([pref, value]() { SetPreference(pref, value);});
+                GameThread::Enqueue([pref, value] { SetPreference(pref, value); });
                 return true;
             }
             SetFlagPreference_Func((uint32_t)pref, value);
             switch (pref) {
-                case (UI::FlagPreference::IsWindowed): {
-                uint32_t pref_value = value ? 2 : 0;
-                uint32_t renderer_value = GetGameRendererMode_Func(0);
-                if (pref_value != renderer_value)
-                    SetGameRendererMode_Func(0, pref_value);
-            }
+                case UI::FlagPreference::IsWindowed: {
+                    uint32_t pref_value = value ? 2 : 0;
+                    uint32_t renderer_value = GetGameRendererMode_Func(0);
+                    if (pref_value != renderer_value)
+                        SetGameRendererMode_Func(0, pref_value);
+                }
 
             }
 

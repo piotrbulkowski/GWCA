@@ -270,7 +270,7 @@ namespace GW {
             AgentID agent_id = Agents::GetHeroAgentID(hero_index);
             // NB: GW Client sends UI Message 0x1000005e (update skillbar skills message) without waiting for a server response!
             // This is a bug in the client, but because this affects rendering we have to enqueue the call
-            GameThread::Enqueue([agent_id, n_skills, skill_ids]() {
+            GameThread::Enqueue([agent_id, n_skills, skill_ids] {
                 LoadSkills_Func(agent_id, n_skills, skill_ids);
                 free(skill_ids);
                 });

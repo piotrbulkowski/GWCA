@@ -147,7 +147,7 @@ namespace {
     void Init() {
         InitializeCriticalSection(&mutex);
         // Requires GameThread module to be hooked!
-        GameThread::Enqueue([]() {
+        GameThread::Enqueue([] {
             InitOnGameThread();
             });
     }
