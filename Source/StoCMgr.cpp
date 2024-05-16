@@ -217,6 +217,22 @@ namespace GW {
         LeaveCriticalSection(&mutex);
     }
 
+    void StoC::RemoveCallbacks(HookEntry* entry)
+    {
+        EnterCriticalSection(&mutex);
+        for (auto& header_entries : packet_entries) {
+            header_entries.erase(
+                std::remove_if(
+                    header_entries.begin(),
+                    header_entries.end(),
+                    [entry](const CallbackEntry& e) { return e.entry == entry; }
+                ),
+                header_entries.end()
+            );
+        }
+        LeaveCriticalSection(&mutex);
+    }
+
     void StoC::RemovePostCallback(uint32_t header, HookEntry* entry)
     {
         RemoveCallback(header, entry);

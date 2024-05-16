@@ -61,6 +61,7 @@ namespace GW {
         }
 
         GWCA_API void RemoveCallback(uint32_t header, HookEntry *entry);
+        GWCA_API void RemoveCallbacks(HookEntry *entry);
 
         template <typename T>
         void RemoveCallback(HookEntry* entry) {
