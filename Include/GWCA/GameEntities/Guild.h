@@ -37,6 +37,17 @@ namespace GW {
 
     typedef Array<GuildHistoryEvent *> GuildHistory;
 
+    struct CapeDesign { // total: 0x1C/28
+        /* +h0000 */ uint32_t cape_bg_color;
+        /* +h0004 */ uint32_t cape_detail_color;
+        /* +h0008 */ uint32_t cape_emblem_color;
+        /* +h000C */ uint32_t cape_shape;
+        /* +h0010 */ uint32_t cape_detail;
+        /* +h0014 */ uint32_t cape_emblem;
+        /* +h0018 */ uint32_t cape_trim;
+    };
+    static_assert(sizeof(CapeDesign) == 0x1c, "struct CapeDesign has incorrect size");
+
     struct Guild { // total: 0xAC/172
         /* +h0000 */ GHKey key;
         /* +h0010 */ uint32_t h0010[5];
@@ -49,15 +60,21 @@ namespace GW {
         /* +h0078 */ uint32_t faction_point;
         /* +h007C */ uint32_t qualifier_point;
         /* +h0080 */ wchar_t tag[8];
-        /* +h0090 */ uint32_t cape_bg_color;
-        /* +h0094 */ uint32_t cape_detail_color;
-        /* +h0098 */ uint32_t cape_emblem_color;
-        /* +h009C */ uint32_t cape_shape;
-        /* +h00A0 */ uint32_t cape_detail;
-        /* +h00A4 */ uint32_t cape_emblem;
-        /* +h00A8 */ uint32_t cape_trim;
+        /* +h0090 */ CapeDesign cape;
     };
     static_assert(sizeof(Guild) == 172, "struct Guild has incorrect size");
 
     typedef Array<Guild *> GuildArray;
+
+    struct TownAlliance { // total: 0x78/120
+        /* +h0000 */ uint32_t rank;
+        /* +h0004 */ uint32_t allegiance;
+        /* +h0008 */ uint32_t faction;
+        /* +h000C */ wchar_t name[32];
+        /* +h004C */ wchar_t tag[5];
+        /* +h0056 */ uint8_t _padding[2];
+        /* +h0058 */ CapeDesign cape;
+        /* +h0074 */ uint32_t map_id;
+    };
+    static_assert(sizeof(TownAlliance) == 0x78, "struct TownAlliance has incorrect size");
 }
