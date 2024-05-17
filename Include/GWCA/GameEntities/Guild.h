@@ -3,6 +3,10 @@
 #include <GWCA/GameContainers/Array.h>
 
 namespace GW {
+
+    namespace Constants {
+        enum class MapID : uint32_t;
+    }
     struct GHKey {
         uint32_t k[4]{};
 
@@ -74,7 +78,7 @@ namespace GW {
         /* +h004C */ wchar_t tag[5];
         /* +h0056 */ uint8_t _padding[2];
         /* +h0058 */ CapeDesign cape;
-        /* +h0074 */ uint32_t map_id;
+        /* +h0074 */ GW::Constants::MapID map_id;
     };
     static_assert(sizeof(TownAlliance) == 0x78, "struct TownAlliance has incorrect size");
 }

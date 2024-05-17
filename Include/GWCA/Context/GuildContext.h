@@ -32,7 +32,7 @@ namespace GW {
         /* +h0278 */ wchar_t announcement_author[20];
         /* +h02A0 */ uint32_t player_guild_rank;
         /* +h02A4 */ uint32_t h02A4;
-        /* +h02A8 */ Array<TownAlliance *> factions_outpost_guilds;
+        /* +h02A8 */ Array<TownAlliance> factions_outpost_guilds;
         /* +h02B8 */ uint32_t kurzick_town_count;
         /* +h02BC */ uint32_t luxon_town_count;
         /* +h02C0 */ uint32_t h02C0;
