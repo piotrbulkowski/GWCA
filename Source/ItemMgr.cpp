@@ -456,7 +456,7 @@ namespace GW {
         }
 
         Bag* GetBag(Constants::Bag bag_id) {
-            if ((uint32_t)bag_id >= (uint32_t)Constants::BagMax)
+            if (!(bag_id > Constants::Bag::None && bag_id < Constants::Bag::Max))
                 return nullptr;
             Bag** bags = GetBagArray();
             const auto bag = bags[(unsigned)bag_id];
