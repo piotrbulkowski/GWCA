@@ -496,6 +496,8 @@ namespace GW {
             if (living->IsPlayer()) {
                 if (!UI::SendUIMessage(UI::UIMessage::kSendInteractPlayer, (void*)agent->agent_id))
                     return false;
+                if (!call_target)
+                    return true;
                 auto call_packet = UI::UIPacket::kSendCallTarget{ CallTargetType::Following, agent->agent_id };
                 return UI::SendUIMessage(UI::UIMessage::kSendCallTarget, &call_packet);
             }
