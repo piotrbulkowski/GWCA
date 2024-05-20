@@ -256,6 +256,7 @@ namespace {
         HookBase::CreateHook((void**)&InteractNPC_Func, OnInteractNPC_Func, (void**)&InteractNPC_Ret);
         HookBase::CreateHook((void**)&InteractEnemy_Func, OnInteractEnemy_Func, (void**)&InteractEnemy_Ret);
         HookBase::CreateHook((void**)&InteractGadget_Func, OnInteractGadget_Func, (void**)&InteractGadget_Ret);
+        HookBase::CreateHook((void**)&InteractItem_Func, OnInteractItem_Func, (void**)&InteractItem_Ret);
         HookBase::CreateHook((void**)&InteractPlayer_Func, OnInteractPlayer_Func, (void**)&InteractPlayer_Ret);
         HookBase::CreateHook((void**)&MoveToWorldPoint_Func, OnMoveToWorldPoint_Func, (void**)&MoveToWorldPoint_Ret);
 
@@ -334,6 +335,8 @@ namespace {
             HookBase::DisableHooks(InteractGadget_Func);
         if (InteractPlayer_Func)
             HookBase::DisableHooks(InteractPlayer_Func);
+        if (InteractItem_Func)
+            HookBase::DisableHooks(InteractItem_Func);
         if (MoveToWorldPoint_Func)
             HookBase::DisableHooks(MoveToWorldPoint_Func);
 
@@ -355,6 +358,8 @@ namespace {
             HookBase::RemoveHook(InteractGadget_Func);
         if (InteractPlayer_Func)
             HookBase::RemoveHook(InteractPlayer_Func);
+        if (InteractItem_Func)
+            HookBase::RemoveHook(InteractItem_Func);
         if (MoveToWorldPoint_Func)
             HookBase::RemoveHook(MoveToWorldPoint_Func);
 
