@@ -300,7 +300,9 @@ namespace GW {
             kQuestDetailsChanged        = 0x10000000 | 0x14A, // wparam = { quest_id, ... }
             kClientActiveQuestChanged   = 0x10000000 | 0x14C, // wparam = { quest_id, ... }. Triggered when the game requests the current quest to change
             kServerActiveQuestChanged   = 0x10000000 | 0x14E, // wparam = { quest_id, ... }. Triggered when the server requests the current quest to change
-            kObjectiveComplete          = 0x10000000 | 0x156, // wparam = { objective_id, ... }
+            kObjectiveAdd               = 0x10000000 | 0x155, // wparam = UIPacket::kObjectiveAdd*
+            kObjectiveComplete          = 0x10000000 | 0x156, // wparam = UIPacket::kObjectiveComplete*
+            kObjectiveUpdated           = 0x10000000 | 0x157, // wparam = UIPacket::kObjectiveUpdated*
             kCheckUIState               = 0x10000000 | 0x170, // Undocumented
             kGuildHall                  = 0x10000000 | 0x177, // wparam = gh key (uint32_t[4])
             kLeaveGuildHall             = 0x10000000 | 0x179,
@@ -453,6 +455,17 @@ namespace GW {
                 uint32_t session_id;
                 uint32_t number_of_points;
                 CompassPoint* points;
+            };
+            struct kObjectiveAdd {
+                uint32_t objective_id;
+                wchar_t* name;
+                uint32_t type;
+            };
+            struct kObjectiveComplete {
+                uint32_t objective_id;
+            };
+            struct kObjectiveUpdated {
+                uint32_t objective_id;
             };
         }
 
