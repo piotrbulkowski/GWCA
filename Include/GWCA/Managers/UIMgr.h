@@ -896,6 +896,8 @@ namespace GW {
         GWCA_API void AsyncDecodeStr(const wchar_t* enc_str, DecodeStr_Callback callback, void* callback_param = 0, GW::Constants::Language language_id = (GW::Constants::Language)0xff);
         GWCA_API void AsyncDecodeStr(const wchar_t *enc_str, std::wstring *out, GW::Constants::Language language_id = (GW::Constants::Language)0xff);
 
+        GWCA_API bool IsValidEncStr(const wchar_t* enc_str);
+
         GWCA_API bool UInt32ToEncStr(uint32_t value, wchar_t *buffer, size_t count);
         GWCA_API uint32_t EncStrToUInt32(const wchar_t *enc_str);
 

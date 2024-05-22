@@ -555,6 +555,180 @@ namespace {
     bool IsFrameValid(UI::Frame* frame) {
         return frame && (int)frame != -1;
     }
+
+#define TERM_FINAL          (0x0000)
+#define TERM_INTERMEDIATE   (0x0001)
+#define CONCAT_CODED        (0x0002)
+#define CONCAT_LITERAL      (0x0003)
+#define STRING_CHAR_FIRST   (0x0010)
+#define WORD_VALUE_BASE     (0x0100)
+#define WORD_BIT_MORE       (0x8000)
+#define WORD_VALUE_RANGE    (WORD_BIT_MORE - WORD_VALUE_BASE)
+
+    inline bool EncChr_IsControlCharacter(wchar_t c) {
+        return c == TERM_FINAL || c == TERM_INTERMEDIATE || c == CONCAT_CODED || c == CONCAT_LITERAL;
+    }
+
+    inline bool EncChr_IsParam(wchar_t c) {
+        return (c >= 0x101 && c <= 0x10f);
+    }
+
+    inline bool EncChr_IsParamSegment(wchar_t c) {
+        return (c >= 0x10a && c <= 0x10c);
+    }
+
+    inline bool EncChr_IsParamSubsection(wchar_t c) {
+        return (c >= 0x107 && c <= 0x109);
+    }
+
+    inline bool EncChr_IsParamNumeric(wchar_t c) {
+        return EncChr_IsParam(c) && !EncChr_IsParamSubsection(c) && !EncChr_IsParamSegment(c);
+    }
+
+    const wchar_t* CParser_ValidateSingleWord(const wchar_t* data, const wchar_t* term) {
+        if (!data) {
+            return nullptr;
+        }
+
+        while (*data & WORD_BIT_MORE) {
+            if (data >= term) {
+                return nullptr;
+            }
+            if ((*data & ~WORD_BIT_MORE) < WORD_VALUE_BASE) {
+                return nullptr;
+            }
+
+            data++;
+        }
+
+        return data;
+    }
+
+    const wchar_t* CParser_ValidateSubsection(const wchar_t* data, const wchar_t* term) {
+        while (data && data < term) {
+            wchar_t c = *data;
+            if (c != TERM_INTERMEDIATE && c < STRING_CHAR_FIRST) {
+                return nullptr;
+            }
+
+            data++;
+
+            if (c == TERM_INTERMEDIATE) {
+                return data;
+            }
+        }
+
+        return nullptr;
+    }
+
+    const wchar_t* CParser_ValidateParam(const wchar_t* data, const wchar_t* term) {
+        if (!data) {
+            return nullptr;
+        }
+
+        wchar_t c = *data;
+
+        if (data >= term || !EncChr_IsParam(*data) || EncChr_IsParamSegment(*data)) { // intentionally not negating IsParamSegment
+            return nullptr;
+        }
+
+        if (EncChr_IsParamSubsection(c)) {
+            return CParser_ValidateSubsection(data+1, term);
+        }
+        else if(EncChr_IsParamNumeric(c)) {
+            return CParser_ValidateSingleWord(data, term);
+        }
+        else {
+            return nullptr;
+        }
+    }
+
+    const wchar_t* CParser_ValidateInternal(const wchar_t* data, const wchar_t* term) {
+        while (data && data < term) {
+            wchar_t c = *data;
+
+            if (c == TERM_FINAL) {
+                data++;
+                if (data != term) {
+                    return nullptr;
+                }
+                return data;
+            }
+            if (c == TERM_INTERMEDIATE) {
+                data++;
+                if (data >= term) {
+                    return nullptr;
+                }
+                return data;
+            }
+            if (c == CONCAT_LITERAL) {
+                data = CParser_ValidateSubsection(data + 1, term);
+                if (!data) {
+                    return nullptr;
+                }
+                continue;
+            }
+            if (c == CONCAT_CODED) {
+                data++;
+                // Intentionally not break
+            }
+
+            // Begin inlined CParser::ValidateWord_AllowPair
+            data = CParser_ValidateSingleWord(data, term);
+            if (!data || data >= term) {
+                return nullptr;
+            }
+
+            if (*data & WORD_BIT_MORE) {
+                data = CParser_ValidateSingleWord(data, term);
+                if (data > term) { // Intentionally not >=
+                    return nullptr;
+                }
+            }
+            // End inlined CParser::ValidateWord_AllowPair
+
+            if (!data) {
+                return nullptr;
+            }
+
+            while (data && data < term) {
+                c = *data;
+                if (EncChr_IsControlCharacter(c)) {
+                    break;
+                }
+
+                if (c >= 0x10a && c <= 0x10c) {
+                    data = CParser_ValidateInternal(data+1, term);
+                }
+                else {
+                    data = CParser_ValidateParam(data, term);
+                }
+            }
+
+            if (!data) {
+                return nullptr;
+            }
+
+            c = *data;
+
+            if (c == TERM_FINAL) {
+                data++;
+                if (data != term) {
+                    return nullptr;
+                }
+                return data;
+            }
+            if (c == TERM_INTERMEDIATE) {
+                data++;
+                if (data >= term) {
+                    return nullptr;
+                }
+                return data;
+            }
+        } // while (data && data < term)
+
+        return nullptr;
+    }
 }
 
 namespace GW {
@@ -845,9 +1019,15 @@ namespace GW {
             return AsyncDecodeStr(enc_str, __calback_copy_wstring, out, language_id);
         }
 
-#define WORD_BIT_MORE       (0x8000)
-#define WORD_VALUE_BASE     (0x100)
-#define WORD_VALUE_RANGE    (WORD_BIT_MORE - WORD_VALUE_BASE)
+        bool IsValidEncStr(const wchar_t* enc_str) {
+            // The CParser::Validate code treats the null terminator as part of the EncStr.
+            // `term` should point to after the null terminator.
+            const wchar_t* term = enc_str + wcslen(enc_str) + 1;
+            const wchar_t* data = CParser_ValidateInternal(enc_str, term);
+
+            return data == term;
+        }
+
         bool UInt32ToEncStr(uint32_t value, wchar_t *buffer, size_t count) {
             // Each "case" in the array of wchar_t contains a value in the range [0, WORD_VALUE_RANGE)
             // This value is offseted by WORD_VALUE_BASE and if it take more than 1 "case" it set the bytes WORD_BIT_MORE
