@@ -66,7 +66,7 @@ namespace GW {
         // Travel to specified outpost.
         GWCA_API bool Travel(Constants::MapID map_id, GW::Constants::ServerRegion region, int district_number = 0, GW::Constants::Language language = (GW::Constants::Language)0);
 
-        GWCA_API bool Travel(Constants::MapID map_id, Constants::District district, int district_number = 0);
+        GWCA_API bool Travel(Constants::MapID map_id, Constants::District district = Constants::District::Current, int district_number = 0);
 
         GWCA_API Constants::ServerRegion RegionFromDistrict(const GW::Constants::District _district);
 
