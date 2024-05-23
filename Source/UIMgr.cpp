@@ -1004,11 +1004,13 @@ namespace GW {
                 callback(callback_param, L"");
                 return;
             }
+#if 0
             if (!IsValidEncStr(enc_str)) {
                 GWCA_WARN("Invalid enc_str passed to AsyncDecodeStr");
                 callback(callback_param, L"");
                 return;
             }
+#endif
             auto& textParser = GetGameContext()->text_parser;
             const auto prev_language_id = textParser->language_id;
             if (language_id != GW::Constants::Language::Unknown) {
