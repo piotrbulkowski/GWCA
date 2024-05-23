@@ -33,7 +33,7 @@ namespace GW {
             int y;
         };
 
-        typedef void(__cdecl* DecodeStr_Callback)(void* param, wchar_t* s);
+        typedef void(__cdecl* DecodeStr_Callback)(void* param, const wchar_t* s);
 
         struct ChatTemplate {
             uint32_t        agent_id;
@@ -891,8 +891,8 @@ namespace GW {
         GWCA_API bool GetIsShiftScreenShot();
         GWCA_API bool GetIsWorldMapShowing();
 
-        GWCA_API void AsyncDecodeStr(const wchar_t *enc_str, wchar_t *buffer, size_t size);
         GWCA_API void AsyncDecodeStr(const wchar_t *enc_str, char    *buffer, size_t size);
+        GWCA_API void AsyncDecodeStr(const wchar_t *enc_str, wchar_t *buffer, size_t size);
         GWCA_API void AsyncDecodeStr(const wchar_t* enc_str, DecodeStr_Callback callback, void* callback_param = 0, GW::Constants::Language language_id = (GW::Constants::Language)0xff);
         GWCA_API void AsyncDecodeStr(const wchar_t *enc_str, std::wstring *out, GW::Constants::Language language_id = (GW::Constants::Language)0xff);
 

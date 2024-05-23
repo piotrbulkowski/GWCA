@@ -274,7 +274,7 @@ namespace {
         size_t size;
     };
 
-    void __cdecl __callback_copy_char(void *param, wchar_t *s) {
+    void __cdecl __callback_copy_char(void *param, const wchar_t *s) {
         GWCA_ASSERT(param && s);
         AsyncBuffer *abuf = (AsyncBuffer *)param;
         char *outstr = (char *)abuf->buffer;
@@ -285,14 +285,14 @@ namespace {
         delete abuf;
     }
 
-    void __cdecl __callback_copy_wchar(void *param, wchar_t *s) {
+    void __cdecl __callback_copy_wchar(void *param, const wchar_t *s) {
         GWCA_ASSERT(param && s);
         AsyncBuffer *abuf = (AsyncBuffer *)param;
         wcsncpy((wchar_t *)abuf->buffer, s, abuf->size);
         delete abuf;
     }
 
-    void __cdecl __calback_copy_wstring(void *param, wchar_t *s) {
+    void __cdecl __calback_copy_wstring(void *param, const wchar_t *s) {
         GWCA_ASSERT(param && s);
         std::wstring *str = (std::wstring *)param;
         *str = s;
@@ -983,29 +983,32 @@ namespace GW {
                 return false;
         }
 
-        void AsyncDecodeStr(const wchar_t *enc_str, wchar_t *buffer, size_t size) {
-            if (!ValidateAsyncDecodeStr)
-                return;
+        void AsyncDecodeStr(const wchar_t* enc_str, char* buffer, size_t size) {
             // @Enhancement: Should use a pool of this buffer, but w/e for now
-            AsyncBuffer *abuf = new AsyncBuffer;
+            AsyncBuffer* abuf = new AsyncBuffer;
             abuf->buffer = buffer;
             abuf->size = size;
-            ValidateAsyncDecodeStr((wchar_t*)enc_str, __callback_copy_wchar, abuf);
+            return AsyncDecodeStr(enc_str, __callback_copy_char, abuf);
         }
 
-        void AsyncDecodeStr(const wchar_t *enc_str, char *buffer, size_t size) {
-            if (!ValidateAsyncDecodeStr)
-                return;
+        void AsyncDecodeStr(const wchar_t *enc_str, wchar_t *buffer, size_t size) {
             // @Enhancement: Should use a pool of this buffer, but w/e for now
             AsyncBuffer *abuf = new AsyncBuffer;
             abuf->buffer = buffer;
             abuf->size = size;
-            ValidateAsyncDecodeStr((wchar_t*)enc_str, __callback_copy_char, abuf);
+            return AsyncDecodeStr(enc_str, __callback_copy_wchar, abuf);
         }
 
         void AsyncDecodeStr(const wchar_t* enc_str, DecodeStr_Callback callback, void* callback_param, GW::Constants::Language language_id) {
-            if (!ValidateAsyncDecodeStr)
+            if (!ValidateAsyncDecodeStr) {
+                callback(callback_param, L"");
                 return;
+            }
+            if (!IsValidEncStr(enc_str)) {
+                GWCA_WARN("Invalid enc_str passed to AsyncDecodeStr");
+                callback(callback_param, L"");
+                return;
+            }
             auto& textParser = GetGameContext()->text_parser;
             const auto prev_language_id = textParser->language_id;
             if (language_id != GW::Constants::Language::Unknown) {
@@ -1020,6 +1023,8 @@ namespace GW {
         }
 
         bool IsValidEncStr(const wchar_t* enc_str) {
+            if (!(enc_str && *enc_str))
+                return false;
             // The CParser::Validate code treats the null terminator as part of the EncStr.
             // `term` should point to after the null terminator.
             const wchar_t* term = enc_str + wcslen(enc_str) + 1;
