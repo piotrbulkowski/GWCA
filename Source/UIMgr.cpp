@@ -565,169 +565,146 @@ namespace {
 #define WORD_BIT_MORE       (0x8000)
 #define WORD_VALUE_RANGE    (WORD_BIT_MORE - WORD_VALUE_BASE)
 
-    inline bool EncChr_IsControlCharacter(wchar_t c) {
+    bool EncChr_IsControlCharacter(wchar_t c) {
         return c == TERM_FINAL || c == TERM_INTERMEDIATE || c == CONCAT_CODED || c == CONCAT_LITERAL;
     }
 
-    inline bool EncChr_IsParam(wchar_t c) {
+    bool EncChr_IsParam(wchar_t c) {
         return (c >= 0x101 && c <= 0x10f);
     }
 
-    inline bool EncChr_IsParamSegment(wchar_t c) {
+    bool EncChr_IsParamSegment(wchar_t c) {
         return (c >= 0x10a && c <= 0x10c);
     }
 
-    inline bool EncChr_IsParamSubsection(wchar_t c) {
+    bool EncChr_IsParamLiteral(wchar_t c) {
         return (c >= 0x107 && c <= 0x109);
     }
 
-    inline bool EncChr_IsParamNumeric(wchar_t c) {
-        return EncChr_IsParam(c) && !EncChr_IsParamSubsection(c) && !EncChr_IsParamSegment(c);
+    bool EncChr_IsParamNumeric(wchar_t c) {
+        return EncChr_IsParam(c) && !EncChr_IsParamLiteral(c) && !EncChr_IsParamSegment(c);
     }
 
-    const wchar_t* CParser_ValidateSingleWord(const wchar_t* data, const wchar_t* term) {
-        if (!data) {
-            return nullptr;
+    // Accepts a sequence of literal string characters, terminated with TERM_INTERMEDIATE
+    bool EncStr_ValidateTerminatedLiteral(const wchar_t*& data, const wchar_t* term) {
+        while (data < term) {
+            wchar_t c = *data++;
+
+            // Skip until we reach a control character.  It terminates correctly if
+            // that character is TERM_INTERMEDIATE, otherwise the string is invalid.
+            if (c < STRING_CHAR_FIRST) {
+                return (c == TERM_INTERMEDIATE);
+            }
         }
 
-        while (*data & WORD_BIT_MORE) {
-            if (data >= term) {
-                return nullptr;
-            }
-            if ((*data & ~WORD_BIT_MORE) < WORD_VALUE_BASE) {
-                return nullptr;
-            }
-
-            data++;
-        }
-
-        return data;
+        return false;
     }
 
-    const wchar_t* CParser_ValidateSubsection(const wchar_t* data, const wchar_t* term) {
-        while (data && data < term) {
-            wchar_t c = *data;
-            if (c != TERM_INTERMEDIATE && c < STRING_CHAR_FIRST) {
-                return nullptr;
+    // Accepts a possibly-multibyte word
+    bool EncStr_ValidateSingleWord(const wchar_t*& data, const wchar_t* term) {
+        wchar_t c;
+
+        do {
+            c = *data++;
+            if ((c & ~WORD_BIT_MORE) < WORD_VALUE_BASE) {
+                return false;
             }
+        } while (c & WORD_BIT_MORE);
 
-            data++;
-
-            if (c == TERM_INTERMEDIATE) {
-                return data;
-            }
-        }
-
-        return nullptr;
+        return (data < term);
     }
 
-    const wchar_t* CParser_ValidateParam(const wchar_t* data, const wchar_t* term) {
-        if (!data) {
-            return nullptr;
+    // Accepts a possibly-multibyte word, optionally followed by a multibyte word
+    bool EncStr_ValidateWord(const wchar_t*& data, const wchar_t* term) {
+        if (!EncStr_ValidateSingleWord(data, term)) {
+            return false;
         }
 
-        wchar_t c = *data;
-
-        if (data >= term || !EncChr_IsParam(*data) || EncChr_IsParamSegment(*data)) { // intentionally not negating IsParamSegment
-            return nullptr;
+        // Lookahead - is there a multibyte word immediately after?
+        // If not, exit now before consuming the character.
+        if (!(*data & WORD_BIT_MORE)) {
+            return true;
         }
 
-        if (EncChr_IsParamSubsection(c)) {
-            return CParser_ValidateSubsection(data+1, term);
-        }
-        else if(EncChr_IsParamNumeric(c)) {
-            return CParser_ValidateSingleWord(data, term);
-        }
-        else {
-            return nullptr;
-        }
+        return EncStr_ValidateSingleWord(data, term);
     }
 
-    const wchar_t* CParser_ValidateInternal(const wchar_t* data, const wchar_t* term) {
-        while (data && data < term) {
-            wchar_t c = *data;
+    bool EncStr_Validate(const wchar_t*& data, const wchar_t* term) {
+        bool isFirstLoop = true;
 
-            if (c == TERM_FINAL) {
-                data++;
-                if (data != term) {
-                    return nullptr;
+        while (data < term) {
+            wchar_t c;  // Do not increment here - the first control character is technically optional
+
+            // Diversion from GW code.  GW's validator loop starts by accepts an EncStr starting with
+            // a control character, but that later crashes string decoding.  As there is no control character
+            // at the start of a string, but there should always be a control character following a word,
+            // I have changed it to make it required, but skipped in the first loop iteration;
+            if (!isFirstLoop) {
+                c = *data++;
+
+                if (c == TERM_FINAL) {
+                    data++;
+                    return (data == term);
                 }
-                return data;
-            }
-            if (c == TERM_INTERMEDIATE) {
-                data++;
-                if (data >= term) {
-                    return nullptr;
+                if (c == TERM_INTERMEDIATE) {
+                    // We should only reach here from a recursive call via an EncString parameter
+                    // provided for a string substitution.
+                    return (data < term);
                 }
-                return data;
-            }
-            if (c == CONCAT_LITERAL) {
-                data = CParser_ValidateSubsection(data + 1, term);
-                if (!data) {
-                    return nullptr;
+                if (c == CONCAT_LITERAL) {
+                    if (EncStr_ValidateTerminatedLiteral(data, term)) {
+                        continue;
+                    }
+                    else {
+                        return false;
+                    }
                 }
-                continue;
-            }
-            if (c == CONCAT_CODED) {
-                data++;
-                // Intentionally not break
+                // if (c == CONCAT_CODED) { /* do nothing - we already consumed the control character */ }
             }
 
-            // Begin inlined CParser::ValidateWord_AllowPair
-            data = CParser_ValidateSingleWord(data, term);
-            if (!data || data >= term) {
-                return nullptr;
+            if (!EncStr_ValidateWord(data, term)) {
+                return false;
             }
 
-            if (*data & WORD_BIT_MORE) {
-                data = CParser_ValidateSingleWord(data, term);
-                if (data > term) { // Intentionally not >=
-                    return nullptr;
-                }
-            }
-            // End inlined CParser::ValidateWord_AllowPair
-
-            if (!data) {
-                return nullptr;
-            }
-
-            while (data && data < term) {
-                c = *data;
-                if (EncChr_IsControlCharacter(c)) {
-                    break;
-                }
-
-                if (c >= 0x10a && c <= 0x10c) {
-                    data = CParser_ValidateInternal(data+1, term);
-                }
-                else {
-                    data = CParser_ValidateParam(data, term);
-                }
-            }
-
-            if (!data) {
-                return nullptr;
-            }
-
+            // At this point we want to lookahead so that we don't consume a potential CONCAT_LITERAL
+            // control character, which should be consumed by the next loop iteration
             c = *data;
-
-            if (c == TERM_FINAL) {
+            while (data < term && !EncChr_IsControlCharacter(c)) {
                 data++;
-                if (data != term) {
-                    return nullptr;
-                }
-                return data;
-            }
-            if (c == TERM_INTERMEDIATE) {
-                data++;
-                if (data >= term) {
-                    return nullptr;
-                }
-                return data;
-            }
-        } // while (data && data < term)
 
-        return nullptr;
+                if (EncChr_IsParam(c)) {
+                    if (EncChr_IsParamLiteral(c)) {
+                        if (!EncStr_ValidateTerminatedLiteral(data, term))  {
+                            return false;
+                        }
+                    }
+                    else if(EncChr_IsParamSegment(c)) {
+                        // EncStr parameter, recurse into this function
+                        if (!EncStr_Validate(data, term)) {
+                            return false;
+                        }
+                    }
+                    else if(EncChr_IsParamNumeric(c)) {
+                        if (!EncStr_ValidateSingleWord(data, term)) {
+                            return false;
+                        }
+                    }
+                    else {
+                        GWCA_ASSERT("Invalid case reached: IsParam but not any IsParamType");
+                        return false;
+                    }
+                }
+            }
+
+            // Here, the guild wars code also handles TERM_FINAL and TERM_INTERMEDIATE, but it
+            // is identical to the start of the next loop so that is omitted in favour of fallthrough.
+
+            isFirstLoop = false;
+        }
+
+        // If the loop exited by data going past the end of the EncStr, it overflowed and
+        // validation should fail.
+        return false;
     }
 }
 
@@ -1025,12 +1002,15 @@ namespace GW {
         }
 
         bool IsValidEncStr(const wchar_t* enc_str) {
-            if (!(enc_str && *enc_str))
+            if (!enc_str)
                 return false;
-            // The CParser::Validate code treats the null terminator as part of the EncStr.
-            // `term` should point to after the null terminator.
+            // The null terminator is considered part of the EncString, so include it in calculating the EncString end position
             const wchar_t* term = enc_str + wcslen(enc_str) + 1;
-            const wchar_t* data = CParser_ValidateInternal(enc_str, term);
+            const wchar_t* data = enc_str;
+
+            if (!EncStr_Validate(data, term)) {
+                return false;
+            }
 
             return data == term;
         }
