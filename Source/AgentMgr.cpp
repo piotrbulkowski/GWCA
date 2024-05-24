@@ -414,6 +414,10 @@ namespace GW {
             return agents && agents->valid() ? agents : nullptr;
         }
         uint32_t GetPlayerId() {
+            const auto c = GetCharacter();
+            return c ? c->agent_id : 0;
+        }
+        uint32_t GetObservingId() {
             return *(uint32_t*)PlayerAgentIdPtr;
         }
         uint32_t GetTargetId() {

@@ -42,6 +42,8 @@ namespace GW {
         // === Agent Array ===
 
         // Get Agent ID of currently observed player
+        GWCA_API uint32_t GetObservingId();
+        // Get Agent ID of client's logged in player
         GWCA_API uint32_t GetPlayerId();
         // Get Agent ID of current target
         GWCA_API uint32_t GetTargetId();
