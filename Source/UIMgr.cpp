@@ -977,14 +977,20 @@ namespace GW {
         }
 
         void AsyncDecodeStr(const wchar_t* enc_str, DecodeStr_Callback callback, void* callback_param, GW::Constants::Language language_id) {
-            if (!ValidateAsyncDecodeStr) {
+            if (!(ValidateAsyncDecodeStr && enc_str)) {
                 callback(callback_param, L"");
                 return;
             }
 #if 0
             if (!IsValidEncStr(enc_str)) {
-                GWCA_WARN("Invalid enc_str passed to AsyncDecodeStr");
-                callback(callback_param, L"");
+                std::string invalid_str = "Invalid enc str: ";
+                char buf[8];
+                for (size_t i = 0; i < wcslen(enc_str); i++) {
+                    snprintf(buf, _countof(buf), " %#06x", enc_str[i]);
+                    invalid_str += buf;
+                }
+                GWCA_WARN(invalid_str.c_str());
+                callback(callback_param, L"!!!");
                 return;
             }
 #endif
