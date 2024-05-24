@@ -1015,29 +1015,6 @@ namespace GW {
             const wchar_t* term = enc_str + wcslen(enc_str) + 1;
             const wchar_t* data = enc_str;
 
-#if _DEBUG
-            size_t enc_str_len = wcslen(enc_str);
-            GWCA_DEBUG("Validating enc string: ");
-            size_t buf_size = enc_str_len + 1;
-            buf_size = 5*buf_size + 2*(buf_size/8) + 5;
-            auto buf = new char[buf_size];
-            int pos = 0;
-
-            for (int i = 0; (size_t)i < enc_str_len; i++) {
-                if (0 == (i % 8)) {
-                    snprintf(buf+pos, buf_size-pos, "\t");
-                }
-                pos += snprintf(buf+pos, buf_size-pos, "%04x ", enc_str[i]);
-                if (7 == (i % 8)) {
-                    snprintf(buf+pos, buf_size-pos, "\n");
-                }
-            }
-
-            GWCA_DEBUG(buf);
-
-            delete[] buf;
-#endif
-
             if (!EncStr_Validate(data, term)) {
                 return false;
             }
