@@ -7,7 +7,6 @@
 
 #include <GWCA/Managers/ItemMgr.h>
 #include <GWCA/Managers/Module.h>
-#include <GWCA/Managers/CtoSMgr.h>
 #include <GWCA/Managers/TradeMgr.h>
 #include <GWCA/Managers/UIMgr.h>
 
