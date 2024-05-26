@@ -23,7 +23,6 @@
 #include <GWCA/Managers/UIMgr.h>
 #include <GWCA/Managers/MapMgr.h>
 #include <GWCA/Managers/ChatMgr.h>
-#include <GWCA/Managers/CtoSMgr.h>
 #include <GWCA/Managers/ItemMgr.h>
 #include <GWCA/Managers/StoCMgr.h>
 #include <GWCA/Managers/AgentMgr.h>
@@ -65,7 +64,6 @@ namespace GW
         modules.push_back(&UIModule);
         modules.push_back(&MapModule);
         modules.push_back(&ChatModule);
-        modules.push_back(&CtoSModule);
         modules.push_back(&ItemModule);
         modules.push_back(&StoCModule);
         modules.push_back(&AgentModule);

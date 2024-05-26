@@ -15,7 +15,6 @@
 #include <GWCA/Managers/Module.h>
 
 #include <GWCA/Managers/UIMgr.h>
-#include <GWCA/Managers/CtoSMgr.h>
 #include <GWCA/Managers/GameThreadMgr.h>
 #include <GWCA/Managers/RenderMgr.h>
 
