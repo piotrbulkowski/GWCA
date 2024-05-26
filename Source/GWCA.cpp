@@ -200,4 +200,9 @@ namespace GW
         const auto* g = GetGameContext();
         return g ? g->account : nullptr;
     }
+    TradeContext* GetTradeContext()
+    {
+        const auto* g = GetGameContext();
+        return g ? g->trade : nullptr;
+    }
 } // namespace GW

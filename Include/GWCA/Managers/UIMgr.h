@@ -288,7 +288,8 @@ namespace GW {
             kInventorySlotCleared       = 0x10000000 | 0xEF, // undocumented. Triggered when an item has been removed from a slot
             kEquipmentSlotCleared       = 0x10000000 | 0xF0, // undocumented. Triggered when an item has been removed from a slot
             kPvPWindowContent           = 0x10000000 | 0xF8,
-            kItemUpdated                = 0x10000000 | 0x104, // wparam = *ItemGeneral packet
+            kTradePlayerUpdated         = 0x10000000 | 0x103, // wparam = GW::TraderPlayer*
+            kItemUpdated                = 0x10000000 | 0x104, // wparam = UIPacket::kItemUpdated*
             kMapChange                  = 0x10000000 | 0x10F, // wparam = map id
             kCalledTargetChange         = 0x10000000 | 0x113, // wparam = { player_number, target_id }
             kErrorMessage               = 0x10000000 | 0x117, // wparam = { int error_index, wchar_t* error_encoded_string }
@@ -466,6 +467,23 @@ namespace GW {
             };
             struct kObjectiveUpdated {
                 uint32_t objective_id;
+            };
+            // Straight passthru of GW::Packets::StoC::ItemGeneral
+            struct kItemUpdated {
+                uint32_t item_id;
+                uint32_t model_file_id;
+                uint32_t type;
+                uint32_t unk1;
+                uint32_t extra_id; // Dye color
+                uint32_t materials;
+                uint32_t unk2;
+                uint32_t interaction; // Flags
+                uint32_t price;
+                uint32_t model_id;
+                uint32_t quantity;
+                wchar_t* enc_name;
+                uint32_t mod_struct_size;
+                uint32_t* mod_struct;
             };
         }
 
@@ -835,7 +853,7 @@ namespace GW {
 
         struct TooltipInfo {
             uint32_t bit_field;
-            void* render; // Function that the game uses to draw the content
+            GW::UI::UIInteractionCallback* render; // Function that the game uses to draw the content
             uint32_t* payload; // uint32_t* for skill or item, wchar_t* for encoded string
             uint32_t unk0; // can use used as an enum in this case
             uint32_t unk1;

@@ -9,6 +9,8 @@
 #include <GWCA/Managers/Module.h>
 #include <GWCA/Managers/TradeMgr.h>
 #include <GWCA/Managers/UIMgr.h>
+#include <GWCA/Context/GameContext.h>
+#include <GWCA/Context/TradeContext.h>
 
 namespace {
     using namespace GW;
@@ -157,6 +159,21 @@ namespace GW {
     }
     bool Trade::RemoveItem(uint32_t slot) {
         return TradeRemoveItem_Func ? TradeRemoveItem_Func(slot) : false;
+    }
+
+    TradeItem* Trade::IsItemOffered(uint32_t item_id, uint32_t* slot) {
+        const auto ctx = GW::GetTradeContext();
+        if (!ctx)
+            return nullptr;
+        auto& items = ctx->player.items;
+        for (size_t i = 0; i < items.size();i++) {
+            if (items[i].item_id != item_id)
+                continue;
+            if (slot)
+                *slot = i;
+            return &items[i];
+        }
+        return nullptr;
     }
     bool Trade::OfferItem(uint32_t item_id, uint32_t quantity) {
         if (!(OfferTradeItem_Func && trade_window_context && !trade_window_context->isDisabled())) {
