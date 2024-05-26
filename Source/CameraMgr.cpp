@@ -117,11 +117,7 @@ namespace GW {
     }
 
     bool CameraMgr::GetCameraUnlock() {
-        if (patch_cam_update_addr) {
-            return patch_cam_update.GetIsEnable();
-        } else {
-            return false;
-        }
+        return patch_cam_update_addr && patch_cam_update.GetIsActive();
     }
 
     bool CameraMgr::SetFog(bool flag) {

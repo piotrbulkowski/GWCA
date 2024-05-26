@@ -3,13 +3,46 @@
 #include <GWCA/Utilities/Debug.h>
 #include <GWCA/Utilities/MemoryPatcher.h>
 
+namespace {
+    std::vector<GW::MemoryPatcher*> patches;
+
+    bool patching_enabled = true;
+}
+
 namespace GW {
     MemoryPatcher::~MemoryPatcher() {
         Reset();
+        patches.erase(std::remove(patches.begin(), patches.end(), this), patches.end());
+    }
+    MemoryPatcher::MemoryPatcher() {
+        patches.push_back(this);
+    }
+
+    void MemoryPatcher::EnableHooks() {
+        if (patching_enabled)
+            return;
+        patching_enabled = true;
+        for (auto p : patches) {
+            if (!(p->IsValid() && p->GetIsActive())) {
+                continue;
+            }
+            p->PatchActual(true);
+        }
+    }
+    void MemoryPatcher::DisableHooks() {
+        if (!patching_enabled)
+            return;
+        for (auto p : patches) {
+            if (!(p->IsValid() && p->GetIsActive())) {
+                continue;
+            }
+            p->PatchActual(false);
+        }
+        patching_enabled = false;
     }
 
     void MemoryPatcher::Reset() {
-        if (GetIsEnable())
+        if (GetIsActive())
             TogglePatch(false);
 
         if (m_patch) {
@@ -23,7 +56,7 @@ namespace GW {
 
         m_addr = nullptr;
         m_size = 0;
-        m_enable = false;
+        m_active = false;
     }
 
     bool MemoryPatcher::IsValid() {
@@ -36,16 +69,27 @@ namespace GW {
 
         m_addr = reinterpret_cast<void *>(addr);
         m_size = size;
-        m_enable = false;
+        m_active = false;
 
         m_patch = new uint8_t[size];
         m_backup = new uint8_t[size];
         memcpy(m_patch, patch, size);
 
         DWORD old_prot;
-        VirtualProtect(m_addr, size, PAGE_EXECUTE_READ, &old_prot);
-        memcpy(m_backup, m_addr, size);
-        VirtualProtect(m_addr, size, old_prot, &old_prot);
+        VirtualProtect(m_addr, m_size, PAGE_EXECUTE_READWRITE, &old_prot);
+        memcpy(m_backup, m_addr, m_size);
+        VirtualProtect(m_addr, m_size, old_prot, &old_prot);
+    }
+
+    void MemoryPatcher::PatchActual(bool patch) {
+        GWCA_ASSERT(IsValid());
+
+        if (!patching_enabled)
+            return;
+        DWORD old_prot;
+        VirtualProtect(m_addr, m_size, PAGE_EXECUTE_READWRITE, &old_prot);
+        memcpy(m_addr, patch ? m_patch : m_backup, m_size);
+        VirtualProtect(m_addr, m_size, old_prot, &old_prot);
     }
 
     bool MemoryPatcher::SetRedirect(uintptr_t call_instruction_address, void* redirect_func) {
@@ -75,20 +119,8 @@ namespace GW {
 
     bool MemoryPatcher::TogglePatch(bool flag) {
         GWCA_ASSERT(IsValid());
-
-        if (m_enable == flag)
-            return flag;
-
-        DWORD old_prot;
-        VirtualProtect(m_addr, m_size, PAGE_EXECUTE_READWRITE, &old_prot);
-        if (flag) {
-            memcpy(m_addr, m_patch, m_size);
-        } else {
-            memcpy(m_addr, m_backup, m_size);
-        }
-        VirtualProtect(m_addr, m_size, old_prot, &old_prot);
-
-        m_enable = flag;
+        m_active = flag;
+        PatchActual(m_active);
         return flag;
     }
 }

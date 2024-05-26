@@ -4,7 +4,7 @@ namespace GW {
 
     class MemoryPatcher {
     public:
-        MemoryPatcher() = default;
+        MemoryPatcher();
         MemoryPatcher(const MemoryPatcher&) = delete;
         ~MemoryPatcher();
 
@@ -16,14 +16,21 @@ namespace GW {
         bool SetRedirect(uintptr_t call_instruction_address, void* redirect_func);
 
         bool TogglePatch(bool flag);
-        bool TogglePatch() { TogglePatch(!m_enable); };
+        bool TogglePatch() { TogglePatch(!m_active); };
 
-        bool GetIsEnable() { return m_enable; };
+        bool GetIsActive() { return m_active; };
+
+        // Disconnect all patches from memory, restoring original values if applicable
+        static void DisableHooks();
+        // Connect any applicable patches that have been disconnected.
+        static void EnableHooks();
     private:
         void       *m_addr = nullptr;
         uint8_t    *m_patch = nullptr;
         uint8_t    *m_backup = nullptr;
         size_t      m_size = 0;
-        bool        m_enable = false;
+        bool        m_active = false;
+
+        void PatchActual(bool patch);
     };
 }

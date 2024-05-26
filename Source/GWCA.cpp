@@ -6,6 +6,7 @@
 #include <GWCA/Utilities/Hooker.h>
 #include <GWCA/Utilities/Macros.h>
 #include <GWCA/Utilities/Scanner.h>
+#include <GWCA/Utilities/MemoryPatcher.h>
 
 #include <GWCA/Context/PreGameContext.h>
 #include <GWCA/Context/GameContext.h>
@@ -117,6 +118,8 @@ namespace GW
             if (module->enable_hooks)
                 module->enable_hooks();
         }
+        MemoryPatcher::EnableHooks();
+
     }
 
     void DisableHooks()
@@ -126,6 +129,7 @@ namespace GW
             if (module->disable_hooks)
                 module->disable_hooks();
         }
+        MemoryPatcher::DisableHooks();
     }
 
     void Terminate()
