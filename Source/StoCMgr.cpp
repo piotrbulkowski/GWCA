@@ -177,10 +177,11 @@ namespace GW {
     {
         bool success = false;
         EnterCriticalSection(&mutex);
+        RemoveCallback(header, entry);
         if (packet_entries.size() <= header) {
             packet_entries.resize(header + 1);
         }
-        RemoveCallback(header, entry);
+
         auto it = packet_entries[header].begin();
         while (it != packet_entries[header].end()) {
             if (it->altitude > altitude)
@@ -201,36 +202,45 @@ namespace GW {
         return RegisterPacketCallback(entry, header, callback, 0x8000);
     }
 
-    void StoC::RemoveCallback(uint32_t header, HookEntry *entry) {
+    size_t StoC::RemoveCallback(uint32_t header, HookEntry *entry) {
+        size_t removed = 0;
         EnterCriticalSection(&mutex);
-        if (packet_entries.size() <= header) {
-            packet_entries.resize(header + 1);
+        if (header >= packet_entries.size()) {
+            LeaveCriticalSection(&mutex);
+            return removed;
         }
         auto it = packet_entries[header].begin();
         while (it != packet_entries[header].end()) {
             if (it->entry == entry) {
                 packet_entries[header].erase(it);
+                removed++;
                 break;
             }
             it++;
         }
         LeaveCriticalSection(&mutex);
+        return removed;
     }
 
-    void StoC::RemoveCallbacks(HookEntry* entry)
+    size_t StoC::RemoveCallbacks(HookEntry* entry)
     {
+        size_t removed = 0;
         EnterCriticalSection(&mutex);
         for (auto& header_entries : packet_entries) {
-            header_entries.erase(
-                std::remove_if(
-                    header_entries.begin(),
-                    header_entries.end(),
-                    [entry](const CallbackEntry& e) { return e.entry == entry; }
-                ),
-                header_entries.end()
-            );
+            auto it = header_entries.begin();
+            while (it != header_entries.end()) {
+                if (it->entry == entry) {
+                    header_entries.erase(it);
+                    removed++;
+                    it = header_entries.begin();
+                }
+                else {
+                    it++;
+                }
+            }
         }
         LeaveCriticalSection(&mutex);
+        return removed;
     }
 
     void StoC::RemovePostCallback(uint32_t header, HookEntry* entry)
