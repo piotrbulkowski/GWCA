@@ -4,7 +4,7 @@ namespace GW {
 
     class MemoryPatcher {
     public:
-        MemoryPatcher();
+        MemoryPatcher() = default;
         MemoryPatcher(const MemoryPatcher&) = delete;
         ~MemoryPatcher();
 

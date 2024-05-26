@@ -11,11 +11,7 @@ namespace {
 
 namespace GW {
     MemoryPatcher::~MemoryPatcher() {
-        Reset();
-        patches.erase(std::remove(patches.begin(), patches.end(), this), patches.end());
-    }
-    MemoryPatcher::MemoryPatcher() {
-        patches.push_back(this);
+        GWCA_ASSERT(!(patching_enabled && IsValid() && GetIsActive()));
     }
 
     void MemoryPatcher::EnableHooks() {
@@ -57,6 +53,8 @@ namespace GW {
         m_addr = nullptr;
         m_size = 0;
         m_active = false;
+
+        patches.erase(std::remove(patches.begin(), patches.end(), this), patches.end());
     }
 
     bool MemoryPatcher::IsValid() {
@@ -79,6 +77,8 @@ namespace GW {
         VirtualProtect(m_addr, m_size, PAGE_EXECUTE_READWRITE, &old_prot);
         memcpy(m_backup, m_addr, m_size);
         VirtualProtect(m_addr, m_size, old_prot, &old_prot);
+
+        patches.push_back(this);
     }
 
     void MemoryPatcher::PatchActual(bool patch) {
