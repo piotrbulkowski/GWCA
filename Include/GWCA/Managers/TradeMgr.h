@@ -16,7 +16,7 @@ namespace GW {
         GWCA_API bool ChangeOffer();
         GWCA_API bool SubmitOffer(uint32_t gold);
         GWCA_API bool RemoveItem(uint32_t slot);
-        GWCA_API TradeItem* IsItemOffered(uint32_t item_id, uint32_t* slot = nullptr);
+        GWCA_API TradeItem* IsItemOffered(uint32_t item_id);
 
         // Passing quantity = 0 will prompt the player for the amount
         GWCA_API bool OfferItem(uint32_t item_id, uint32_t quantity = 0);

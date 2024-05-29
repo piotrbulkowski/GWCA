@@ -62,6 +62,7 @@ namespace {
 
     DoAction_pt DropGold_Func = 0;
     DoAction_pt OpenLockedChest_Func = 0;
+    DoAction_pt DestroyItem_Func = 0;
 
     typedef void(__cdecl* Void_pt)();
     Void_pt SalvageSessionCancel_Func = 0;
@@ -238,6 +239,9 @@ namespace {
         address = Scanner::Find("\x83\xc4\x40\x6a\x00\x6a\x19", "xxxxxxx", -0x4e);
         DropItem_Func = (DropItem_pt)Scanner::FunctionFromNearCall(address);
 
+        address = Scanner::Find("\x83\x78\x08\x0a\x75\x10", "xxxxxx", 0xe);
+        DestroyItem_Func = (DoAction_pt)Scanner::FunctionFromNearCall(address);
+
         address = Scanner::Find("\x8b\x42\x04\x51\x23\xc1","xxxxxx",0x7);
         ChangeEquipmentVisibility_Func = (ChangeEquipmentVisibility_pt)Scanner::FunctionFromNearCall(address);
 
@@ -280,6 +284,7 @@ namespace {
         GWCA_INFO("[SCAN] MoveItem Function = %p", MoveItem_Func);
         GWCA_INFO("[SCAN] DropGold Function = %p", DropGold_Func);
         GWCA_INFO("[SCAN] DropItem Function = %p", DropItem_Func);
+        GWCA_INFO("[SCAN] DestroyItem_Func Function = %p", DestroyItem_Func);
         GWCA_INFO("[SCAN] ChangeEquipmentVisibility Function = %p", ChangeEquipmentVisibility_Func);
         GWCA_INFO("[SCAN] ChangeGold Function = %p", ChangeGold_Func);
         GWCA_INFO("[SCAN] OpenLockedChest Function = %p", OpenLockedChest_Func);
@@ -309,6 +314,7 @@ namespace {
         GWCA_ASSERT(unlocked_pvp_item_upgrade_array.m_buffer);
         GWCA_ASSERT(unlocked_pvp_item_upgrade_array.m_size);
         GWCA_ASSERT(GetPvPItemUpgradeInfoName_Func);
+        GWCA_ASSERT(DestroyItem_Func);
 #endif
         HookBase::CreateHook((void**)&ItemClick_Func, OnItemClick, (void**)&RetItemClick);
         if (PingWeaponSet_Func) {
@@ -524,6 +530,9 @@ namespace GW {
 
         bool SalvageSessionDone() {
             return SalvageSessionComplete_Func ? SalvageSessionComplete_Func(), true : false;
+        }
+        bool DestroyItem(uint32_t item_id) {
+            return DestroyItem_Func ? DestroyItem_Func(item_id), true : false;
         }
 
         bool SalvageMaterials() {

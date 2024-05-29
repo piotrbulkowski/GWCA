@@ -93,6 +93,9 @@ namespace GW {
         // Acknowledge that the salvage session is complete
         GWCA_API bool SalvageSessionDone();
 
+        // Trash an item from inventory
+        GWCA_API bool DestroyItem(uint32_t item_id);
+
         // Choose to salvage materials from a prompted item.
         GWCA_API bool SalvageMaterials();
 
