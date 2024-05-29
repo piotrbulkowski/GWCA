@@ -629,9 +629,10 @@ namespace GW {
             return nullptr;
         }
         Skill* GetHoveredSkill() {
-            UI::TooltipInfo* tooltip = UI::GetCurrentTooltip();
-            if (!(tooltip && tooltip->type() == UI::TooltipType::Skill))
+            const auto tooltip = UI::GetCurrentTooltip();
+            if (!(tooltip && tooltip->payload_len == 0x14)) {
                 return nullptr;
+            }
             return GetSkillConstantData(*(GW::Constants::SkillID*)tooltip->payload);
         }
         bool GetIsSkillUnlocked(GW::Constants::SkillID skill_id) {

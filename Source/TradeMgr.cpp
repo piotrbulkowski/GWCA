@@ -161,7 +161,7 @@ namespace GW {
         return TradeRemoveItem_Func ? TradeRemoveItem_Func(slot) : false;
     }
 
-    TradeItem* Trade::IsItemOffered(uint32_t item_id, uint32_t* slot) {
+    TradeItem* Trade::IsItemOffered(uint32_t item_id) {
         const auto ctx = GW::GetTradeContext();
         if (!ctx)
             return nullptr;
@@ -169,8 +169,6 @@ namespace GW {
         for (size_t i = 0; i < items.size();i++) {
             if (items[i].item_id != item_id)
                 continue;
-            if (slot)
-                *slot = i;
             return &items[i];
         }
         return nullptr;

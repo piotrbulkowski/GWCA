@@ -856,22 +856,11 @@ namespace GW {
             uint32_t bit_field;
             GW::UI::UIInteractionCallback* render; // Function that the game uses to draw the content
             uint32_t* payload; // uint32_t* for skill or item, wchar_t* for encoded string
-            uint32_t unk0; // can use used as an enum in this case
+            uint32_t payload_len; // Length in bytes of the payload
             uint32_t unk1;
             uint32_t unk2;
-            UI::TooltipType type() {
-                // Without sniffing into each render function to determine the source, we have to guess based on the arguments passed.
-                switch ((UI::TooltipType)unk0) {
-                case UI::TooltipType::Item:
-                    // 0x8 also used for attribute tooltips, title tooltips and more
-                    if(payload[1] != 0xff) // NB: Item tooltip has 2 item_id values, second is always 0xff
-                        return UI::TooltipType::None;
-                    break;
-                default:
-                    break;
-                }
-                return static_cast<UI::TooltipType>(unk0);
-            }
+            uint32_t unk3;
+            uint32_t unk4;
         };
 
         struct CreateUIComponentPacket {

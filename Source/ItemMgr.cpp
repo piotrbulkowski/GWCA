@@ -497,10 +497,20 @@ namespace GW {
         }
 
         Item* GetHoveredItem() {
-            UI::TooltipInfo* tooltip = UI::GetCurrentTooltip();
-            if (!(tooltip && (tooltip->type() == UI::TooltipType::Item || tooltip->type() == UI::TooltipType::WeaponSet)))
+            const auto tooltip = UI::GetCurrentTooltip();
+            if (!tooltip) {
                 return nullptr;
-            return GetItemById(*(uint32_t*)tooltip->payload);
+            }
+            if (tooltip->payload_len == 0x8 && tooltip->payload[1] == 0xff) {
+                // Single item hover; { uint32_t item_id, uint32_t 0xff }
+                return GetItemById(*(uint32_t*)tooltip->payload);
+            }
+            if (tooltip->payload_len == 0xC && tooltip->payload[2] == 0xff) {
+                // Dual item hover; { uint32_t item_id1, uint32_t item_id2, uint32_t 0xff }
+                const auto item_ids = (uint32_t*)tooltip->payload;
+                return GetItemById(item_ids[0] ? item_ids[0] : item_ids[1]);
+            }
+            return nullptr;
         }
 
         Item* GetItemById(uint32_t item_id) {
