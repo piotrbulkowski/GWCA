@@ -6,6 +6,8 @@ namespace GW {
     struct Module;
     extern Module ChatModule;
 
+    struct HookStatus;
+
     namespace Chat {
         typedef uint32_t Color;
 #pragma warning(push)
@@ -75,7 +77,7 @@ namespace GW {
 
 
         // Typedef for callbacks that handle chat commands; always blocks gw command
-        typedef void (__cdecl* ChatCommandCallback)(const wchar_t* cmd, int argc, const LPWSTR* argv);
+        typedef void (__cdecl* ChatCommandCallback)(GW::HookStatus*, const wchar_t* cmd, int argc, const LPWSTR* argv);
         // Typedef for callbacks that handle chat commands; return true to block sending the command to gw
         typedef bool(__cdecl* BoolChatCommandCallback)(const wchar_t* cmd, int argc, const LPWSTR* argv);
         // Hook into a chat command. Chat commands that are registered here aren't sent to the game.

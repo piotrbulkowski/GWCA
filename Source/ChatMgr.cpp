@@ -212,8 +212,8 @@ namespace {
                     if (command_str != *argv)
                         continue;
                     if (callback_handler.voidcb) {
-                        callback_handler.voidcb(packet->message, argc, argv);
                         status->blocked = true;
+                        callback_handler.voidcb(status, packet->message, argc, argv);
                     }
                     else {
                         if (callback_handler.boolcb(packet->message, argc, argv)) {
