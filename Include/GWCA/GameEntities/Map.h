@@ -121,17 +121,17 @@ namespace GW {
         /* +h0074 */ uint32_t name_id;
         /* +h0078 */ uint32_t description_id;
 
-        inline uint32_t file_id1() { return (((file_id - 1) % 0xff00) + 0x100); }
-        inline uint32_t file_id2() { return (((file_id - 1) / 0xff00) + 0x100); }
-        
+        uint32_t file_id1() const { return ((file_id - 1) % 0xff00) + 0x100; }
+        uint32_t file_id2() const { return ((file_id - 1) / 0xff00) + 0x100; }
 
-        inline bool GetHasEnterButton()         const { return (flags & 0x100) != 0 || (flags & 0x40000) != 0; }
-        inline bool GetIsOnWorldMap()           const { return (flags & 0x20) == 0; }
-        inline bool GetIsPvP()                  const { return (flags & 0x40001) != 0; } // 0x40000 = Explorable, 0x1 = Outpost
-        inline bool GetIsGuildHall()            const { return (flags & 0x800000) != 0; }
-        inline bool GetIsVanquishableArea()     const { return (flags & 0x10000000) != 0; }
-        inline bool GetIsUnlockable()           const { return (flags & 0x10000) != 0; }
-        inline bool GetHasMissionMapsTo()    const { return (flags & 0x8000000) != 0; }
+
+        bool GetHasEnterButton()         const { return (flags & 0x100) != 0 || (flags & 0x40000) != 0; }
+        bool GetIsOnWorldMap()           const { return (flags & 0x20) == 0; }
+        bool GetIsPvP()                  const { return (flags & 0x40001) != 0; } // 0x40000 = Explorable, 0x1 = Outpost
+        bool GetIsGuildHall()            const { return (flags & 0x800000) != 0; }
+        bool GetIsVanquishableArea()     const { return (flags & 0x10000000) != 0; }
+        bool GetIsUnlockable()           const { return (flags & 0x10000) != 0; }
+        bool GetHasMissionMapsTo()       const { return (flags & 0x8000000) != 0; }
     };
     static_assert(sizeof(AreaInfo) == 124, "struct AreaInfo has incorrect size");
 }
