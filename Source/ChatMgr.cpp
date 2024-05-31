@@ -48,11 +48,7 @@ namespace {
     GetChannelColor_pt GetSenderColor_Func = 0, GetSenderColor_Ret = 0;
     GetChannelColor_pt GetMessageColor_Func = 0, GetMessageColor_Ret = 0;
 
-    struct ChatCommandCallbackHandler {
-        Chat::ChatCommandCallback voidcb = nullptr;
-        Chat::BoolChatCommandCallback boolcb = nullptr;
-    };
-    std::unordered_map<std::wstring, ChatCommandCallbackHandler> chat_command_hook_entries;
+    std::unordered_map<std::wstring, Chat::ChatCommandCallback> chat_command_hook_entries;
 
     Chat::Color* __cdecl OnGetSenderColor_Func(Chat::Color* color, Chat::Channel chan) {
         HookBase::EnterHook();
@@ -211,15 +207,7 @@ namespace {
                 for (auto [command_str, callback_handler] : chat_command_hook_entries) {
                     if (command_str != *argv)
                         continue;
-                    if (callback_handler.voidcb) {
-                        status->blocked = true;
-                        callback_handler.voidcb(status, packet->message, argc, argv);
-                    }
-                    else {
-                        if (callback_handler.boolcb(packet->message, argc, argv)) {
-                            status->blocked = true;
-                        }
-                    }
+                    callback_handler(status, packet->message, argc, argv);
                 }
                 LocalFree(argv);
             }
@@ -573,15 +561,9 @@ namespace GW {
     }
 
     void Chat::CreateCommand(const wchar_t* cmd, Chat::ChatCommandCallback callback) {
-        ChatCommandCallbackHandler h;
-        h.voidcb = callback;
-        chat_command_hook_entries[cmd] = h;
+        chat_command_hook_entries[cmd] = callback;
     }
-    void Chat::CreateCommand(const wchar_t* cmd, Chat::BoolChatCommandCallback callback) {
-        ChatCommandCallbackHandler h; 
-        h.boolcb = callback;
-        chat_command_hook_entries[cmd] = h;
-    }
+
     void Chat::DeleteCommand(const wchar_t* cmd) {
         const auto found = chat_command_hook_entries.find(cmd);
         if (found != chat_command_hook_entries.end())

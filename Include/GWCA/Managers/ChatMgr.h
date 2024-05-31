@@ -78,10 +78,6 @@ namespace GW {
 
         // Typedef for callbacks that handle chat commands; always blocks gw command
         typedef void (__cdecl* ChatCommandCallback)(GW::HookStatus*, const wchar_t* cmd, int argc, const LPWSTR* argv);
-        // Typedef for callbacks that handle chat commands; return true to block sending the command to gw
-        typedef bool(__cdecl* BoolChatCommandCallback)(const wchar_t* cmd, int argc, const LPWSTR* argv);
-        // Hook into a chat command. Chat commands that are registered here aren't sent to the game.
-        GWCA_API void CreateCommand(const wchar_t* cmd, BoolChatCommandCallback callback);
         GWCA_API void CreateCommand(const wchar_t* cmd, ChatCommandCallback callback);
         GWCA_API void DeleteCommand(const wchar_t* cmd);
 
