@@ -91,7 +91,20 @@ namespace {
     typedef void(__cdecl* UseSkill_pt)(uint32_t, uint32_t, uint32_t, uint32_t);
     UseSkill_pt UseSkill_Func = 0;
     UseSkill_pt RetUseSkill = 0;
-    //typedef HookCallback<uint32_t, uint32_t, uint32_t, uint32_t> UseSkillCallback;
+
+    std::unordered_map<HookEntry*, UseSkillCallback> OnUseSkill_Callbacks;
+    void __cdecl OnUseSkill(uint32_t agent_id, uint32_t slot, uint32_t target, uint32_t call_target)
+    {
+        HookBase::EnterHook();
+        HookStatus status;
+        for (auto& it : OnUseSkill_Callbacks) {
+            it.second(&status, agent_id, slot, target, call_target);
+            ++status.altitude;
+        }
+        if (!status.blocked)
+            RetUseSkill(agent_id, slot, target, call_target);
+        HookBase::LeaveHook();
+    }
 
     HookEntry OnLoadSkillbar_HookEntry;
     typedef void(__cdecl* LoadSkills_pt)(uint32_t agent_id, uint32_t skill_ids_count, uint32_t* skill_ids);
@@ -135,6 +148,11 @@ namespace {
             attribute_array_addr = *(AttributeInfo**)address;
         }
 
+        UseSkill_Func = (UseSkill_pt)GW::Scanner::Find( "\x85\xF6\x74\x5B\x83\xFE\x11\x74", "xxxxxxxx", -0x126);
+        if (UseSkill_Func) {
+            HookBase::CreateHook((void**)&UseSkill_Func, OnUseSkill, (void**)&RetUseSkill);
+        }
+
         address = Scanner::FindAssertion("p:\\code\\gw\\ui\\game\\templates\\templateshelpers.cpp", "targetPrimaryProf == templateData.profPrimary");
         ChangeSecondary_Func = (ChangeSecondary_pt)Scanner::FunctionFromNearCall(address + 0x20);
         LoadAttributes_Func = (LoadAttributes_pt)Scanner::FunctionFromNearCall(address + 0x34);
@@ -156,6 +174,7 @@ namespace {
         GWCA_ASSERT(ChangeSecondary_Func);
         GWCA_ASSERT(LoadAttributes_Func);
         GWCA_ASSERT(LoadSkills_Func);
+        GWCA_ASSERT(UseSkill_Func);
 #endif
 
     }
@@ -653,6 +672,20 @@ namespace GW {
             uint32_t shift = index % 32;
             uint32_t flag = 1U << shift;
             return (array[real_index] & flag) != 0;
+        }
+        void RegisterUseSkillCallback(
+            HookEntry* entry,
+            const UseSkillCallback& callback)
+        {
+            OnUseSkill_Callbacks.insert({ entry, callback });
+        }
+
+        void RemoveUseSkillCallback(
+            HookEntry* entry)
+        {
+            auto it = OnUseSkill_Callbacks.find(entry);
+            if (it != OnUseSkill_Callbacks.end())
+                OnUseSkill_Callbacks.erase(it);
         }
     }
 } // namespace GW

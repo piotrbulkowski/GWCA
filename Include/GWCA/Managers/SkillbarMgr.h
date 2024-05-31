@@ -63,6 +63,10 @@ namespace GW {
         // Whether the current character has learnt this skill
         GWCA_API bool GetIsSkillLearnt(Constants::SkillID skill_id);
 
+        typedef HookCallback<uint32_t, uint32_t, uint32_t, uint32_t> UseSkillCallback;
+        void RegisterUseSkillCallback(HookEntry* entry, const UseSkillCallback& callback);
+        void RemoveUseSkillCallback(HookEntry* entry);
+
         GWCA_API bool DecodeSkillTemplate(SkillTemplate *result, const char *temp);
         GWCA_API bool EncodeSkillTemplate(const SkillTemplate& in, char* result, size_t result_len);
 
