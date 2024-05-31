@@ -11,14 +11,11 @@
 #include <GWCA/GameEntities/Agent.h>
 #include <GWCA/GameEntities/Skill.h>
 #include <GWCA/GameEntities/Attribute.h>
-#include <GWCA/GameEntities/Hero.h>
 
-#include <GWCA/Context/GameContext.h>
 #include <GWCA/Context/WorldContext.h>
 #include <GWCA/Context/AccountContext.h>
 
 #include <GWCA/Managers/Module.h>
-
 #include <GWCA/Managers/MapMgr.h>
 #include <GWCA/Managers/AgentMgr.h>
 #include <GWCA/Managers/PartyMgr.h>
@@ -88,7 +85,7 @@ namespace {
             }
         }
 
-        return (Constants::Profession)info->profession_id;
+        return info->profession_id;
     }
 
     typedef void(__cdecl* UseSkill_pt)(uint32_t, uint32_t, uint32_t, uint32_t);
@@ -130,7 +127,7 @@ namespace {
 
         DWORD address = 0;
         address = GW::Scanner::Find("\x8D\x04\xB6\xC1\xE0\x05\x05", "xxxxxxx", +7);
-        if(Scanner::IsValidPtr(*(uintptr_t*)address,Scanner::RDATA))
+        if (Scanner::IsValidPtr(*(uintptr_t*)address,Scanner::RDATA))
             skill_array_addr = *(Skill**)address;
 
         address = GW::Scanner::Find("\xba\x33\x00\x00\x00\x89\x08\x8d\x40\x04", "x?xxxxxxxx", -4);
@@ -164,9 +161,9 @@ namespace {
     }
 
     void EnableHooks() {
-        if(UseSkill_Func)
+        if (UseSkill_Func)
             HookBase::EnableHooks(UseSkill_Func);
-        if(LoadSkills_Func)
+        if (LoadSkills_Func)
             HookBase::EnableHooks(LoadSkills_Func);
     }
 
