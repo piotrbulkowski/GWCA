@@ -207,6 +207,7 @@ namespace {
                 for (auto [command_str, callback_handler] : chat_command_hook_entries) {
                     if (command_str != *argv)
                         continue;
+                    status->blocked = true;
                     callback_handler(status, packet->message, argc, argv);
                 }
                 LocalFree(argv);
