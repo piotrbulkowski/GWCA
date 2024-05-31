@@ -64,7 +64,6 @@ namespace GW {
 
         typedef void(__cdecl* UIInteractionCallback)(InteractionMessage* message, void* wParam, void* lParam);
 
-        
         struct Frame {
             uint32_t field1_0x0;
             uint32_t field2_0x4;
@@ -241,7 +240,8 @@ namespace GW {
             kDestroyFrame               = 0xb,
             kKeyDown                    = 0x1e, // wparam = UIPacket::kKeyAction*
             kKeyUp                      = 0x20, // wparam = UIPacket::kKeyAction*
-            kMouseAction                = 0x2f, // wparam = UIPacket::kMouseAction
+            kMouseClick                 = 0x22, // wparam = UIPacket::kMouseClick*
+            kMouseAction                = 0x2f, // wparam = UIPacket::kMouseAction*
             kUpdateAgentEffects         = 0x10000000 | 0x9,
             kRerenderAgentModel         = 0x10000000 | 0x7, // wparam = uint32_t agent_id
             kShowAgentNameTag           = 0x10000000 | 0x19, // wparam = AgentNameTagInfo*
@@ -360,6 +360,11 @@ namespace GW {
                 uint32_t gw_key;
                 uint32_t h0004;
                 uint32_t h0008;
+            };
+            struct kMouseClick {
+                uint32_t mouse_button; // 0x0 = left, 0x1 = middle, 0x2 = right
+                uint32_t is_doubleclick;
+                uint32_t unknown_type_screen_pos;
             };
             struct kMouseAction {
                 uint32_t child_frame_id;
