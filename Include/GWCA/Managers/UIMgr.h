@@ -241,6 +241,7 @@ namespace GW {
             kKeyDown                    = 0x1e, // wparam = UIPacket::kKeyAction*
             kKeyUp                      = 0x20, // wparam = UIPacket::kKeyAction*
             kMouseClick                 = 0x22, // wparam = UIPacket::kMouseClick*
+            kMouseClick2                = 0x2e, // wparam = UIPacket::kMouseAction*
             kMouseAction                = 0x2f, // wparam = UIPacket::kMouseAction*
             kUpdateAgentEffects         = 0x10000000 | 0x9,
             kRerenderAgentModel         = 0x10000000 | 0x7, // wparam = uint32_t agent_id
