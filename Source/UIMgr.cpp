@@ -719,12 +719,35 @@ namespace GW {
         ::DisableHooks,           // disable_hooks
     };
     namespace UI {
+        GWCA_API bool ButtonClick(Frame* btn_frame)
+        {
+            if (!(btn_frame && btn_frame->IsCreated())) {
+                return false; // Not yet created
+            }
 
+            const auto parent_frame = GW::UI::GetParentFrame(btn_frame);
+            if (!(parent_frame && parent_frame->IsCreated())) { // frame->state.Test(FRAME_STATE_CREATED)
+                return false; // Not yet created
+            }
+
+            GW::UI::UIPacket::kMouseAction action;
+            action.current_state = 0x6;
+            action.child_frame_id_dupe = action.child_frame_id = btn_frame->child_offset_id;
+            return SendFrameUIMessage(parent_frame, GW::UI::UIMessage::kMouseClick2, &action);
+        }
         Frame* GetChildFrame(Frame* parent, uint32_t child_offset) {
             if (!(GetChildFrameId_Func && parent))
                 return nullptr;
             const auto found_id = GetChildFrameId_Func(parent->frame_id, child_offset);
             return GetFrameById(found_id);
+        }
+
+        Frame* GetParentFrame(Frame* frame) {
+            if (!(frame && frame->code_table_head))
+                return nullptr;
+            uintptr_t offset = (uintptr_t)&frame->code_table_head - (uintptr_t)frame;
+            const auto parent = (Frame*)((uintptr_t)frame->code_table_head - offset);
+            return parent;
         }
 
         Frame* GetFrameById(uint32_t frame_id) {

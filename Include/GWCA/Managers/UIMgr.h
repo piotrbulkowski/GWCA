@@ -103,7 +103,7 @@ namespace GW {
             uint32_t field35_0x98;
             uint32_t field36_0x9c;
             GW::Array<UIInteractionCallback> frame_callbacks;
-            uint32_t field38_0xb0;
+            uint32_t child_offset_id; // Offset of this child in relation to its parent
             uint32_t frame_id; // Offset in the global frame array
             uint32_t field40_0xb8;
             uint32_t field41_0xbc;
@@ -166,6 +166,10 @@ namespace GW {
             uint32_t field98_0x1a0;
             uint32_t field99_0x1a4;
             uint32_t field100_0x1a8;
+
+            inline bool IsCreated() {
+                return (field91_0x184 & 4) != 0;
+            }
         };
         static_assert(sizeof(Frame) == 0x1ac);
 
@@ -878,7 +882,10 @@ namespace GW {
             wchar_t* component_label;
         };
 
+        GWCA_API bool ButtonClick(Frame* btn_frame);
+
         GWCA_API Frame* GetChildFrame(Frame* parent, uint32_t child_offset);
+        GWCA_API Frame* GetParentFrame(Frame* frame);
         GWCA_API Frame* GetFrameById(uint32_t frame_id);
         GWCA_API Frame* GetFrameByLabel(const wchar_t* frame_label);
 
