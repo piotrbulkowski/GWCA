@@ -735,6 +735,15 @@ namespace GW {
             action.child_frame_id_dupe = action.child_frame_id = btn_frame->child_offset_id;
             return SendFrameUIMessage(parent_frame, GW::UI::UIMessage::kMouseClick2, &action);
         }
+        Frame* FrameRelation::GetFrame() {
+            const auto frame = (Frame*)((uintptr_t)this - offsetof(struct Frame, relation));
+            GWCA_ASSERT(&frame->relation == this);
+            return frame;
+        }
+        Frame* FrameRelation::GetParent() {
+            return parent ? parent->GetFrame() : nullptr;
+        }
+
         Frame* GetChildFrame(Frame* parent, uint32_t child_offset) {
             if (!(GetChildFrameId_Func && parent))
                 return nullptr;
@@ -743,11 +752,7 @@ namespace GW {
         }
 
         Frame* GetParentFrame(Frame* frame) {
-            if (!(frame && frame->code_table_head))
-                return nullptr;
-            uintptr_t offset = (uintptr_t)&frame->code_table_head - (uintptr_t)frame;
-            const auto parent = (Frame*)((uintptr_t)frame->code_table_head - offset);
-            return parent;
+            return frame ? frame->relation.GetParent() : nullptr;
         }
 
         Frame* GetFrameById(uint32_t frame_id) {
@@ -763,7 +768,7 @@ namespace GW {
             for (auto frame : *s_FrameArray) {
                 if (!IsFrameValid(frame))
                     continue;
-                if (frame->frame_hash_id == hash)
+                if (frame->relation.frame_hash_id == hash)
                     return frame;
             }
             return nullptr;

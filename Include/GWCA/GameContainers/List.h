@@ -119,4 +119,6 @@ namespace GW {
         size_t offset{};
         TLink<T> link;
     };
+
+    static_assert(sizeof(TList<void*>) == 0xc);
 }

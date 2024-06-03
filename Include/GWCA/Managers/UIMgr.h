@@ -3,6 +3,7 @@
 #include <GWCA/Utilities/Hook.h>
 #include <GWCA/Utilities/Export.h>
 #include <GWCA/GameContainers/Array.h>
+#include <GWCA/GameContainers/List.h>
 #include <GWCA/GameContainers/GamePos.h>
 #include <GWCA/Managers/MerchantMgr.h>
 
@@ -63,6 +64,21 @@ namespace GW {
         };
 
         typedef void(__cdecl* UIInteractionCallback)(InteractionMessage* message, void* wParam, void* lParam);
+
+
+        struct Frame;
+
+        struct FrameRelation {
+            FrameRelation* parent;
+            uint32_t field67_0x124;
+            uint32_t field68_0x128;
+            uint32_t frame_hash_id;
+            TList<FrameRelation*> siblings;
+            Frame* GetFrame();
+            Frame* GetParent();
+        };
+
+        static_assert(sizeof(FrameRelation) == 0x1c);
 
         struct Frame {
             uint32_t field1_0x0;
@@ -131,13 +147,9 @@ namespace GW {
             uint32_t field63_0x114;
             uint32_t field64_0x118;
             uint32_t field65_0x11c;
-            void * code_table_head;
-            uint32_t field67_0x124;
-            uint32_t field68_0x128;
-            uint32_t frame_hash_id;
-            uint32_t field70_0x130;
-            uint32_t field71_0x134;
-            uint32_t field72_0x138;
+            union {
+                FrameRelation relation;
+            };
             uint32_t field73_0x13c;
             uint32_t field74_0x140;
             uint32_t field75_0x144;
@@ -173,8 +185,7 @@ namespace GW {
         };
         static_assert(sizeof(Frame) == 0x1ac);
 
-
-
+        static_assert(offsetof(struct Frame, relation) == 0x120);
 
         struct AgentNameTagInfo {
             /* +h0000 */ uint32_t agent_id;
