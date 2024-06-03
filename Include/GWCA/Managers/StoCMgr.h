@@ -19,6 +19,16 @@ namespace GW {
         }
     }
 
+
+    namespace StoC {
+        typedef bool (__cdecl *StoCHandler_pt)(Packet::StoC::PacketBase *pak);
+        struct StoCHandler {
+            uint32_t      *packet_template;
+            uint32_t       template_size;
+            StoCHandler_pt handler_func;
+        };
+    }
+
     struct Module;
     extern Module StoCModule;
 
@@ -85,5 +95,7 @@ namespace GW {
             packet->header = Packet::StoC::Packet<T>::STATIC_HEADER;
             return EmulatePacket((Packet::StoC::PacketBase *)packet);
         }
+
+        GWCA_API StoCHandler** GetOriginalFunctions();
     };
 }

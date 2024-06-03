@@ -20,13 +20,7 @@ namespace {
     using namespace GW;
     CRITICAL_SECTION mutex;
 
-    typedef bool (__cdecl *StoCHandler_pt)(Packet::StoC::PacketBase *pak);
-    struct StoCHandler {
-        uint32_t      *packet_template;
-        uint32_t       template_size;
-        StoCHandler_pt handler_func;
-    };
-    typedef Array<StoCHandler> StoCHandlerArray;
+    typedef Array<StoC::StoCHandler> StoCHandlerArray;
 
     struct GameServer {
         uint8_t h0000[8];
@@ -47,7 +41,7 @@ namespace {
     };
 
     StoCHandlerArray* game_server_handlers = 0;
-    StoCHandler *original_functions = nullptr;
+    StoC::StoCHandler *original_functions = nullptr;
 
     // Callbacks are triggered by weighting
     struct CallbackEntry {
@@ -138,7 +132,7 @@ namespace {
         // Because GW registers new handlers module by module, we may have caught it too soon; sanity check to make sure the header count is over 300
         GWCA_ASSERT(stoc_handler_count == STOC_HEADER_COUNT);
         if(!original_functions)
-            original_functions = new StoCHandler[stoc_handler_count];
+            original_functions = new StoC::StoCHandler[stoc_handler_count];
         packet_entries.resize(stoc_handler_count);
 
         EnableHooks();
@@ -252,4 +246,8 @@ namespace GW {
         return OriginalHandler(packet);
     }
 
+    StoC::StoCHandler** StoC::GetOriginalFunctions()
+    {
+        return &original_functions;
+    }
 } // namespace GW
