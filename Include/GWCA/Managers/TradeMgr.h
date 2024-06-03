@@ -20,12 +20,5 @@ namespace GW {
 
         // Passing quantity = 0 will prompt the player for the amount
         GWCA_API bool OfferItem(uint32_t item_id, uint32_t quantity = 0);
-
-        typedef HookCallback<uint32_t, uint32_t> OfferItemCallback;
-        GWCA_API void RegisterOfferItemCallback(
-            HookEntry* entry,
-            const OfferItemCallback& callback);
-        GWCA_API void RemoveOfferItemCallback(
-            HookEntry* entry);
     };
 }
