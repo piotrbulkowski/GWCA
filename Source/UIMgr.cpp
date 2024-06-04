@@ -804,9 +804,8 @@ namespace GW {
         }
 
         Vec2f WindowPosition::yAxis(float multiplier, const bool clamp_position) const {
-            const float h = static_cast<float>(Render::GetViewportHeight());
+            const auto h = static_cast<float>(Render::GetViewportHeight());
             Vec2f y;
-            float correct;
             switch (state ^ 0x1) {
                 case 0x20:
                 case 0x24:
@@ -816,8 +815,7 @@ namespace GW {
                 case 0x4:
                 case 0x10:
                 case 0x0:
-                    correct = (h / 2.f);
-                y = { correct - p1.y * multiplier, correct + p2.y * multiplier };
+                    y = { (h / 2.f) - p1.y * multiplier, (h / 2.f) + p2.y * multiplier };
                 break;
                 default:
                     y = { p1.y * multiplier, p2.y * multiplier };
