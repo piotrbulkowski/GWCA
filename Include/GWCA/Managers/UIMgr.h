@@ -215,7 +215,7 @@ namespace GW {
             Vec2f xAxis(float multiplier = 1.f, bool clamp_position = true) const;
             // Returns vector of from Y coord, to Y coord.
             Vec2f yAxis(float multiplier = 1.f, bool clamp_position = true) const;
-            float left(float multiplier = 1.f, bool clamp_position = true) const { return xAxis(multiplier, clamp_position).y; }
+            float left(float multiplier = 1.f, bool clamp_position = true) const { return xAxis(multiplier, clamp_position).x; }
             float right(float multiplier = 1.f, bool clamp_position = true) const { return xAxis(multiplier, clamp_position).y; }
             float top(float multiplier = 1.f, bool clamp_position = true) const { return yAxis(multiplier, clamp_position).x; }
             float bottom(float multiplier = 1.f, bool clamp_position = true) const { return yAxis(multiplier, clamp_position).y; }
