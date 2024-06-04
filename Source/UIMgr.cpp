@@ -774,24 +774,24 @@ namespace GW {
             return nullptr;
         }
 
-        Vec2f WindowPosition::xAxis(float multiplier, bool clamp_position) const {
+        Vec2f WindowPosition::xAxis(float multiplier, const bool clamp_position) const {
+            Vec2f x;
             const auto w = static_cast<float>(Render::GetViewportWidth());
             const auto middle = w / 2.f;
-            Vec2f x;
             switch (state ^ 0x1) {
-            case 0x10:
-            case 0x18:
-            case 0x30:
-                x = { std::roundf(w - p1.x * multiplier), std::roundf(w - p2.x * multiplier) };
-                break;
-            case 0x8:
-            case 0x20:
-            case 0x0:
-                x = { std::roundf(middle - p1.x * multiplier), std::roundf(middle + p2.x * multiplier) };
-                break;
-            default:
-                x = { std::roundf(p1.x * multiplier), std::roundf(p2.x * multiplier) };
-                break;
+                case 0x10:
+                case 0x18:
+                case 0x30:
+                    x = { std::roundf(w - p1.x * multiplier), std::roundf(w - p2.x * multiplier) };
+                    break;
+                case 0x8:
+                case 0x20:
+                case 0x0:
+                    x = { std::roundf(middle - p1.x * multiplier), std::roundf(middle + p2.x * multiplier) };
+                    break;
+                default:
+                    x =  {std::roundf(p1.x * multiplier), std::roundf(p2.x * multiplier)};
+                    break;
             }
 
             if (clamp_position) {
@@ -803,24 +803,24 @@ namespace GW {
             return x;
         }
 
-        Vec2f WindowPosition::yAxis(float multiplier, bool clamp_position) const {
+        Vec2f WindowPosition::yAxis(float multiplier, const bool clamp_position) const {
             const float h = static_cast<float>(Render::GetViewportHeight());
             Vec2f y;
             float correct;
             switch (state ^ 0x1) {
-            case 0x20:
-            case 0x24:
-            case 0x30:
-                y = { h - p1.y * multiplier, h - p2.y * multiplier };
+                case 0x20:
+                case 0x24:
+                case 0x30:
+                    y = { h - p1.y * multiplier, h - p2.y * multiplier };
                 break;
-            case 0x4:
-            case 0x10:
-            case 0x0:
-                correct = (h / 2.f);
+                case 0x4:
+                case 0x10:
+                case 0x0:
+                    correct = (h / 2.f);
                 y = { correct - p1.y * multiplier, correct + p2.y * multiplier };
                 break;
-            default:
-                y = { p1.y * multiplier, p2.y * multiplier };
+                default:
+                    y = { p1.y * multiplier, p2.y * multiplier };
                 break;
             }
 
