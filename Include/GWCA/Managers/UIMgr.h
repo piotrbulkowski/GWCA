@@ -215,10 +215,14 @@ namespace GW {
             Vec2f xAxis(float multiplier = 1.f) const;
             // Returns vector of from Y coord, to Y coord.
             Vec2f yAxis(float multiplier = 1.f) const;
-            float left(float multiplier = 1.f) const;
-            float right(float multiplier = 1.f) const;
-            float top(float multiplier = 1.f) const;
-            float bottom(float multiplier = 1.f) const;
+            // If clamp_position is true, the returned value will be clamped to the window's actual position on screen
+            float left(float multiplier = 1.f, bool clamp_position = true) const;
+            // If clamp_position is true, the returned value will be clamped to the window's actual position on screen
+            float right(float multiplier = 1.f, bool clamp_position = true) const;
+            // If clamp_position is true, the returned value will be clamped to the window's actual position on screen
+            float top(float multiplier = 1.f, bool clamp_position = true) const;
+            // If clamp_position is true, the returned value will be clamped to the window's actual position on screen
+            float bottom(float multiplier = 1.f, bool clamp_position = true) const;
             float width(float multiplier = 1.f) const { return right(multiplier) - left(multiplier); }
             float height(float multiplier = 1.f) const { return bottom(multiplier) - top(multiplier); }
         };

@@ -796,6 +796,7 @@ namespace GW {
             }
             return y;
         }
+
         Vec2f WindowPosition::xAxis(float multiplier) const {
             const auto w = static_cast<float>(Render::GetViewportWidth());
             const auto middle = w / 2.f;
@@ -812,17 +813,43 @@ namespace GW {
                 return {std::roundf(p1.x * multiplier), std::roundf(p2.x * multiplier)};
             }
         }
-        float WindowPosition::top(float multiplier) const {
-            return yAxis(multiplier).x;
+
+        float WindowPosition::top(float multiplier, bool clamp_position) const {
+            auto value = yAxis(multiplier).x;
+            if (clamp_position) {
+                value = std::max(value, 0.f);
+                value = std::min(value, static_cast<float>(Render::GetViewportHeight()) - height(multiplier));
+            }
+            return value;
         }
-        float WindowPosition::left(float multiplier) const {
-            return xAxis(multiplier).x;
+
+        float WindowPosition::left(float multiplier, bool clamp_position) const {
+            auto value = xAxis(multiplier).x;
+            if (clamp_position) {
+                value = std::max(value, 0.f);
+                value = std::min(value, static_cast<float>(Render::GetViewportWidth()) - width(multiplier));
+            }
+            return value;
         }
-        float WindowPosition::bottom(float multiplier) const {
-            return yAxis(multiplier).y;
+
+        float WindowPosition::bottom(float multiplier, bool clamp_position) const {
+            float value = yAxis(multiplier).y;
+            if (clamp_position) {
+                const auto h = static_cast<float>(Render::GetViewportHeight());
+                value = std::min(value, h);
+                value = std::max(value, height(multiplier));
+            }
+            return value;
         }
-        float WindowPosition::right(float multiplier) const {
-            return xAxis(multiplier).y;
+
+        float WindowPosition::right(float multiplier, bool clamp_position) const {
+            auto value = xAxis(multiplier).y;
+            if (clamp_position) {
+                const auto w = static_cast<float>(Render::GetViewportWidth());
+                value = std::min(value, w);
+                value = std::max(value, width(multiplier));
+            }
+            return value;
         }
 
         bool RawSendUIMessage(UIMessage msgid, void* wParam, void* lParam) {
