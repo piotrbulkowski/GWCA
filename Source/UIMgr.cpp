@@ -774,7 +774,36 @@ namespace GW {
             return nullptr;
         }
 
-        Vec2f WindowPosition::yAxis(float multiplier) const {
+        Vec2f WindowPosition::xAxis(float multiplier, bool clamp_position) const {
+            const auto w = static_cast<float>(Render::GetViewportWidth());
+            const auto middle = w / 2.f;
+            Vec2f x;
+            switch (state ^ 0x1) {
+            case 0x10:
+            case 0x18:
+            case 0x30:
+                x = { std::roundf(w - p1.x * multiplier), std::roundf(w - p2.x * multiplier) };
+                break;
+            case 0x8:
+            case 0x20:
+            case 0x0:
+                x = { std::roundf(middle - p1.x * multiplier), std::roundf(middle + p2.x * multiplier) };
+                break;
+            default:
+                x = { std::roundf(p1.x * multiplier), std::roundf(p2.x * multiplier) };
+                break;
+            }
+
+            if (clamp_position) {
+                x.x = std::max(0.0f, x.x);
+                x.x = std::min(x.x, w - width(multiplier));
+                x.y = std::min(w, x.y);
+                x.y = std::max(x.y, width(multiplier));
+            }
+            return x;
+        }
+
+        Vec2f WindowPosition::yAxis(float multiplier, bool clamp_position) const {
             const float h = static_cast<float>(Render::GetViewportHeight());
             Vec2f y;
             float correct;
@@ -794,62 +823,14 @@ namespace GW {
                 y = { p1.y * multiplier, p2.y * multiplier };
                 break;
             }
+
+            if (clamp_position) {
+                y.x = std::max(0.0f, y.x);
+                y.x = std::min(y.x, h - height(multiplier));
+                y.y = std::min(h, y.y);
+                y.y = std::max(y.y, height(multiplier));
+            }
             return y;
-        }
-
-        Vec2f WindowPosition::xAxis(float multiplier) const {
-            const auto w = static_cast<float>(Render::GetViewportWidth());
-            const auto middle = w / 2.f;
-            switch (state ^ 0x1) {
-            case 0x10:
-            case 0x18:
-            case 0x30:
-                return { std::roundf(w - p1.x * multiplier), std::roundf(w - p2.x * multiplier) };
-            case 0x8:
-            case 0x20:
-            case 0x0:
-                return { std::roundf(middle - p1.x * multiplier), std::roundf(middle + p2.x * multiplier) };
-            default:
-                return {std::roundf(p1.x * multiplier), std::roundf(p2.x * multiplier)};
-            }
-        }
-
-        float WindowPosition::top(float multiplier, bool clamp_position) const {
-            auto value = yAxis(multiplier).x;
-            if (clamp_position) {
-                value = std::max(value, 0.f);
-                value = std::min(value, static_cast<float>(Render::GetViewportHeight()) - height(multiplier));
-            }
-            return value;
-        }
-
-        float WindowPosition::left(float multiplier, bool clamp_position) const {
-            auto value = xAxis(multiplier).x;
-            if (clamp_position) {
-                value = std::max(value, 0.f);
-                value = std::min(value, static_cast<float>(Render::GetViewportWidth()) - width(multiplier));
-            }
-            return value;
-        }
-
-        float WindowPosition::bottom(float multiplier, bool clamp_position) const {
-            float value = yAxis(multiplier).y;
-            if (clamp_position) {
-                const auto h = static_cast<float>(Render::GetViewportHeight());
-                value = std::min(value, h);
-                value = std::max(value, height(multiplier));
-            }
-            return value;
-        }
-
-        float WindowPosition::right(float multiplier, bool clamp_position) const {
-            auto value = xAxis(multiplier).y;
-            if (clamp_position) {
-                const auto w = static_cast<float>(Render::GetViewportWidth());
-                value = std::min(value, w);
-                value = std::max(value, width(multiplier));
-            }
-            return value;
         }
 
         bool RawSendUIMessage(UIMessage msgid, void* wParam, void* lParam) {
