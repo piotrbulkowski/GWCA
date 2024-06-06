@@ -220,15 +220,15 @@ namespace GW {
             Vec2f p2;
             bool visible() const { return (state & 0x1) != 0; }
             // Returns vector of from X coord, to X coord.
-            Vec2f xAxis(float multiplier = 1.f) const;
+            Vec2f xAxis(float multiplier = 1.f, bool clamp_position = true) const;
             // Returns vector of from Y coord, to Y coord.
-            Vec2f yAxis(float multiplier = 1.f) const;
-            float left(float multiplier = 1.f) const;
-            float right(float multiplier = 1.f) const;
-            float top(float multiplier = 1.f) const;
-            float bottom(float multiplier = 1.f) const;
-            float width(float multiplier = 1.f) const { return right(multiplier) - left(multiplier); }
-            float height(float multiplier = 1.f) const { return bottom(multiplier) - top(multiplier); }
+            Vec2f yAxis(float multiplier = 1.f, bool clamp_position = true) const;
+            float left(float multiplier = 1.f, bool clamp_position = true) const { return xAxis(multiplier, clamp_position).x; }
+            float right(float multiplier = 1.f, bool clamp_position = true) const { return xAxis(multiplier, clamp_position).y; }
+            float top(float multiplier = 1.f, bool clamp_position = true) const { return yAxis(multiplier, clamp_position).x; }
+            float bottom(float multiplier = 1.f, bool clamp_position = true) const { return yAxis(multiplier, clamp_position).y; }
+            float width(float multiplier = 1.f) const { return right(multiplier, false) - left(multiplier, false); }
+            float height(float multiplier = 1.f) const { return bottom(multiplier, false) - top(multiplier, false); }
         };
 
         struct MapEntryMessage {

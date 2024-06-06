@@ -774,55 +774,61 @@ namespace GW {
             return nullptr;
         }
 
-        Vec2f WindowPosition::yAxis(float multiplier) const {
-            const float h = static_cast<float>(Render::GetViewportHeight());
-            Vec2f y;
-            float correct;
-            switch (state ^ 0x1) {
-            case 0x20:
-            case 0x24:
-            case 0x30:
-                y = { h - p1.y * multiplier, h - p2.y * multiplier };
-                break;
-            case 0x4:
-            case 0x10:
-            case 0x0:
-                correct = (h / 2.f);
-                y = { correct - p1.y * multiplier, correct + p2.y * multiplier };
-                break;
-            default:
-                y = { p1.y * multiplier, p2.y * multiplier };
-                break;
-            }
-            return y;
-        }
-        Vec2f WindowPosition::xAxis(float multiplier) const {
+        Vec2f WindowPosition::xAxis(float multiplier, const bool clamp_position) const {
+            Vec2f x;
             const auto w = static_cast<float>(Render::GetViewportWidth());
             const auto middle = w / 2.f;
             switch (state ^ 0x1) {
-            case 0x10:
-            case 0x18:
-            case 0x30:
-                return { std::roundf(w - p1.x * multiplier), std::roundf(w - p2.x * multiplier) };
-            case 0x8:
-            case 0x20:
-            case 0x0:
-                return { std::roundf(middle - p1.x * multiplier), std::roundf(middle + p2.x * multiplier) };
-            default:
-                return {std::roundf(p1.x * multiplier), std::roundf(p2.x * multiplier)};
+                case 0x10:
+                case 0x18:
+                case 0x30:
+                    x = { std::roundf(w - p1.x * multiplier), std::roundf(w - p2.x * multiplier) };
+                    break;
+                case 0x8:
+                case 0x20:
+                case 0x0:
+                    x = { std::roundf(middle - p1.x * multiplier), std::roundf(middle + p2.x * multiplier) };
+                    break;
+                default:
+                    x =  {std::roundf(p1.x * multiplier), std::roundf(p2.x * multiplier)};
+                    break;
             }
+
+            if (clamp_position) {
+                x.x = std::max(0.0f, x.x);
+                x.x = std::min(x.x, w - width(multiplier));
+                x.y = std::min(w, x.y);
+                x.y = std::max(x.y, width(multiplier));
+            }
+            return x;
         }
-        float WindowPosition::top(float multiplier) const {
-            return yAxis(multiplier).x;
-        }
-        float WindowPosition::left(float multiplier) const {
-            return xAxis(multiplier).x;
-        }
-        float WindowPosition::bottom(float multiplier) const {
-            return yAxis(multiplier).y;
-        }
-        float WindowPosition::right(float multiplier) const {
-            return xAxis(multiplier).y;
+
+        Vec2f WindowPosition::yAxis(float multiplier, const bool clamp_position) const {
+            const auto h = static_cast<float>(Render::GetViewportHeight());
+            Vec2f y;
+            switch (state ^ 0x1) {
+                case 0x20:
+                case 0x24:
+                case 0x30:
+                    y = { h - p1.y * multiplier, h - p2.y * multiplier };
+                break;
+                case 0x4:
+                case 0x10:
+                case 0x0:
+                    y = { (h / 2.f) - p1.y * multiplier, (h / 2.f) + p2.y * multiplier };
+                break;
+                default:
+                    y = { p1.y * multiplier, p2.y * multiplier };
+                break;
+            }
+
+            if (clamp_position) {
+                y.x = std::max(0.0f, y.x);
+                y.x = std::min(y.x, h - height(multiplier));
+                y.y = std::min(h, y.y);
+                y.y = std::max(y.y, height(multiplier));
+            }
+            return y;
         }
 
         bool RawSendUIMessage(UIMessage msgid, void* wParam, void* lParam) {
