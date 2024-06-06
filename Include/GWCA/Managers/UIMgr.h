@@ -80,6 +80,29 @@ namespace GW {
 
         static_assert(sizeof(FrameRelation) == 0x1c);
 
+        struct FramePosition {
+            uint32_t flags;
+            float left;
+            float bottom;
+            float right;
+            float top;
+
+            float left2;
+            float bottom2;
+            float right2;
+            float top2;
+
+            float unk;
+            float scale_factor; // Depends on UI scale
+            float viewport_width; // Width in px of available screen height; this may sometimes be scaled down, too!
+            float viewport_height; // Height in px of available screen height; this may sometimes be scaled down, too!
+
+            float screen_left;
+            float screen_bottom;
+            float screen_right;
+            float screen_top;
+        };
+
         struct Frame {
             uint32_t field1_0x0;
             uint32_t field2_0x4;
@@ -87,7 +110,7 @@ namespace GW {
             uint32_t field3_0xc;
             uint32_t field4_0x10;
             uint32_t field5_0x14;
-            uint32_t field6_0x18;
+            uint32_t visibility_flags;
             uint32_t field7_0x1c;
             uint32_t type;
             uint32_t template_type;
@@ -127,29 +150,11 @@ namespace GW {
             uint32_t field43_0xc4;
             uint32_t field44_0xc8;
             uint32_t field45_0xcc;
-            uint32_t field46_0xd0;
-            uint32_t field47_0xd4;
-            uint32_t field48_0xd8;
-            uint32_t field49_0xdc;
-            uint32_t field50_0xe0;
-            uint32_t field51_0xe4;
-            uint32_t field52_0xe8;
-            uint32_t field53_0xec;
-            uint32_t field54_0xf0;
-            uint32_t field55_0xf4;
-            uint32_t field56_0xf8;
-            uint32_t field57_0xfc;
-            uint32_t field58_0x100;
-            uint32_t field59_0x104;
-            uint32_t field60_0x108;
-            uint32_t field61_0x10c;
-            uint32_t field62_0x110;
+            FramePosition position;
             uint32_t field63_0x114;
             uint32_t field64_0x118;
             uint32_t field65_0x11c;
-            union {
-                FrameRelation relation;
-            };
+            FrameRelation relation;
             uint32_t field73_0x13c;
             uint32_t field74_0x140;
             uint32_t field75_0x144;
@@ -181,6 +186,9 @@ namespace GW {
 
             inline bool IsCreated() {
                 return (field91_0x184 & 4) != 0;
+            }
+            inline bool IsVisible() {
+                return (visibility_flags == 0);
             }
         };
         static_assert(sizeof(Frame) == 0x1ac);
