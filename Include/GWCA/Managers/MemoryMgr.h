@@ -16,9 +16,7 @@ namespace GW {
         // Basics
         static bool Scan();
 
-        static DWORD GetSkillTimer() {
-            return GetTickCount() + *SkillTimerPtr;
-        }
+        static DWORD GetSkillTimer();
 
         static HWND GetGWWindowHandle() {
             return *reinterpret_cast<HWND*>(WinHandlePtr);

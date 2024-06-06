@@ -1,4 +1,8 @@
 #include "stdafx.h"
+#include <timeapi.h>
+#pragma comment(lib, "winmm")
+
+
 
 #include <GWCA/Utilities/Debug.h>
 #include <GWCA/Utilities/Scanner.h>
@@ -75,6 +79,11 @@ bool GW::MemoryMgr::Scan() {
 #endif
 
     return SkillTimerPtr && WinHandlePtr && GetPersonalDirPtr && GetGWVersion_Func;
+}
+
+DWORD GW::MemoryMgr::GetSkillTimer()
+{
+    return timeGetTime() + *SkillTimerPtr;
 }
 
 uint32_t GW::MemoryMgr::GetGWVersion() {
