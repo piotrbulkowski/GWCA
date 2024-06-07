@@ -7,6 +7,8 @@
 #include <GWCA/GameContainers/GamePos.h>
 #include <GWCA/Managers/MerchantMgr.h>
 
+#include "RenderMgr.h"
+
 namespace GW {
 
     struct Module;
@@ -23,6 +25,7 @@ namespace GW {
     }
 
     namespace UI {
+        struct TooltipInfo;
         typedef GW::Array<unsigned char> ArrayByte;
 
         enum class UIMessage : uint32_t;
@@ -75,7 +78,7 @@ namespace GW {
             uint32_t frame_hash_id;
             TList<FrameRelation*> siblings;
             Frame* GetFrame();
-            Frame* GetParent();
+            Frame* GetParent() const;
         };
 
         static_assert(sizeof(FrameRelation) == 0x1c);
@@ -101,6 +104,11 @@ namespace GW {
             float screen_bottom;
             float screen_right;
             float screen_top;
+
+            [[nodiscard]] GW::Vec2f GetRelativeTopLeft(const Frame* frame = nullptr) const;
+            [[nodiscard]] GW::Vec2f GetRelativeBottomRight(const Frame* frame = nullptr) const;
+            [[nodiscard]] GW::Vec2f GetRelativeSize(const Frame* frame = nullptr) const;
+            [[nodiscard]] static GW::Vec2f GetViewportScale(const Frame* frame = nullptr);
         };
 
         struct Frame {
@@ -181,19 +189,20 @@ namespace GW {
             uint32_t field96_0x198;
             uint32_t field97_0x19c;
             uint32_t field98_0x1a0;
-            uint32_t field99_0x1a4;
+            TooltipInfo* tooltip_info;
             uint32_t field100_0x1a8;
 
-            inline bool IsCreated() {
+            bool IsCreated() const {
                 return (field91_0x184 & 4) != 0;
             }
-            inline bool IsVisible() {
-                return (visibility_flags == 0);
+
+            bool IsVisible() const {
+                return visibility_flags == 0;
             }
         };
         static_assert(sizeof(Frame) == 0x1ac);
 
-        static_assert(offsetof(struct Frame, relation) == 0x120);
+        static_assert(offsetof(Frame, relation) == 0x120);
 
         struct AgentNameTagInfo {
             /* +h0000 */ uint32_t agent_id;
@@ -908,7 +917,7 @@ namespace GW {
         GWCA_API Frame* GetFrameById(uint32_t frame_id);
         GWCA_API Frame* GetFrameByLabel(const wchar_t* frame_label);
 
-        GWCA_API bool SendFrameUIMessage(UI::Frame* frame, UI::UIMessage msgid, void* wParam, void* lParam = nullptr);
+        GWCA_API bool SendFrameUIMessage(UI::Frame* frame, UI::UIMessage message_id, void* wParam, void* lParam = nullptr);
 
         // SendMessage for Guild Wars UI messages, most UI interactions will use this. Returns true if not blocked
         GWCA_API bool SendUIMessage(UI::UIMessage msgid, void* wParam = nullptr, void* lParam = nullptr, bool skip_hooks = false);
