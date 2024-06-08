@@ -317,6 +317,10 @@ namespace GW {
             kMapChange                  = 0x10000000 | 0x10F, // wparam = map id
             kCalledTargetChange         = 0x10000000 | 0x113, // wparam = { player_number, target_id }
             kErrorMessage               = 0x10000000 | 0x117, // wparam = { int error_index, wchar_t* error_encoded_string }
+            kPartyAddHenchman           = 0x10000000 | 0x119,
+            kPartyRemoveHenchman        = 0x10000000 | 0x11a,
+            kPartyAddHero               = 0x10000000 | 0x11c,
+            kPartyRemoveHero            = 0x10000000 | 0x11d,
             kEnumPreference             = 0x10000000 | 0x13E, // wparam = { EnumPreference pref_id, uint32_t val }
             kCheckboxPreference         = 0x10000000 | 0x13F,
             kPreferenceChanged          = 0x10000000 | 0x140,
