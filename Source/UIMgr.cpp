@@ -740,8 +740,45 @@ namespace GW {
             GWCA_ASSERT(&frame->relation == this);
             return frame;
         }
-        Frame* FrameRelation::GetParent() {
+        Frame* FrameRelation::GetParent() const
+        {
             return parent ? parent->GetFrame() : nullptr;
+        }
+
+        GW::Vec2f FramePosition::GetRelativeTopLeft(const Frame* frame) const
+        {
+            const auto viewport_scale = GetViewportScale(frame);
+            return {
+                this->screen_left * viewport_scale.x,
+                (this->viewport_height - this->screen_top) * viewport_scale.y
+            };
+        }
+        GW::Vec2f FramePosition::GetRelativeBottomRight(const Frame* frame) const
+        {
+            const auto viewport_scale = GetViewportScale(frame);
+            return {
+                this->screen_right * viewport_scale.x,
+                (this->viewport_height - this->screen_bottom) * viewport_scale.y
+            };
+        }
+        GW::Vec2f FramePosition::GetRelativeSize(const Frame* frame) const
+        {
+            const auto viewport_scale = GetViewportScale(frame);
+            return {
+                (this->screen_right - this->screen_left) * viewport_scale.x,
+                (this->screen_top - this->screen_bottom) * viewport_scale.y,
+            };
+        }
+
+        GW::Vec2f FramePosition::GetViewportScale(const Frame* frame)
+        {
+            const auto game = frame ? frame : GW::UI::GetFrameByLabel(L"Game");
+            const auto screen_width = static_cast<float>(GW::Render::GetViewportWidth());
+            const auto screen_height = static_cast<float>(GW::Render::GetViewportHeight());
+            return {
+                screen_width / game->position.viewport_width,
+                screen_height / game->position.viewport_height
+             };
         }
 
         Frame* GetChildFrame(Frame* parent, uint32_t child_offset) {
