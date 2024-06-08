@@ -105,10 +105,10 @@ namespace GW {
             float screen_right;
             float screen_top;
 
-            [[nodiscard]] GW::Vec2f GetRelativeTopLeft(const Frame* frame = nullptr) const;
-            [[nodiscard]] GW::Vec2f GetRelativeBottomRight(const Frame* frame = nullptr) const;
-            [[nodiscard]] GW::Vec2f GetRelativeSize(const Frame* frame = nullptr) const;
-            [[nodiscard]] static GW::Vec2f GetViewportScale(const Frame* frame = nullptr);
+            [[nodiscard]] GW::Vec2f GetTopLeftOnScreen() const;
+            [[nodiscard]] GW::Vec2f GetBottomRightOnScreen() const;
+            [[nodiscard]] GW::Vec2f GetSizeOnScreen() const;
+            [[nodiscard]] GW::Vec2f GetViewportScale() const;
         };
 
         struct Frame {

@@ -730,7 +730,7 @@ namespace GW {
                 return false; // Not yet created
             }
 
-            GW::UI::UIPacket::kMouseAction action;
+            GW::UI::UIPacket::kMouseAction action{};
             action.current_state = 0x6;
             action.child_frame_id_dupe = action.child_frame_id = btn_frame->child_offset_id;
             return SendFrameUIMessage(parent_frame, GW::UI::UIMessage::kMouseClick2, &action);
@@ -745,39 +745,38 @@ namespace GW {
             return parent ? parent->GetFrame() : nullptr;
         }
 
-        GW::Vec2f FramePosition::GetRelativeTopLeft(const Frame* frame) const
+        GW::Vec2f FramePosition::GetTopLeftOnScreen() const
         {
-            const auto viewport_scale = GetViewportScale(frame);
+            const auto viewport_scale = GetViewportScale();
             return {
-                this->screen_left * viewport_scale.x,
-                (this->viewport_height - this->screen_top) * viewport_scale.y
+                screen_left * viewport_scale.x,
+                (viewport_height - screen_top) * viewport_scale.y
             };
         }
-        GW::Vec2f FramePosition::GetRelativeBottomRight(const Frame* frame) const
+        GW::Vec2f FramePosition::GetBottomRightOnScreen() const
         {
-            const auto viewport_scale = GetViewportScale(frame);
+            const auto viewport_scale = GetViewportScale();
             return {
-                this->screen_right * viewport_scale.x,
-                (this->viewport_height - this->screen_bottom) * viewport_scale.y
+                screen_right * viewport_scale.x,
+                (viewport_height - screen_bottom) * viewport_scale.y
             };
         }
-        GW::Vec2f FramePosition::GetRelativeSize(const Frame* frame) const
+        GW::Vec2f FramePosition::GetSizeOnScreen() const
         {
-            const auto viewport_scale = GetViewportScale(frame);
+            const auto viewport_scale = GetViewportScale();
             return {
-                (this->screen_right - this->screen_left) * viewport_scale.x,
-                (this->screen_top - this->screen_bottom) * viewport_scale.y,
+                (screen_right - screen_left) * viewport_scale.x,
+                (screen_top - screen_bottom) * viewport_scale.y,
             };
         }
 
-        GW::Vec2f FramePosition::GetViewportScale(const Frame* frame)
+        GW::Vec2f FramePosition::GetViewportScale() const
         {
-            const auto game = frame ? frame : GW::UI::GetFrameByLabel(L"Game");
             const auto screen_width = static_cast<float>(GW::Render::GetViewportWidth());
             const auto screen_height = static_cast<float>(GW::Render::GetViewportHeight());
             return {
-                screen_width / game->position.viewport_width,
-                screen_height / game->position.viewport_height
+                screen_width / viewport_width,
+                screen_height / viewport_height
              };
         }
 
