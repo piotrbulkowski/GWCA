@@ -264,6 +264,10 @@ namespace {
         HookBase::EnterHook();
         const auto frame = (UI::Frame*)(((uintptr_t)frame_callbacks) - 0xA0);
         GWCA_ASSERT(&frame->frame_callbacks == frame_callbacks);
+        static std::unordered_map<UI::UIMessage, uint32_t> message_count{};
+        if (message_count[message_id]++ <= 3) {
+            GWCA_DEBUG("%x", message_id);
+        }
         UI::SendFrameUIMessage(frame, message_id, wParam, lParam);
         HookBase::LeaveHook();
     }
@@ -745,38 +749,40 @@ namespace GW {
             return parent ? parent->GetFrame() : nullptr;
         }
 
-        GW::Vec2f FramePosition::GetTopLeftOnScreen() const
+        GW::Vec2f FramePosition::GetTopLeftOnScreen(const Frame* frame) const
         {
-            const auto viewport_scale = GetViewportScale();
+            const auto viewport_scale = GetViewportScale(frame);
+            const auto height = frame ? frame->position.viewport_height : viewport_height;
             return {
                 screen_left * viewport_scale.x,
-                (viewport_height - screen_top) * viewport_scale.y
+                (height - screen_top) * viewport_scale.y
             };
         }
-        GW::Vec2f FramePosition::GetBottomRightOnScreen() const
+        GW::Vec2f FramePosition::GetBottomRightOnScreen(const Frame* frame) const
         {
-            const auto viewport_scale = GetViewportScale();
+            const auto viewport_scale = GetViewportScale(frame);
+            const auto height = frame ? frame->position.viewport_height : viewport_height;
             return {
                 screen_right * viewport_scale.x,
-                (viewport_height - screen_bottom) * viewport_scale.y
+                (height - screen_bottom) * viewport_scale.y
             };
         }
-        GW::Vec2f FramePosition::GetSizeOnScreen() const
+        GW::Vec2f FramePosition::GetSizeOnScreen(const Frame* frame) const
         {
-            const auto viewport_scale = GetViewportScale();
+            const auto viewport_scale = GetViewportScale(frame);
             return {
                 (screen_right - screen_left) * viewport_scale.x,
                 (screen_top - screen_bottom) * viewport_scale.y,
             };
         }
 
-        GW::Vec2f FramePosition::GetViewportScale() const
+        GW::Vec2f FramePosition::GetViewportScale(const Frame* frame) const
         {
             const auto screen_width = static_cast<float>(GW::Render::GetViewportWidth());
             const auto screen_height = static_cast<float>(GW::Render::GetViewportHeight());
             return {
-                screen_width / viewport_width,
-                screen_height / viewport_height
+                screen_width / (frame ? frame->position.viewport_width : viewport_width),
+                screen_height / (frame ? frame->position.viewport_height :viewport_height)
              };
         }
 
