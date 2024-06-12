@@ -342,6 +342,7 @@ namespace GW {
             for (const GW::Constants::SkillID skill : in.skills) {
                 offset += _WriteBits((int)skill, &bitStr[offset], bits_per_skill);
             }
+            offset += _WriteBits(0, &bitStr[offset], 1); // Added terminating bit
 
             char* it = bitStr;
             size_t r = offset % 6;
@@ -357,8 +358,6 @@ namespace GW {
                 int value = _ReadBits(&it, 6);
                 build_code_result[i] = (char)_Base64Table[value];
             }
-            // TODO: this is sometimes missing character(s) at the end
-            build_code_result[needed_length] = '\0';
             return true;
         }
         bool DecodeSkillTemplate(SkillTemplate* result, const char* temp)
