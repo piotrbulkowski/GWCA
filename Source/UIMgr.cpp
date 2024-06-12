@@ -264,10 +264,6 @@ namespace {
         HookBase::EnterHook();
         const auto frame = (UI::Frame*)(((uintptr_t)frame_callbacks) - 0xA0);
         GWCA_ASSERT(&frame->frame_callbacks == frame_callbacks);
-        static std::unordered_map<UI::UIMessage, uint32_t> message_count{};
-        if (message_count[message_id]++ <= 3) {
-            GWCA_DEBUG("%x", message_id);
-        }
         UI::SendFrameUIMessage(frame, message_id, wParam, lParam);
         HookBase::LeaveHook();
     }
