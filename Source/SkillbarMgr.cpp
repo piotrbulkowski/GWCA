@@ -22,7 +22,6 @@
 #include <GWCA/Managers/SkillbarMgr.h>
 #include <GWCA/Managers/UIMgr.h>
 #include <GWCA/Managers/GameThreadMgr.h>
-
 #include "GWCA/Context/GameContext.h"
 
 namespace {
@@ -220,8 +219,8 @@ namespace {
             return false;
         // If any of the attributes in this skill bar rely on the primary profession drop out
         bool is_primary_attribute = false;
-        for (size_t i = 0; i < _countof(skill_template.attributes); i++) {
-            if (GetAttributeProfession(skill_template.attributes[i].attribute, &is_primary_attribute) == profession
+        for (const auto& attribute : skill_template.attributes) {
+            if (GetAttributeProfession(attribute.attribute, &is_primary_attribute) == profession
                 && is_primary_attribute)
                 return true;
         }
@@ -256,10 +255,8 @@ namespace GW {
     };
     namespace SkillbarMgr {
 
-
-
         Skill* GetSkillConstantData(Constants::SkillID skill_id) {
-            Skill* arr = (Skill*)skill_array_addr;
+            Skill* arr = skill_array_addr;
             return skill_array_addr ? &arr[(uint32_t)skill_id] : nullptr;
         }
         AttributeInfo* GetAttributeConstantData(Constants::Attribute attribute_id) {
@@ -490,7 +487,7 @@ namespace GW {
             if (!profession_state) {
                 return false;
             }
-            if (skill_template.primary != Constants::Profession::None && profession_state->primary != skill_template.primary) {
+            if (skill_template.primary != Profession::None && profession_state->primary != skill_template.primary) {
                 if (IsPrimaryAttributeRequired(skill_template, skill_template.primary)) {
                     // Build contains points in this profession's primary attribute; we can't avoid it.
                     return false;
@@ -505,7 +502,7 @@ namespace GW {
                     skill_template.secondary = skill_template.primary;
                 }
             }
-            if (skill_template.secondary != Constants::Profession::None && IsProfessionRequired(skill_template, skill_template.secondary)) {
+            if (skill_template.secondary != Profession::None && IsProfessionRequired(skill_template, skill_template.secondary)) {
                 if (!profession_state->IsProfessionUnlocked(skill_template.secondary)) {
                     return false;
                 }
@@ -670,9 +667,8 @@ namespace GW {
 
         SkillTemplate GetSkillTemplate(const uint32_t hero_index)
         {
-            if (hero_index > 7) return {};
             const auto agent_id = Agents::GetHeroAgentID(hero_index);
-            const auto agent = Agents::GetAgentByID(agent_id);
+            if (!agent_id) return {};
             const auto skillbar = GetHeroSkillbar(hero_index);
             const auto skillbar_array = GetSkillbarArray();
             std::vector skillbars(skillbar_array->begin(), skillbar_array->end());
@@ -683,17 +679,10 @@ namespace GW {
                 skill_template.skills[i] = skill->IsPvP() ? skill->skill_id_pvp : skill->skill_id;
             }
 
-            if (const auto agent_living = agent ? agent->GetAsAgentLiving() : nullptr) {
-                skill_template.primary = static_cast<Constants::Profession>(agent_living->primary);
-                skill_template.secondary = static_cast<Constants::Profession>(agent_living->secondary);
-            }
-            else {
-                const auto partyInfo = PartyMgr::GetPartyInfo();
-                if (partyInfo && hero_index <= partyInfo->heroes.size()) {
-                    GW::HeroPartyMember& hero = partyInfo->heroes[hero_index - 1];
-                    skill_template.primary = static_cast<Constants::Profession>(hero.h000C);
-                    skill_template.secondary = static_cast<Constants::Profession>(hero.h0010);
-                }
+            const auto profession_state = GetAgentProfessionState(agent_id);
+            if (profession_state) {
+                skill_template.primary = profession_state->primary;
+                skill_template.secondary = profession_state->secondary;
             }
             PartyAttributeArray& party_attributes = GetGameContext()->world->attributes;
             size_t attribute_idx = 0;

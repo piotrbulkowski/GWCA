@@ -513,6 +513,20 @@ namespace GW {
             return 0;
         }
 
+        HeroInfo* GetHeroInfo(uint32_t hero_id)
+        {
+            const auto w = GetWorldContext();
+            if (!(w && w->hero_info.size())) {
+                return nullptr;
+            }
+            for (auto& a : w->hero_info) {
+                if (a.hero_id == hero_id) {
+                    return &a;
+                }
+            }
+            return nullptr;
+        }
+
         bool SearchParty(uint32_t search_type, const wchar_t* advertisement) {
             if (!PartySearchSeek_Func)
                 return false;

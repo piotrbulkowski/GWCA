@@ -23,7 +23,7 @@ namespace GW {
 
     namespace SkillbarMgr {
         struct Attribute {
-            Constants::Attribute attribute{};
+            Constants::Attribute attribute = (Constants::Attribute)0xFF;
             uint32_t points{};
         };
 

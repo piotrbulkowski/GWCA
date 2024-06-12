@@ -6,6 +6,7 @@ namespace GW {
     struct GamePos;
     struct PartyInfo;
     struct PetInfo;
+    struct HeroInfo;
 
     struct Attribute;
     enum class HeroBehavior : uint32_t;
@@ -87,7 +88,8 @@ namespace GW {
 
         GWCA_API uint32_t GetHeroAgentID(uint32_t hero_index);
         GWCA_API uint32_t GetAgentHeroID(uint32_t agent_id);
-        
+
+        GWCA_API HeroInfo* GetHeroInfo(uint32_t hero_id);
 
         // Advertise your party in party search window
         GWCA_API bool SearchParty(uint32_t search_type, const wchar_t* advertisement = nullptr);
