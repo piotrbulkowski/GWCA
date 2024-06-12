@@ -323,7 +323,7 @@ namespace GW {
             offset += _WriteBits(attrib_count, &bitStr[offset], 4);
             offset += _WriteBits(bits_per_attr - 4, &bitStr[offset], 4);
             for (const Attribute& attribute : in.attributes) {
-                if (attribute.attribute != GW::Constants::Attribute::None
+                if (attribute.attribute != Constants::Attribute::None
                     && attribute.points != 0) {
                     offset += _WriteBits((int)attribute.attribute, &bitStr[offset], bits_per_attr);
                     offset += _WriteBits((int)attribute.points, &bitStr[offset], 4);
@@ -357,7 +357,32 @@ namespace GW {
                 int value = _ReadBits(&it, 6);
                 build_code_result[i] = (char)_Base64Table[value];
             }
-            build_code_result[needed_length] = 0;
+            // TODO: most certainly not the correct way, but it works - revert this commit if you figure it out
+            bool has_primary_attr_points = false;
+            bool has_secondary_attr_points = false;
+            for (const auto attr : in.attributes) {
+                if (GetAttributeProfession(attr.attribute) == in.primary) {
+                    has_primary_attr_points = true;
+                }
+                if (GetAttributeProfession(attr.attribute) == in.secondary) {
+                    has_secondary_attr_points = true;
+                }
+            }
+            if (has_primary_attr_points && has_secondary_attr_points) {
+                build_code_result[needed_length] = '\0';
+                return true;
+            }
+            for (const auto skill : in.skills) {
+                const auto skill_prof = GetSkillProfession(skill);
+                if (skill != Constants::SkillID::No_Skill && (
+                    skill_prof == in.secondary && !has_secondary_attr_points ||
+                    skill_prof == in.primary && !has_primary_attr_points
+                    )) {
+                    build_code_result[needed_length++] = 'A';
+                    break;
+                }
+            }
+            build_code_result[needed_length] = '\0';
             return true;
         }
         bool DecodeSkillTemplate(SkillTemplate* result, const char* temp)
@@ -423,12 +448,12 @@ namespace GW {
                 if (!attrib_val) {
                     continue;
                 }
-                auto prof = static_cast<Constants::ProfessionByte>(GetAttributeProfession((Constants::Attribute)attrib_id, &is_primary_attribute));
-                if (prof != prof1 && prof != prof2) {
+                const auto profession = static_cast<Constants::ProfessionByte>(GetAttributeProfession(static_cast<Constants::Attribute>(attrib_id), &is_primary_attribute));
+                if (profession != prof1 && profession != prof2) {
                     GWCA_ERR("Attribute id %d does not match build profession(s)\n", attrib_id);
                     return false;
                 }
-                if (is_primary_attribute && prof != prof1) {
+                if (is_primary_attribute && profession != prof1) {
                     GWCA_ERR("Primary attribute id %d does not match primary profession\n", attrib_id);
                     return false;
                 }
