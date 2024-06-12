@@ -23,6 +23,8 @@
 #include <GWCA/Managers/UIMgr.h>
 #include <GWCA/Managers/GameThreadMgr.h>
 
+#include "GWCA/Context/GameContext.h"
+
 namespace {
     using namespace GW;
     using namespace SkillbarMgr;
@@ -644,6 +646,20 @@ namespace GW {
             }
             return nullptr;
         }
+
+        Skillbar* GetHeroSkillbar(const uint32_t hero_index)
+        {
+            if (hero_index > 7) return nullptr;
+            SkillbarArray* sba = GetSkillbarArray();
+            uint32_t player_id = sba ? GW::Agents::GetHeroAgentID(hero_index) : 0;
+            if (!player_id) return nullptr;
+            for (auto& sb : *sba) {
+                if (sb.agent_id == player_id)
+                    return &sb;
+            }
+            return nullptr;
+        }
+
         Skill* GetHoveredSkill() {
             const auto tooltip = UI::GetCurrentTooltip();
             if (!(tooltip && tooltip->payload_len == 0x14)) {
@@ -651,6 +667,59 @@ namespace GW {
             }
             return GetSkillConstantData(*(GW::Constants::SkillID*)tooltip->payload);
         }
+
+        SkillTemplate GetSkillTemplate(const uint32_t hero_index)
+        {
+            if (hero_index > 7) return {};
+            const auto agent_id = Agents::GetHeroAgentID(hero_index);
+            const auto agent = Agents::GetAgentByID(agent_id);
+            const auto skillbar = GetHeroSkillbar(hero_index);
+            const auto skillbar_array = GetSkillbarArray();
+            std::vector skillbars(skillbar_array->begin(), skillbar_array->end());
+            SkillTemplate skill_template{};
+            for (size_t i = 0; i < _countof(skill_template.skills); i++) {
+                // Ensure skill encoded is the pve version
+                const auto skill = GetSkillConstantData(skillbar->skills[i].skill_id);
+                skill_template.skills[i] = skill->IsPvP() ? skill->skill_id_pvp : skill->skill_id;
+            }
+
+            if (const auto agent_living = agent ? agent->GetAsAgentLiving() : nullptr) {
+                skill_template.primary = static_cast<Constants::Profession>(agent_living->primary);
+                skill_template.secondary = static_cast<Constants::Profession>(agent_living->secondary);
+            }
+            else {
+                const auto partyInfo = PartyMgr::GetPartyInfo();
+                if (partyInfo && hero_index <= partyInfo->heroes.size()) {
+                    GW::HeroPartyMember& hero = partyInfo->heroes[hero_index - 1];
+                    skill_template.primary = static_cast<Constants::Profession>(hero.h000C);
+                    skill_template.secondary = static_cast<Constants::Profession>(hero.h0010);
+                }
+            }
+            PartyAttributeArray& party_attributes = GetGameContext()->world->attributes;
+            size_t attribute_idx = 0;
+            for (const PartyAttribute& agent_attributes : party_attributes) {
+                if (agent_attributes.agent_id != agent_id) {
+                    continue;
+                }
+                if (attribute_idx > _countof(skill_template.attributes)) {
+                    break;
+                }
+                for (size_t attribute_id = 0; attribute_id < _countof(agent_attributes.attribute); attribute_id++) {
+                    if (static_cast<Constants::Attribute>(attribute_id) > Constants::Attribute::Mysticism) {
+                        continue;
+                    }
+                    const GW::Attribute& attribute = agent_attributes.attribute[attribute_id];
+                    if (!attribute.level_base) {
+                        continue;
+                    }
+                    skill_template.attributes[attribute_idx].attribute = static_cast<Constants::Attribute>(attribute_id);
+                    skill_template.attributes[attribute_idx].points = attribute.level_base;
+                    attribute_idx++;
+                }
+            }
+            return skill_template;
+        }
+
         bool GetIsSkillUnlocked(GW::Constants::SkillID skill_id) {
             auto& array = GetAccountContext()->unlocked_account_skills;
 

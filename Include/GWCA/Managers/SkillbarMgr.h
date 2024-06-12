@@ -23,15 +23,15 @@ namespace GW {
 
     namespace SkillbarMgr {
         struct Attribute {
-            Constants::Attribute attribute;
-            uint32_t points;
+            Constants::Attribute attribute{};
+            uint32_t points{};
         };
 
         struct SkillTemplate {
-            Constants::Profession primary;
-            Constants::Profession secondary;
-            Constants::SkillID    skills[8];
-            Attribute             attributes[16];
+            Constants::Profession primary{};
+            Constants::Profession secondary{};
+            Constants::SkillID    skills[8]{};
+            Attribute             attributes[16]{};
         };
 
         // Get the skill slot in the player bar of the player.
@@ -55,8 +55,10 @@ namespace GW {
 
         // Get array of skillbars, [0] = player [1-7] = heroes.
         GWCA_API SkillbarArray* GetSkillbarArray();
-        GWCA_API Skillbar *GetPlayerSkillbar();
+        GWCA_API Skillbar* GetPlayerSkillbar();
+        GWCA_API Skillbar* GetHeroSkillbar(uint32_t hero_index);
         GWCA_API Skill* GetHoveredSkill();
+        GWCA_API SkillTemplate GetSkillTemplate(uint32_t hero_index = 0);
 
         // Whether this skill is unlocked at account level, not necessarily learnt by the current character
         GWCA_API bool GetIsSkillUnlocked(Constants::SkillID skill_id);
