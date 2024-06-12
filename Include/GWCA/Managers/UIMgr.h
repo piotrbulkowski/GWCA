@@ -90,10 +90,10 @@ namespace GW {
             float right;
             float top;
 
-            float left2;
-            float bottom2;
-            float right2;
-            float top2;
+            float content_left;
+            float content_bottom;
+            float content_right;
+            float content_top;
 
             float unk;
             float scale_factor; // Depends on UI scale
