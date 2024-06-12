@@ -223,6 +223,9 @@ namespace {
     typedef void (__cdecl *SetInGameUIScale_pt)(uint32_t value); 
     SetInGameUIScale_pt SetInGameUIScale_Func = 0; // Triggers the game to actually use the ui scale chosen.
 
+    typedef GW::UI::Frame* (__cdecl* GetRootFrame_pt)();
+    GetRootFrame_pt GetRootFrame_Func = 0;
+
 
     UI::WindowPosition* window_positions_array = 0;
 
@@ -320,6 +323,8 @@ namespace {
         // @TODO: Grab the relationship array from memory, write this ourselves!
         address = Scanner::FindAssertion("p:\\code\\engine\\controls\\ctlview.cpp", "pageId", 0x19);
         GetChildFrameId_Func = (GetChildFrameId_pt)GW::Scanner::FunctionFromNearCall(address);
+
+        GetRootFrame_Func = (GetRootFrame_pt)Scanner::Find("\x05\xe0\xfe\xff\xff\xc3", "xxxxxx", -0x3c);
 
         SendUIMessage_Func = (SendUIMessage_pt)Scanner::Find(
             "\xE8\x00\x00\x00\x00\x5D\xC3\x89\x45\x08\x5D\xE9", "x????xxxxxxx", -0x1A);
@@ -466,6 +471,7 @@ namespace {
         GWCA_INFO("[SCAN] SetInGameStaticPreference_Func = %p", SetInGameStaticPreference_Func);
         GWCA_INFO("[SCAN] SetInGameUIScale_Func = %p", SetInGameUIScale_Func);
         GWCA_INFO("[SCAN] PreferencesInitialised_Addr = %p", PreferencesInitialised_Addr);
+        GWCA_INFO("[SCAN] GetRootFrame_Func %p", GetRootFrame_Func);
 
 #ifdef _DEBUG
         GWCA_ASSERT(GetStringPreference_Func);
@@ -499,6 +505,7 @@ namespace {
         GWCA_ASSERT(SetInGameStaticPreference_Func);
         GWCA_ASSERT(SetInGameUIScale_Func);
         GWCA_ASSERT(PreferencesInitialised_Addr);
+        GWCA_ASSERT(GetRootFrame_Func);
 #endif
         HookBase::CreateHook((void**)&SendUIMessage_Func, OnSendUIMessage, (void **)&RetSendUIMessage);
         HookBase::CreateHook((void**)&CreateUIComponent_Func, OnCreateUIComponent, (void**)&CreateUIComponent_Ret);
@@ -782,6 +789,9 @@ namespace GW {
              };
         }
 
+        Frame* GetRootFrame() {
+            return GetRootFrame_Func ? GetRootFrame_Func() : nullptr;
+        }
         Frame* GetChildFrame(Frame* parent, uint32_t child_offset) {
             if (!(GetChildFrameId_Func && parent))
                 return nullptr;

@@ -916,6 +916,8 @@ namespace GW {
 
         GWCA_API bool ButtonClick(Frame* btn_frame);
 
+        GWCA_API Frame* GetRootFrame();
+
         GWCA_API Frame* GetChildFrame(Frame* parent, uint32_t child_offset);
         GWCA_API Frame* GetParentFrame(Frame* frame);
         GWCA_API Frame* GetFrameById(uint32_t frame_id);
