@@ -358,6 +358,7 @@ namespace GW {
                 int value = _ReadBits(&it, 6);
                 build_code_result[i] = (char)_Base64Table[value];
             }
+            build_code_result[needed_length] = '\0';
             return true;
         }
         bool DecodeSkillTemplate(SkillTemplate* result, const char* temp)
