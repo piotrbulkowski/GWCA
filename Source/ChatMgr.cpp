@@ -45,8 +45,8 @@ namespace {
     }
 
     typedef Chat::Color* (__cdecl* GetChannelColor_pt)(Chat::Color* color, uint32_t chan);
-    GetChannelColor_pt GetSenderColor_Func = 0, GetSenderColor_Ret = 0;
-    GetChannelColor_pt GetMessageColor_Func = 0, GetMessageColor_Ret = 0;
+    GetChannelColor_pt GetSenderColor_Func = nullptr, GetSenderColor_Ret = nullptr;
+    GetChannelColor_pt GetMessageColor_Func = nullptr, GetMessageColor_Ret = nullptr;
 
     std::unordered_map<std::wstring, Chat::ChatCommandCallback> chat_command_hook_entries;
 
@@ -69,7 +69,7 @@ namespace {
     }
 
     typedef void(__cdecl* SendChat_pt)(wchar_t* message, uint32_t agent_id);
-    SendChat_pt SendChat_Func = 0, SendChat_Ret = 0;
+    SendChat_pt SendChat_Func = nullptr, SendChat_Ret = nullptr;
 
     void __cdecl OnSendChat_Func(wchar_t *message, uint32_t agent_id) {
         HookBase::EnterHook();
@@ -79,7 +79,7 @@ namespace {
     }
 
     typedef void(__cdecl *RecvWhisper_pt)(uint32_t transaction_id, wchar_t *player_name, wchar_t* message);
-    RecvWhisper_pt RecvWhisper_Func = 0, RecvWhisper_Ret = 0;
+    RecvWhisper_pt RecvWhisper_Func = nullptr, RecvWhisper_Ret = nullptr;
 
     void __cdecl OnRecvWhisper_Func(uint32_t transaction_id, wchar_t *player_name, wchar_t* message) {
         HookBase::EnterHook();
@@ -89,7 +89,7 @@ namespace {
     }
 
     typedef void(__fastcall* StartWhisper_pt)(GW::UI::Frame* ctx, uint32_t edx, wchar_t* name);
-    StartWhisper_pt StartWhisper_Func = 0, StartWhisper_Ret = 0;
+    StartWhisper_pt StartWhisper_Func = nullptr, StartWhisper_Ret = nullptr;
 
     void __fastcall OnStartWhisper_Func(GW::UI::Frame* ctx, uint32_t, wchar_t* name) {
         GW::HookBase::EnterHook();
@@ -99,7 +99,7 @@ namespace {
     }
 
     typedef void(_cdecl* AddToChatLog_pt)(wchar_t* message, uint32_t channel);
-    AddToChatLog_pt AddToChatLog_Func = 0, AddToChatLog_Ret = 0;
+    AddToChatLog_pt AddToChatLog_Func = nullptr, AddToChatLog_Ret = nullptr;
 
     void __cdecl OnAddToChatLog_Func(wchar_t* message, uint32_t channel) {
         GW::HookBase::EnterHook();
@@ -109,7 +109,7 @@ namespace {
     }
 
     typedef void (__fastcall *PrintChat_pt)(UI::Frame *frame, uint32_t edx, Chat::Channel channel, wchar_t *message, FILETIME timestamp, bool is_reprint);
-    PrintChat_pt PrintChat_Func = 0, PrintChat_Ret = 0;
+    PrintChat_pt PrintChat_Func = nullptr, PrintChat_Ret = nullptr;
 
     void __fastcall OnPrintChat_Func(UI::Frame *frame, uint32_t, Chat::Channel channel, wchar_t *message, FILETIME timestamp, bool is_reprint)
     {
@@ -378,10 +378,10 @@ namespace GW {
 
     Module ChatModule = {
         "ChatModule",   // name
-        NULL,           // param
+nullptr,                       // param
         ::Init,         // init_module
         ::Exit,         // exit_module
-        ::EnableHooks,           // enable_hooks
+        ::EnableHooks,  // enable_hooks
         ::DisableHooks, // disable_hooks
     };
 
@@ -414,20 +414,19 @@ namespace GW {
 
     Chat::Color Chat::SetSenderColor(Channel chan, Color col) {
         Color old = 0;
-        GetChannelColors(chan, &old, 0);
+        GetChannelColors(chan, &old, nullptr);
         ChatSenderColor[chan] = col;
         return old;
     }
 
     Chat::Color Chat::SetMessageColor(Channel chan, Color col) {
         Color old = 0;
-        GetChannelColors(chan, 0, &old);
+        GetChannelColors(chan, nullptr, &old);
         ChatMessageColor[chan] = col;
         return old;
     }
 
     void Chat::GetChannelColors(Channel chan, Color *sender, Color *message) {
-        GW::UI::UIPacket::kGetColor packet = { sender, chan };
         if (sender && GetSenderColor_Func) {
             GetSenderColor_Func(sender, chan);
         }
@@ -505,7 +504,7 @@ namespace GW {
     void Chat::WriteChatF(Channel channel, const wchar_t* format, ...) {
         va_list vl;
         va_start(vl, format);
-        size_t szbuf = vswprintf(NULL,0,format, vl) + 1;
+        size_t szbuf = vswprintf(nullptr,0,format, vl) + 1;
         wchar_t* chat = new wchar_t[szbuf];
         vswprintf(chat, szbuf, format, vl);
         va_end(vl);
@@ -520,7 +519,7 @@ namespace GW {
         size_t len = wcslen(message_unencoded) + 4;
         wchar_t* message_encoded = new wchar_t[len];
         GWCA_ASSERT(swprintf(message_encoded, len, L"\x108\x107%s\x1", message_unencoded) >= 0);
-        wchar_t* sender_encoded = 0;
+        wchar_t* sender_encoded = nullptr;
         if (sender_unencoded) {
             len = wcslen(sender_unencoded) + 4;
             sender_encoded = new wchar_t[len];
@@ -540,8 +539,8 @@ namespace GW {
             // If message contains link (<a=1>), manually create the message string
             const wchar_t* format = L"\x76b\x10a%s\x1\x10b%s\x1";
             size_t len = wcslen(message_encoded) + wcslen(sender_encoded) + 6;
-            bool has_link_in_message = wcsstr(message_encoded, L"<a=1>") != 0;
-            bool has_markup = has_link_in_message || wcsstr(message_encoded, L"<c=") != 0;
+            bool has_link_in_message = wcsstr(message_encoded, L"<a=1>") != nullptr;
+            bool has_markup = has_link_in_message || wcsstr(message_encoded, L"<c=") != nullptr;
             if (has_markup) {
                 // NB: When not using this method, any skill templates etc are NOT rendered by the game
                 if (has_link_in_message) {
