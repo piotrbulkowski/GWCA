@@ -344,6 +344,11 @@ namespace GW {
             }
             offset += _WriteBits(0, &bitStr[offset], 1); // Added terminating bit
 
+            size_t backfill_length = 6 * 27;
+            while (offset < backfill_length) {
+                bitStr[offset++] = 0;
+            }
+
             char* it = bitStr;
             size_t r = offset % 6;
             for (size_t i = 0; i < r; i++) {
