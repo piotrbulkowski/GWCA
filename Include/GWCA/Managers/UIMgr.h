@@ -76,7 +76,7 @@ namespace GW {
             uint32_t field67_0x124;
             uint32_t field68_0x128;
             uint32_t frame_hash_id;
-            TList<FrameRelation*> siblings;
+            TList<FrameRelation> siblings;
             Frame* GetFrame();
             Frame* GetParent() const;
         };

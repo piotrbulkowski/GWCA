@@ -620,14 +620,17 @@ namespace GW {
             return ChangeGold(gold_character, gold_storage) ? will_move : 0;
         }
 
-        bool OpenLockedChest(bool use_key) {
-            auto* target = Agents::GetTarget();
+        bool OpenLockedChest(const bool use_key) {
+            const auto* target = Agents::GetTarget();
             if (!(target && target->GetIsGadgetType()))
                 return false;
-            auto* me = Agents::GetPlayer();
+            const auto* me = Agents::GetPlayer();
             if (!(me && GetDistance(me->pos, target->pos) < Constants::Range::Area))
                 return false;
-            return GW::UI::SendUIMessage(GW::UI::UIMessage::kSendDialog, use_key ? (void*)1 : (void*)2);
+            if (use_key) {
+                GW::Agents::SendDialog(1u);
+            }
+            return GW::Agents::SendDialog(2u);
         }
 
         bool MoveItem(const Item* from, const Bag* bag, uint32_t slot, uint32_t quantity) {
