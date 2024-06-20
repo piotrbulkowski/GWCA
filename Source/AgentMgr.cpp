@@ -473,7 +473,7 @@ namespace GW {
         }
 
         AgentLiving* GetCharacter() {
-            Agent* a = GetPlayerByID(PlayerMgr::GetPlayerNumber());
+            const auto a = GetAgentByID(GetPlayerId());
             return a ? a->GetAsAgentLiving() : nullptr;
         }
 
