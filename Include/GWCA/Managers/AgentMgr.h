@@ -56,7 +56,7 @@ namespace GW {
         // Get AgentArray Structures of player or target.
         GWCA_API Agent *GetAgentByID(uint32_t id);
         // Get Agent of currently observed player
-        inline Agent   *GetPlayer() { return GetAgentByID(GetPlayerId() ? GetPlayerId() : GetObservingId()); }
+        inline Agent   *GetPlayer() { return GetAgentByID(GetObservingId()); }
         // Get Agent of current target
         inline Agent   *GetTarget() { return GetAgentByID(GetTargetId()); }
 
