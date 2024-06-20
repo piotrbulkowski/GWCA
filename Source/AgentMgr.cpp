@@ -414,7 +414,7 @@ namespace GW {
             auto* agents = (AgentArray*)AgentArrayPtr;
             return agents && agents->valid() ? agents : nullptr;
         }
-        uint32_t GetPlayerId() {
+        uint32_t GetControlledCharacterId() {
             const auto w = GetWorldContext();
             return w && w->playerControlledChar ? w->playerControlledChar->agent_id : 0;
         }
