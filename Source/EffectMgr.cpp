@@ -122,7 +122,7 @@ namespace GW {
             return nullptr;
         }
         AgentEffects* GetPlayerEffectsArray() {
-            return GetAgentEffectsArray(Agents::GetPlayerId());
+            return GetAgentEffectsArray(Agents::GetControlledCharacterId());
         }
         EffectArray* GetAgentEffects(uint32_t agent_id) {
             auto* e = GetAgentEffectsArray(agent_id);
@@ -133,11 +133,11 @@ namespace GW {
             return e && e->buffs.valid() ? &e->buffs : nullptr;
         }
         EffectArray* GetPlayerEffects() {
-            return GetAgentEffects(Agents::GetPlayerId());
+            return GetAgentEffects(Agents::GetControlledCharacterId());
         }
 
         BuffArray* GetPlayerBuffs() {
-            return GetAgentBuffs(Agents::GetPlayerId());
+            return GetAgentBuffs(Agents::GetControlledCharacterId());
         }
 
         bool DropBuff(uint32_t buff_id) {

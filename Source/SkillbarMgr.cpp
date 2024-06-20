@@ -486,7 +486,7 @@ namespace GW {
                 return false;
             }
 
-            AgentLiving* me = Agents::GetPlayerAsAgentLiving();
+            AgentLiving* me = Agents::GetControlledCharacter();
             if (!me) return false;
 
             const auto profession_state = GetAgentProfessionState(me->agent_id);
@@ -545,7 +545,7 @@ namespace GW {
             PlayerArray* players = Agents::GetPlayerArray();
             if (!players) return false;
 
-            AgentLiving* me = Agents::GetPlayerAsAgentLiving();
+            AgentLiving* me = Agents::GetControlledCharacter();
             if (!me) return false;
             HeroPartyMemberArray& heroes = info->heroes;
 
@@ -641,7 +641,7 @@ namespace GW {
 
         Skillbar* GetPlayerSkillbar() {
             SkillbarArray* sba = GetSkillbarArray();
-            uint32_t player_id = sba ? GW::Agents::GetPlayerId() : 0;
+            uint32_t player_id = sba ? GW::Agents::GetControlledCharacterId() : 0;
             if (!player_id) return nullptr;
             for (auto& sb : *sba) {
                 if (sb.agent_id == player_id)

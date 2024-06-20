@@ -412,7 +412,7 @@ namespace GW {
             if (!FlagHeroAgent_Func)
                 return false;
             if (agent_id == 0) return false;
-            if (agent_id == Agents::GetPlayerId()) return false;
+            if (agent_id == Agents::GetControlledCharacterId()) return false;
             FlagHeroAgent_Func(agent_id, &pos);
             return true;
         }
@@ -477,7 +477,7 @@ namespace GW {
             if (!(w && w->pets.size()))
                 return nullptr;
             if (owner_agent_id == 0)
-                owner_agent_id = Agents::GetPlayerId();
+                owner_agent_id = Agents::GetControlledCharacterId();
             for (auto& pet : w->pets) {
                 if (pet.owner_agent_id == owner_agent_id)
                     return &pet;
@@ -490,7 +490,7 @@ namespace GW {
         }
         uint32_t GetHeroAgentID(uint32_t hero_index) {
             if (hero_index == 0)
-                return Agents::GetPlayerId();
+                return Agents::GetControlledCharacterId();
             hero_index--;
             PartyInfo* party = GetPartyInfo();
             if (!party)

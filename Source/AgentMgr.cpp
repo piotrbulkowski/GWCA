@@ -16,6 +16,7 @@
 #include <GWCA/Managers/AgentMgr.h>
 #include <GWCA/Managers/ItemMgr.h>
 #include <GWCA/Managers/UIMgr.h>
+#include <GWCA/Managers/MapMgr.h>
 
 #include <GWCA/Utilities/Hooker.h>
 #include <GWCA/Utilities/Scanner.h>
@@ -472,15 +473,13 @@ namespace GW {
             return GetAgentByID(PlayerMgr::GetPlayerAgentId(player_id));
         }
 
-        AgentLiving* GetCharacter() {
-            const auto a = GetAgentByID(GetPlayerId());
+        AgentLiving* GetControlledCharacter() {
+            const auto a = GetAgentByID(GetControlledCharacterId());
             return a ? a->GetAsAgentLiving() : nullptr;
         }
 
-        AgentLiving* GetPlayerAsAgentLiving()
-        {
-            Agent* a = GetPlayer();
-            return a ? a->GetAsAgentLiving() : nullptr;
+        bool IsObserving() {
+            return !GW::Map::GetIsObserving() && GetControlledCharacterId() != GetObservingId();
         }
 
         AgentLiving* GetTargetAsAgentLiving()

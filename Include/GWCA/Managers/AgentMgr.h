@@ -41,10 +41,10 @@ namespace GW {
 
         // === Agent Array ===
 
-        // Get Agent ID of currently observed player
+        // Get Agent ID of currently observed agent
         GWCA_API uint32_t GetObservingId();
         // Get Agent ID of client's logged in player
-        GWCA_API uint32_t GetPlayerId();
+        GWCA_API uint32_t GetControlledCharacterId();
         // Get Agent ID of current target
         GWCA_API uint32_t GetTargetId();
         // Get Agent ID of current hover
@@ -55,8 +55,8 @@ namespace GW {
 
         // Get AgentArray Structures of player or target.
         GWCA_API Agent *GetAgentByID(uint32_t id);
-        // Get Agent of currently observed player
-        inline Agent   *GetPlayer() { return GetAgentByID(GetObservingId()); }
+        // Get agent that we're currently observing
+        inline Agent   *GetObservingAgent() { return GetAgentByID(GetObservingId()); }
         // Get Agent of current target
         inline Agent   *GetTarget() { return GetAgentByID(GetTargetId()); }
 
@@ -64,10 +64,10 @@ namespace GW {
         GWCA_API Agent *GetPlayerByID(uint32_t player_id);
 
         // Get Agent of current logged in character
-        GWCA_API AgentLiving* GetCharacter();
+        GWCA_API AgentLiving* GetControlledCharacter();
 
-        // Get AgentLiving of currently observed player
-        GWCA_API AgentLiving    *GetPlayerAsAgentLiving();
+        // Whether we're observing someone else
+        GWCA_API bool IsObserving();
 
         // Get AgentLiving of current target
         GWCA_API AgentLiving    *GetTargetAsAgentLiving();

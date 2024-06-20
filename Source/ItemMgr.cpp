@@ -440,7 +440,7 @@ namespace GW {
             if (!CanInteractWithItem(item))
                 return false;
             if (!agent_id)
-                agent_id = Agents::GetPlayerId();
+                agent_id = Agents::GetControlledCharacterId();
             if (!agent_id)
                 return false;
             EquipItem_Func(item->item_id, agent_id);
@@ -618,19 +618,6 @@ namespace GW {
             gold_storage -= will_move;
             gold_character += will_move;
             return ChangeGold(gold_character, gold_storage) ? will_move : 0;
-        }
-
-        bool OpenLockedChest(const bool use_key) {
-            const auto* target = Agents::GetTarget();
-            if (!(target && target->GetIsGadgetType()))
-                return false;
-            const auto* me = Agents::GetPlayer();
-            if (!(me && GetDistance(me->pos, target->pos) < Constants::Range::Area))
-                return false;
-            if (use_key) {
-                GW::Agents::SendDialog(1u);
-            }
-            return GW::Agents::SendDialog(2u);
         }
 
         bool MoveItem(const Item* from, const Bag* bag, uint32_t slot, uint32_t quantity) {
