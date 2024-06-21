@@ -284,6 +284,7 @@ namespace GW {
             kAgentStartCasting          = 0x10000000 | 0x27, // wparam = { uint32_t agent_id, uint32_t skill_id }
             kShowMapEntryMessage        = 0x10000000 | 0x29, // wparam = { wchar_t* title, wchar_t* subtitle }
             kSetCurrentPlayerData       = 0x10000000 | 0x2A, // fired after setting the worldcontext player name
+            kPostProcessingEffect       = 0x10000000 | 0x34, // Triggered when drunk. wparam = UIPacket::kPostProcessingEffect
             kHeroAgentAdded             = 0x10000000 | 0x38, // hero assigned to agent/inventory/ai mode
             kHeroDataAdded              = 0x10000000 | 0x39, // hero info received from server (name, level etc)
             kShowXunlaiChest            = 0x10000000 | 0x40,
@@ -387,6 +388,10 @@ namespace GW {
         };
 
         namespace UIPacket {
+            struct kPostProcessingEffect {
+                uint32_t tint;
+                float amount;
+            };
             struct kLogout {
                 uint32_t unknown;
                 uint32_t character_select;
