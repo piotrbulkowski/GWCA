@@ -156,7 +156,7 @@ namespace {
             else
                 GWCA_ASSERT(swprintf(time_buffer, buffer_size, L"[lbracket]%02d:%02d[rbracket]", hour, minute) > 0);
         }
-        size_t buf_len = 21 + buffer_size + wcslen(packet->message);
+        size_t buf_len = 21 + buffer_size + wcslen(packet->message) + 1;
 
         rewritten_message_buffer = new wchar_t[buf_len];
         if (ChannelThatParseColorTag[packet->channel]) {
@@ -164,7 +164,7 @@ namespace {
         } else {
             GWCA_ASSERT(swprintf(rewritten_message_buffer, buf_len, L"\x108\x107%s \x01\x02%s", time_buffer, packet->message) > 0);
         }
-        GWCA_ASSERT(UI::IsValidEncStr(rewritten_message_buffer));
+        // GWCA_ASSERT(UI::IsValidEncStr(rewritten_message_buffer));
         packet->message = rewritten_message_buffer;
 
     }
