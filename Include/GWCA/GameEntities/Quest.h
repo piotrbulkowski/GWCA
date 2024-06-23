@@ -22,6 +22,7 @@ namespace GW {
         /* +h002C */ wchar_t* description; // namestring reward
         /* +h0030 */ wchar_t* objectives; // namestring objective
 
+        inline bool IsCompleted() { return (log_state & 0x2) != 0; }
         inline bool IsCurrentMissionQuest() { return (log_state & 0x10) != 0; }
         inline bool IsAreaPrimary() { return (log_state & 0x40) != 0; } // e.g. "Primary Echovald Forest Quests"
         inline bool IsPrimary() { return (log_state & 0x20) != 0; } // e.g. "Primary Quests"
