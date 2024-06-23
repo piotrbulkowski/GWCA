@@ -142,26 +142,29 @@ namespace {
         if(!Timestamp_24hFormat)
             hour %= 12;
 
-
-        wchar_t time_buffer[29];
+        const size_t buffer_size = 29;
+        wchar_t time_buffer[buffer_size];
         if (localtime.wYear == 0) {
-            Timestamp_seconds ? std::memcpy(time_buffer, L"[lbracket]--:--:--[rbracket]", sizeof(wchar_t) * 29)
-                : std::memcpy(time_buffer, L"[lbracket]--:--[rbracket]", sizeof(wchar_t) * 26);
+            if (Timestamp_seconds)
+                wcscpy(time_buffer, L"[lbracket]--:--:--[rbracket]");
+            else
+                wcscpy(time_buffer, L"[lbracket]--:--[rbracket]");
         }
         else {
             if(Timestamp_seconds)
-                swprintf(time_buffer, 29, L"[lbracket]%02d:%02d:%02d[rbracket]", hour, minute, second);
+                GWCA_ASSERT(swprintf(time_buffer, buffer_size, L"[lbracket]%02d:%02d:%02d[rbracket]", hour, minute, second) > 0);
             else
-                swprintf(time_buffer, 29, L"[lbracket]%02d:%02d[rbracket]", hour, minute);
+                GWCA_ASSERT(swprintf(time_buffer, buffer_size, L"[lbracket]%02d:%02d[rbracket]", hour, minute) > 0);
         }
-        size_t buf_len = 21 + 29 + wcslen(packet->message);
+        size_t buf_len = 21 + buffer_size + wcslen(packet->message);
 
         rewritten_message_buffer = new wchar_t[buf_len];
         if (ChannelThatParseColorTag[packet->channel]) {
-            swprintf(rewritten_message_buffer, buf_len, L"\x108\x107<c=#%06x>%s </c>\x01\x02%s", (TimestampsColor & 0x00FFFFFF), time_buffer, packet->message);
+            GWCA_ASSERT(swprintf(rewritten_message_buffer, buf_len, L"\x108\x107<c=#%06x>%s </c>\x01\x02%s", (TimestampsColor & 0x00FFFFFF), time_buffer, packet->message) > 0);
         } else {
-            swprintf(rewritten_message_buffer, buf_len, L"\x108\x107%s \x01\x02%s", time_buffer, packet->message);
+            GWCA_ASSERT(swprintf(rewritten_message_buffer, buf_len, L"\x108\x107%s \x01\x02%s", time_buffer, packet->message) > 0);
         }
+        GWCA_ASSERT(UI::IsValidEncStr(rewritten_message_buffer));
         packet->message = rewritten_message_buffer;
 
     }
