@@ -331,6 +331,8 @@ namespace GW {
             kPartyRemoveHenchman        = 0x10000000 | 0x11a,
             kPartyAddHero               = 0x10000000 | 0x11c,
             kPartyRemoveHero            = 0x10000000 | 0x11d,
+            kPartySearchInviteReceived  = 0x10000000 | 0x135, // wparam = UIPacket::kPartySearchInviteReceived*
+            kPartySearchInviteSent      = 0x10000000 | 0x137,
             kEnumPreference             = 0x10000000 | 0x13E, // wparam = { EnumPreference pref_id, uint32_t val }
             kCheckboxPreference         = 0x10000000 | 0x13F,
             kPreferenceChanged          = 0x10000000 | 0x140,
@@ -388,6 +390,10 @@ namespace GW {
         };
 
         namespace UIPacket {
+            struct kPartySearchInvite {
+                uint32_t source_party_search_id;
+                uint32_t dest_party_search_id;
+            };
             struct kPostProcessingEffect {
                 uint32_t tint;
                 float amount;

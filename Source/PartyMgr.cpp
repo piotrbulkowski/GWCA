@@ -222,6 +222,16 @@ namespace GW {
             return nullptr;
         }
 
+        PartySearch* GetPartySearch(uint32_t party_search_id) {
+            const auto p = GW::GetPartyContext();
+            if (!p) return nullptr;
+            for (auto party : p->party_search) {
+                if (party && party->party_search_id == party_search_id)
+                    return party;
+            }
+            return nullptr;
+        }
+
         PartyInfo* GetPartyInfo(uint32_t party_id) {
             GW::PartyContext* ctx = GW::GetPartyContext();
             if (!ctx || !ctx->parties.size()) return 0;
@@ -376,7 +386,7 @@ namespace GW {
             KickPlayer_Func(playerid);
             return true;
         }
-        bool InvitePlayer(wchar_t* player_name) {
+        bool InvitePlayer(const wchar_t* player_name) {
             // There is a specific CtoS packet for this, but just use chat command instead
             if (!(player_name && player_name[0]))
                 return false;

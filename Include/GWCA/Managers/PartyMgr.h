@@ -5,6 +5,7 @@
 namespace GW {
     struct GamePos;
     struct PartyInfo;
+    struct PartySearch;
     struct PetInfo;
     struct HeroInfo;
 
@@ -27,6 +28,8 @@ namespace GW {
         GWCA_API bool Tick(bool flag = true);
 
         GWCA_API Attribute* GetAgentAttributes(uint32_t agent_id);
+
+        GWCA_API PartySearch* GetPartySearch(uint32_t party_search_id = 0);
 
         GWCA_API PartyInfo *GetPartyInfo(uint32_t party_id = 0);
 
@@ -70,7 +73,7 @@ namespace GW {
         GWCA_API bool AddHenchman(uint32_t agent_id);
         GWCA_API bool KickHenchman(uint32_t agent_id);
         GWCA_API bool InvitePlayer(uint32_t player_id);
-        GWCA_API bool InvitePlayer(wchar_t* player_name);
+        GWCA_API bool InvitePlayer(const wchar_t* player_name);
         GWCA_API bool KickPlayer(uint32_t player_id);
 
         // hero flagging
