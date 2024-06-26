@@ -336,7 +336,7 @@ namespace GW {
             kEnumPreference             = 0x10000000 | 0x13E, // wparam = { EnumPreference pref_id, uint32_t val }
             kCheckboxPreference         = 0x10000000 | 0x13F,
             kPreferenceChanged          = 0x10000000 | 0x140,
-            kUIPositionChanged          = 0x10000000 | 0x141,
+            kUIPositionChanged          = 0x10000000 | 0x141, // wparam = UIPacket::kUIPositionChanged
             kQuestAdded                 = 0x10000000 | 0x149, // wparam = { quest_id, ... }
             kQuestDetailsChanged        = 0x10000000 | 0x14A, // wparam = { quest_id, ... }
             kClientActiveQuestChanged   = 0x10000000 | 0x14C, // wparam = { quest_id, ... }. Triggered when the game requests the current quest to change
@@ -390,6 +390,10 @@ namespace GW {
         };
 
         namespace UIPacket {
+            struct kUIPositionChanged {
+                uint32_t window_id;
+                UI::WindowPosition* position;
+            };
             struct kPartySearchInvite {
                 uint32_t source_party_search_id;
                 uint32_t dest_party_search_id;
