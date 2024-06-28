@@ -12,6 +12,13 @@
 #include <GWCA/Context/GameContext.h>
 #include <GWCA/Context/TradeContext.h>
 
+namespace {
+    uint32_t GetTradeState() {
+        const auto c = GW::GetTradeContext();
+        return c ? c->flags : 0;
+    }
+}
+
 namespace GW {
     Module TradeModule = {
         "TradeModule",  // name
@@ -46,6 +53,8 @@ namespace GW {
         return ChangeOffer();
     }
     bool Trade::RemoveItem(uint32_t item_id) {
+        if (GetTradeState() != TradeContext::TRADE_INITIATED)
+            return false;
         const auto frame = UI::GetFrameByLabel(L"CartPlayer");
         struct {
             uint32_t h0000 = 0;
@@ -70,6 +79,8 @@ namespace GW {
         return nullptr;
     }
     bool Trade::OfferItem(uint32_t item_id, uint32_t quantity) {
+        if (GetTradeState() != TradeContext::TRADE_INITIATED)
+            return false;
         const auto frame = UI::GetFrameByLabel(L"CartPlayer");
         struct {
             uint32_t h0000 = 0;
