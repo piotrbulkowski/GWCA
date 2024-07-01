@@ -8,6 +8,8 @@
 
 #include <GWCA/Managers/UIMgr.h>
 #include <GWCA/Managers/ChatMgr.h>
+#include <GWCA/Utilities/MemoryPatcher.h>
+#include <GWCA/Managers/GameThreadMgr.h>
 
 #define COLOR_ARGB(a, r, g, b) (GW::Chat::Color)((((a) & 0xff) << 24) | (((r) & 0xff) << 16) | (((g) & 0xff) << 8) | ((b) & 0xff))
 #define COLOR_RGB(r, g, b) COLOR_ARGB(0xff, r, g, b)
@@ -19,6 +21,8 @@ namespace {
     bool Timestamp_24hFormat = false;
     bool Timestamp_seconds = false;
     Chat::Color TimestampsColor = COLOR_RGB(0xff, 0xff, 0xff);
+
+    GW::MemoryPatcher block_chat_timestamps;
 
     // 08 01 07 01 [Time] 01 00 02 00
     // ChatBuffer **ChatBuffer_Addr;
@@ -108,71 +112,78 @@ namespace {
         GW::HookBase::LeaveHook();
     }
 
-    typedef void (__fastcall *PrintChat_pt)(UI::Frame *frame, uint32_t edx, Chat::Channel channel, wchar_t *message, FILETIME timestamp, bool is_reprint);
-    PrintChat_pt PrintChat_Func = nullptr, PrintChat_Ret = nullptr;
+    GW::UI::UIInteractionCallback UICallback_ChatLogLine_Func = nullptr, UICallback_ChatLogLine_Ret = nullptr;
 
-    void __fastcall OnPrintChat_Func(UI::Frame *frame, uint32_t, Chat::Channel channel, wchar_t *message, FILETIME timestamp, bool is_reprint)
-    {
-        HookBase::EnterHook();
-        GW::UI::UIPacket::kPrintChatMessage packet = { channel, message, timestamp, is_reprint };
-        GW::UI::SendUIMessage(GW::UI::UIMessage::kPrintChatMessage, &packet, frame);
-        HookBase::LeaveHook();
-    }
-
-    wchar_t* rewritten_message_buffer = nullptr;
-
-    void OnUIMessage_Pre_AddTimestampToChatMessage(GW::HookStatus*, GW::UI::UIMessage message_id, void* wparam, void*) {
-        GWCA_ASSERT(message_id == GW::UI::UIMessage::kPrintChatMessage);
-        const auto packet = static_cast<GW::UI::UIPacket::kPrintChatMessage*>(wparam);
-        if (!ShowTimestamps)
-            return;
-        if (packet->message == rewritten_message_buffer)
-            return;
+    wchar_t* ChatMessageWithTimestamp(const wchar_t* message, const GW::Chat::Channel channel, const FILETIME timestamp) {
 
         FILETIME   timestamp2;
         SYSTEMTIME localtime;
 
-        FileTimeToLocalFileTime(&packet->timestamp, &timestamp2);
+        FileTimeToLocalFileTime(&timestamp, &timestamp2);
         FileTimeToSystemTime(&timestamp2, &localtime);
+        if (!localtime.wYear)
+            return nullptr;
 
         WORD hour = localtime.wHour;
         WORD minute = localtime.wMinute;
         WORD second = localtime.wSecond;
 
-        if(!Timestamp_24hFormat)
+        if (!Timestamp_24hFormat)
             hour %= 12;
 
         const size_t buffer_size = 29;
         wchar_t time_buffer[buffer_size];
-        if (localtime.wYear == 0) {
-            if (Timestamp_seconds)
-                wcscpy(time_buffer, L"[lbracket]--:--:--[rbracket]");
-            else
-                wcscpy(time_buffer, L"[lbracket]--:--[rbracket]");
+
+        if (Timestamp_seconds)
+            GWCA_ASSERT(swprintf(time_buffer, buffer_size, L"[lbracket]%02d:%02d:%02d[rbracket]", hour, minute, second) > 0);
+        else
+            GWCA_ASSERT(swprintf(time_buffer, buffer_size, L"[lbracket]%02d:%02d[rbracket]", hour, minute) > 0);
+
+        size_t buf_len = 21 + buffer_size + wcslen(message) + 1;
+        auto buffer = new wchar_t[buf_len];
+        if (ChannelThatParseColorTag[channel]) {
+            GWCA_ASSERT(swprintf(buffer, buf_len, L"\x108\x107<c=#%06x>%s </c>\x01\x02%s", (TimestampsColor & 0x00FFFFFF), time_buffer, message) > 0);
         }
         else {
-            if(Timestamp_seconds)
-                GWCA_ASSERT(swprintf(time_buffer, buffer_size, L"[lbracket]%02d:%02d:%02d[rbracket]", hour, minute, second) > 0);
-            else
-                GWCA_ASSERT(swprintf(time_buffer, buffer_size, L"[lbracket]%02d:%02d[rbracket]", hour, minute) > 0);
+            GWCA_ASSERT(swprintf(buffer, buf_len, L"\x108\x107%s \x01\x02%s", time_buffer, message) > 0);
         }
-        size_t buf_len = 21 + buffer_size + wcslen(packet->message) + 1;
-
-        rewritten_message_buffer = new wchar_t[buf_len];
-        if (ChannelThatParseColorTag[packet->channel]) {
-            GWCA_ASSERT(swprintf(rewritten_message_buffer, buf_len, L"\x108\x107<c=#%06x>%s </c>\x01\x02%s", (TimestampsColor & 0x00FFFFFF), time_buffer, packet->message) > 0);
-        } else {
-            GWCA_ASSERT(swprintf(rewritten_message_buffer, buf_len, L"\x108\x107%s \x01\x02%s", time_buffer, packet->message) > 0);
-        }
-        // GWCA_ASSERT(UI::IsValidEncStr(rewritten_message_buffer));
-        packet->message = rewritten_message_buffer;
-
-    }
-    void OnUIMessage_Post_AddTimestampToChatMessage(GW::HookStatus*, GW::UI::UIMessage, void*, void*) {
-        delete[] rewritten_message_buffer;
-        rewritten_message_buffer = nullptr;
+        return buffer;
     }
 
+    // Override the default in-game chat message timestamp logic
+    void __cdecl OnUICallback_ChatLogLine(GW::UI::InteractionMessage* message, void* wParam, void* lParam) {
+        GW::Hook::EnterHook();
+        switch (static_cast<uint32_t>(message->message_id)) {
+        case 0x49: {
+            ShowTimestamps = GW::UI::GetPreference(GW::UI::FlagPreference::ShowChatTimestamps);
+            if (ShowTimestamps != block_chat_timestamps.GetIsActive()) {
+                block_chat_timestamps.TogglePatch();
+            }
+
+            // Print chat function
+            struct Packet {
+                wchar_t* message;
+                GW::Chat::Channel channel;
+                FILETIME timestamp;
+            }*packet = (Packet*)wParam;
+
+            const auto old_message = packet->message;
+
+            auto new_message = ShowTimestamps ? ChatMessageWithTimestamp(packet->message, packet->channel, packet->timestamp) : nullptr;
+            if (new_message) {
+                packet->message = new_message;
+            }
+            UICallback_ChatLogLine_Ret(message, wParam, lParam);
+            packet->message = old_message;
+            if (new_message)
+                delete[] new_message;
+        } break;
+        default:
+            UICallback_ChatLogLine_Ret(message, wParam, lParam);
+            break;
+        }
+        GW::Hook::LeaveHook();
+    }
 
     UI::UIInteractionCallback UICallback_AssignEditableText_Func = nullptr;
     UI::UIInteractionCallback UICallback_AssignEditableText_Ret = nullptr;
@@ -230,16 +241,6 @@ namespace {
                 }
             }
         } break;
-        case UI::UIMessage::kPrintChatMessage: {
-            const auto packet = static_cast<GW::UI::UIPacket::kPrintChatMessage*>(wparam);
-            if (PrintChat_Ret) {
-                const auto frame = lparam ? (UI::Frame*)lparam : UI::GetFrameByLabel(L"Log");
-                if (frame) {
-                    PrintChat_Ret(frame, 0, packet->channel,packet->message,packet->timestamp,packet->is_reprint);
-                    return;
-                }
-            }
-        } break;
         case UI::UIMessage::kLogChatMessage: {
             const auto packet = static_cast<UI::UIPacket::kLogChatMessage*>(wparam);
             if (AddToChatLog_Ret) {
@@ -258,6 +259,16 @@ namespace {
         status->blocked = true;
     }
 
+    void ForceRedrawChatLog() {
+        GW::GameThread::Enqueue([]() {
+            struct {
+                GW::UI::FlagPreference pref = GW::UI::FlagPreference::ShowChatTimestamps;
+                uint32_t val = static_cast<uint32_t>(GW::UI::GetPreference(GW::UI::FlagPreference::ShowChatTimestamps));
+            } packet;
+            GW::UI::SendUIMessage(GW::UI::UIMessage::kCheckboxPreference, &packet);
+            });
+    }
+
     void DisableHook(void* hook) {
         if (hook)
             HookBase::DisableHooks(hook);
@@ -273,7 +284,6 @@ namespace {
         GetMessageColor_Func = (GetChannelColor_pt)Scanner::Find("\xC7\x00\xB0\xB0\xB0\xFF\x5D\xC3", "xxxxxxxx", -0x27);
         SendChat_Func = (SendChat_pt)Scanner::Find("\x8D\x85\xE0\xFE\xFF\xFF\x50\x68\x1C\x01", "xxxxxxxxx", -0x3E);
         StartWhisper_Func = (StartWhisper_pt)GW::Scanner::Find("\xFC\x53\x56\x8B\xF1\x57\x6A\x05\xFF\x36\xE8", "xxxxxxxxxxx", -0xF);
-        PrintChat_Func = (PrintChat_pt)Scanner::Find("\x3D\x00\x00\x00\x00\x73\x2B\x6A", "x??xxxxx", -0x46);
         AddToChatLog_Func = (AddToChatLog_pt)GW::Scanner::Find("\x40\x25\xff\x01\x00\x00", "xxxxxx", -0x97);
         ChatBuffer_Addr = *(Chat::ChatBuffer***)Scanner::Find("\x8B\x45\x08\x83\x7D\x0C\x07\x74", "xxxxxxxx", -4);
         RecvWhisper_Func = (RecvWhisper_pt)Scanner::Find("\x83\xc4\x04\x8d\x58\x2e\x8b\xc3", "xxxxxxxx", -0x18);
@@ -286,36 +296,48 @@ namespace {
         if (address && Scanner::IsValidPtr(*(uintptr_t*)address, Scanner::TEXT))
             UICallback_AssignEditableText_Func = *(UI::UIInteractionCallback*)address;
 
+
+        address = GW::Scanner::FindAssertion("p:\\code\\gw\\ui\\game\\gmchatlog.cpp", "m_itemCount <= CHAT_LOG_SIZE", 0x38);
+        if (address) {
+            UICallback_ChatLogLine_Func = *(GW::UI::UIInteractionCallback*)address;
+            address = GW::Scanner::Find("\x83\xc4\x0c\x85\xc0\x75\x0c\x6a\x01", "xxxxxxxxx", 0x5);
+            if (address) {
+                block_chat_timestamps.SetPatch(address, "\x90\x90", 2);
+            }
+        }
+
+        
         GWCA_INFO("[SCAN] GetSenderColor = %p", GetSenderColor_Func);
         GWCA_INFO("[SCAN] GetMessageColor = %p", GetMessageColor_Func);
         GWCA_INFO("[SCAN] SendChat = %p", SendChat_Func);
         GWCA_INFO("[SCAN] StartWhisper = %p", StartWhisper_Func);
         GWCA_INFO("[SCAN] RecvWhisper_Func = %p", RecvWhisper_Func);
-        GWCA_INFO("[SCAN] PrintChat = %p", PrintChat_Func);
         GWCA_INFO("[SCAN] AddToChatLog_Func = %p", AddToChatLog_Func);
         GWCA_INFO("[SCAN] ChatBuffer_Addr = %p", ChatBuffer_Addr);
         GWCA_INFO("[SCAN] IsTyping_FrameId = %p", IsTyping_FrameId);
         GWCA_INFO("[SCAN] UICallback_AssignEditableText_Func = %p", UICallback_AssignEditableText_Func);
+        GWCA_INFO("[SCAN] UICallback_ChatLogLine_Func = %p", UICallback_ChatLogLine_Func);
+        
 
 #ifdef _DEBUG
+        GWCA_ASSERT(UICallback_ChatLogLine_Func);
+        GWCA_ASSERT(block_chat_timestamps.IsValid());
         GWCA_ASSERT(GetSenderColor_Func);
         GWCA_ASSERT(GetMessageColor_Func);
         GWCA_ASSERT(SendChat_Func);
         GWCA_ASSERT(StartWhisper_Func);
         GWCA_ASSERT(RecvWhisper_Func);
-        GWCA_ASSERT(PrintChat_Func);
         GWCA_ASSERT(AddToChatLog_Func);
         GWCA_ASSERT(ChatBuffer_Addr);
         GWCA_ASSERT(IsTyping_FrameId);
         GWCA_ASSERT(UICallback_AssignEditableText_Func);
 #endif
-
+        HookBase::CreateHook((void**)&UICallback_ChatLogLine_Func, OnUICallback_ChatLogLine, (void**)&UICallback_ChatLogLine_Ret);
         HookBase::CreateHook((void**)&StartWhisper_Func, OnStartWhisper_Func, (void**)& StartWhisper_Ret);
         HookBase::CreateHook((void**)&GetSenderColor_Func, OnGetSenderColor_Func, (void **)&GetSenderColor_Ret);
         HookBase::CreateHook((void**)&GetMessageColor_Func, OnGetMessageColor_Func, (void **)&GetMessageColor_Ret);
         HookBase::CreateHook((void**)&SendChat_Func, OnSendChat_Func, (void **)&SendChat_Ret);
         HookBase::CreateHook((void**)&RecvWhisper_Func, OnRecvWhisper_Func, (void **)&RecvWhisper_Ret);
-        HookBase::CreateHook((void**)&PrintChat_Func, OnPrintChat_Func, (void **)&PrintChat_Ret);
         HookBase::CreateHook((void**)&AddToChatLog_Func, OnAddToChatLog_Func, (void**)&AddToChatLog_Ret);
         HookBase::CreateHook((void**)&UICallback_AssignEditableText_Func, OnUICallback_AssignEditableText, (void**)& UICallback_AssignEditableText_Ret);
 
@@ -329,47 +351,42 @@ namespace {
     }
 
     void EnableHooks() {
+        EnableHook(UICallback_ChatLogLine_Func);
         EnableHook(StartWhisper_Func);
         EnableHook(GetSenderColor_Func);
         EnableHook(GetMessageColor_Func);
         EnableHook(SendChat_Func);
         EnableHook(RecvWhisper_Func);
-        EnableHook(PrintChat_Func);
         EnableHook(AddToChatLog_Func);
         EnableHook(UICallback_AssignEditableText_Func);
-
-        UI::RegisterUIMessageCallback((GW::HookEntry*)OnUIMessage_Pre_AddTimestampToChatMessage, UI::UIMessage::kPrintChatMessage, OnUIMessage_Pre_AddTimestampToChatMessage, -0x4000);
-        UI::RegisterUIMessageCallback((GW::HookEntry*)OnUIMessage_Post_AddTimestampToChatMessage, UI::UIMessage::kPrintChatMessage, OnUIMessage_Post_AddTimestampToChatMessage, 0x4000);
 
         for (auto ui_message : ui_messages_to_hook) {
             UI::RegisterUIMessageCallback(&UIMessage_Entry, ui_message, OnUIMessage, 0x1);
         }
     }
     void DisableHooks() {
+        DisableHook(UICallback_ChatLogLine_Func);
         DisableHook(StartWhisper_Func);
         DisableHook(GetSenderColor_Func);
         DisableHook(GetMessageColor_Func);
         DisableHook(SendChat_Func);
         DisableHook(RecvWhisper_Func);
-        DisableHook(PrintChat_Func);
         DisableHook(AddToChatLog_Func);
         DisableHook(UICallback_AssignEditableText_Func);
 
-        UI::RemoveUIMessageCallback((GW::HookEntry*)OnUIMessage_Pre_AddTimestampToChatMessage);
-        UI::RemoveUIMessageCallback((GW::HookEntry*)OnUIMessage_Post_AddTimestampToChatMessage);
-
         UI::RemoveUIMessageCallback(&UIMessage_Entry);
     }
-
     void Exit() {
+        HookBase::RemoveHook(UICallback_ChatLogLine_Func);
         HookBase::RemoveHook(StartWhisper_Func);
         HookBase::RemoveHook(GetSenderColor_Func);
         HookBase::RemoveHook(GetMessageColor_Func);
         HookBase::RemoveHook(SendChat_Func);
         HookBase::RemoveHook(RecvWhisper_Func);
-        HookBase::RemoveHook(PrintChat_Func);
         HookBase::RemoveHook(AddToChatLog_Func);
         HookBase::RemoveHook(UICallback_AssignEditableText_Func);
+
+        block_chat_timestamps.Reset();
 
         while (chat_command_hook_entries.size()) {
             Chat::DeleteCommand(chat_command_hook_entries.begin()->first.c_str());
@@ -574,18 +591,18 @@ nullptr,                       // param
     }
 
     void Chat::ToggleTimestamps(bool enable) {
-        ShowTimestamps = enable;
-        if (ShowTimestamps)
-            UI::SetPreference(UI::FlagPreference::ShowChatTimestamps, 0);
+        GW::UI::SetPreference(GW::UI::FlagPreference::ShowChatTimestamps, enable);
     }
 
     void Chat::SetTimestampsFormat(bool use_24h, bool show_timestamp_seconds) {
         Timestamp_24hFormat = use_24h;
         Timestamp_seconds = show_timestamp_seconds;
+        ForceRedrawChatLog();
     }
 
     void Chat::SetTimestampsColor(Color color) {
         TimestampsColor = color;
+        ForceRedrawChatLog();
     }
 
 } // namespace GW

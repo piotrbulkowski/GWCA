@@ -16,7 +16,7 @@ namespace GW {
         bool SetRedirect(uintptr_t call_instruction_address, void* redirect_func);
 
         bool TogglePatch(bool flag);
-        bool TogglePatch() { TogglePatch(!m_active); };
+        bool TogglePatch() { return TogglePatch(!m_active); };
 
         bool GetIsActive() { return m_active; };
 

@@ -334,7 +334,7 @@ namespace GW {
             kPartySearchInviteReceived  = 0x10000000 | 0x135, // wparam = UIPacket::kPartySearchInviteReceived*
             kPartySearchInviteSent      = 0x10000000 | 0x137,
             kEnumPreference             = 0x10000000 | 0x13E, // wparam = { EnumPreference pref_id, uint32_t val }
-            kCheckboxPreference         = 0x10000000 | 0x13F,
+            kCheckboxPreference         = 0x10000000 | 0x13F, // wparam = { FlagPreference pref_id, uint32_t val }
             kPreferenceChanged          = 0x10000000 | 0x140,
             kUIPositionChanged          = 0x10000000 | 0x141, // wparam = UIPacket::kUIPositionChanged
             kQuestAdded                 = 0x10000000 | 0x149, // wparam = { quest_id, ... }
