@@ -206,6 +206,8 @@ namespace {
         UI::UIMessage::kLogChatMessage,
         UI::UIMessage::kRecvWhisper
     };
+
+    const wchar_t* transient_chat_message = nullptr;
     void OnUIMessage(GW::HookStatus* status, UI::UIMessage message_id, void* wparam, void* lparam) {
         if (status->blocked)
             return;
@@ -243,6 +245,10 @@ namespace {
         } break;
         case UI::UIMessage::kLogChatMessage: {
             const auto packet = static_cast<UI::UIPacket::kLogChatMessage*>(wparam);
+            if (transient_chat_message && wcscmp(packet->message, transient_chat_message) == 0) {
+                status->blocked = true;
+                return;
+            }
             if (AddToChatLog_Ret) {
                 AddToChatLog_Ret(packet->message, packet->channel);
                 return;
@@ -550,7 +556,7 @@ nullptr,                       // param
         if(sender_encoded)
             delete[] sender_encoded;
     }
-    void Chat::WriteChatEnc(Channel channel, const wchar_t* message_encoded, const wchar_t* sender_encoded, bool) {
+    void Chat::WriteChatEnc(Channel channel, const wchar_t* message_encoded, const wchar_t* sender_encoded, bool transient) {
         UI::UIChatMessage param;
         param.channel = param.channel2 = channel;
         param.message = (wchar_t*)message_encoded;
@@ -575,7 +581,9 @@ nullptr,                       // param
             delete_message = true;
             GWCA_ASSERT(swprintf(param.message, len, format, sender_encoded, message_encoded) >= 0);
         }
+        transient_chat_message = transient ? param.message : nullptr;
         UI::SendUIMessage(UI::UIMessage::kWriteToChatLog, &param);
+        transient_chat_message = nullptr;
         if (delete_message)
             delete[] param.message;
     }
