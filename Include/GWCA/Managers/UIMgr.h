@@ -346,6 +346,8 @@ namespace GW {
             kObjectiveUpdated           = 0x10000000 | 0x157, // wparam = UIPacket::kObjectiveUpdated*
             kTradeSessionUpdated        = 0x10000000 | 0x166, // no args
             kCheckUIState               = 0x10000000 | 0x170, // Undocumented
+            kCloseSettings              = 0x10000000 | 0x174, // Undocumented
+            kChangeSettingsTab          = 0x10000000 | 0x175, // wparam = uint32_t is_interface_tab
             kGuildHall                  = 0x10000000 | 0x177, // wparam = gh key (uint32_t[4])
             kLeaveGuildHall             = 0x10000000 | 0x179,
             kTravel                     = 0x10000000 | 0x17A,
