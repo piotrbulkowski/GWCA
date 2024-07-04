@@ -331,6 +331,8 @@ namespace GW {
             kPartyRemoveHenchman        = 0x10000000 | 0x11a,
             kPartyAddHero               = 0x10000000 | 0x11c,
             kPartyRemoveHero            = 0x10000000 | 0x11d,
+            kPartyAddPlayer             = 0x10000000 | 0x122,
+            kPartyRemovePlayer          = 0x10000000 | 0x124,
             kPartySearchInviteReceived  = 0x10000000 | 0x135, // wparam = UIPacket::kPartySearchInviteReceived*
             kPartySearchInviteSent      = 0x10000000 | 0x137,
             kEnumPreference             = 0x10000000 | 0x13E, // wparam = { EnumPreference pref_id, uint32_t val }
