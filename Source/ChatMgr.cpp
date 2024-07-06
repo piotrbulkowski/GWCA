@@ -202,7 +202,6 @@ namespace {
     constexpr std::array ui_messages_to_hook = {
         UI::UIMessage::kSendChatMessage,
         UI::UIMessage::kStartWhisper,
-        UI::UIMessage::kPrintChatMessage,
         UI::UIMessage::kLogChatMessage,
         UI::UIMessage::kRecvWhisper
     };
@@ -434,8 +433,8 @@ nullptr,                       // param
     bool Chat::AddToChatLog(wchar_t* message, uint32_t channel) {
         if (!(AddToChatLog_Func && message && *message))
             return false;
-        AddToChatLog_Func(message, channel);
-        return true;
+        auto packet = GW::UI::UIPacket::kLogChatMessage{ message, static_cast<Chat::Channel>(channel) };
+        return GW::UI::SendUIMessage(GW::UI::UIMessage::kLogChatMessage, &packet);
     }
 
     Chat::Color Chat::SetSenderColor(Channel chan, Color col) {

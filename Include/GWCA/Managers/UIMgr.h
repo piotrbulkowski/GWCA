@@ -298,7 +298,7 @@ namespace GW {
             kSkillActivated             = 0x10000000 | 0x5b, // wparam ={ uint32_t agent_id , uint32_t skill_id }
             kTitleProgressUpdated       = 0x10000000 | 0x65, // wparam = title_id
             kExperienceGained           = 0x10000000 | 0x66, // wparam = experience amount
-            kWriteToChatLog             = 0x10000000 | 0x7E, // wparam = UIPacket::kWriteToChatLog*
+            kWriteToChatLog             = 0x10000000 | 0x7E, // wparam = UIPacket::kWriteToChatLog*. Triggered by the game when it wants to add a new message to chat.
             kPlayerChatMessage          = 0x10000000 | 0x81, // wparam = UIPacket::kPlayerChatMessage*
             kFriendUpdated              = 0x10000000 | 0x89, // wparam = { GW::Friend*, ... }
             kMapLoaded                  = 0x10000000 | 0x8A,
@@ -388,8 +388,7 @@ namespace GW {
             kGetSenderColor             = 0x30000000 | 0x18, // wparam = UIPacket::kGetColor* // Get chat sender color depending on channel, output object passed by reference
             kGetMessageColor            = 0x30000000 | 0x19, // wparam = UIPacket::kGetColor* // Get chat message color depending on channel, output object passed by reference
             kSendChatMessage            = 0x30000000 | 0x1B, // wparam = UIPacket::kSendChatMessage*
-            kPrintChatMessage           = 0x30000000 | 0x1C, // wparam = UIPacket::kPrintChatMessage*
-            kLogChatMessage             = 0x30000000 | 0x1D, // wparam = UIPacket::kLogChatMessage*
+            kLogChatMessage             = 0x30000000 | 0x1D, // wparam = UIPacket::kLogChatMessage*. Triggered when a message wants to be added to the persistent chat log.
             kRecvWhisper                = 0x30000000 | 0x1E, // wparam = UIPacket::kRecvWhisper*
         };
 
