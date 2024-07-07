@@ -177,6 +177,10 @@ namespace {
         HookBase::LeaveHook();
     }
 
+
+    ItemFormula* item_formulas = nullptr;
+    uint32_t item_formula_count = 0;
+
     uint32_t GetSalvageSessionId() {
         const auto w = GetWorldContext();
         return w ? w->salvage_session_id : 0;
@@ -277,6 +281,13 @@ namespace {
             GetPvPItemUpgradeInfoName_Func = (GetPvPItemUpgradeInfoName_pt)address;
         }
 
+        address = GW::Scanner::FindAssertion("p:\\code\\gw\\const\\constitem.cpp", "formula < ITEM_FORMULAS");
+        if (address) {
+            item_formulas = *(ItemFormula**)(address + 0x15);
+            item_formula_count = *(uint32_t*)(address + -0xb);
+        }
+
+        GWCA_INFO("[SCAN] item_formulas = %p, item_count = %p", item_formulas, item_formula_count);
         GWCA_INFO("[SCAN] StorageOpenPtr = %p", storage_open_addr);
         GWCA_INFO("[SCAN] OnItemClick Function = %p", ItemClick_Func);
         GWCA_INFO("[SCAN] UseItem Function = %p", UseItem_Func);
@@ -296,6 +307,7 @@ namespace {
         GWCA_INFO("[SCAN] unlocked_pvp_item_upgrade_array.m_size = %p", unlocked_pvp_item_upgrade_array.m_size);
         GWCA_INFO("[SCAN] GetPvPItemUpgradeInfoName_Func = %p", GetPvPItemUpgradeInfoName_Func);
 #ifdef _DEBUG
+        GWCA_ASSERT(item_formulas);
         GWCA_ASSERT(storage_open_addr);
         GWCA_ASSERT(ItemClick_Func);
         GWCA_ASSERT(EquipItem_Func);
@@ -809,7 +821,11 @@ namespace GW {
             return *out != nullptr;
         }
 
-
+        const ItemFormula* GetItemFormula(const GW::Item* item) {
+            if (!(item && item_formulas && item->item_formula < item_formula_count))
+                return nullptr;
+            return &item_formulas[item->item_formula];
+        }
     }
 
 } // namespace GW

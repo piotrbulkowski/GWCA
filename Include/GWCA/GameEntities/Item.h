@@ -9,6 +9,8 @@ namespace GW {
         enum class Bag : uint8_t;
         enum class ItemType : uint8_t;
 
+        enum class MaterialSlot : uint32_t;
+
         enum class BagType {
             None,
             Inventory,
@@ -54,6 +56,23 @@ namespace GW {
         uint32_t interaction = 0;
     };
     static_assert(sizeof(ItemData) == 0x10, "struct ItemData has incorrect size");
+
+    struct MaterialCost {
+        GW::Constants::MaterialSlot material;
+        uint32_t amount;
+        uint32_t h0008;
+        uint32_t h000c;
+    };
+    static_assert(sizeof(MaterialCost) == 0x10);
+
+    struct ItemFormula {
+        uint32_t h0000;
+        uint32_t gold_cost;
+        uint32_t skill_point_cost;
+        uint32_t material_cost_count;
+        MaterialCost* material_cost_buffer; // NB: The game stores a cached array of material amounts that the player has in inventory; we don't care about it though!
+    };
+    static_assert(sizeof(ItemFormula) == 0x14);
 
     struct Bag { // total: 0x28/40
         /* +h0000 */ Constants::BagType bag_type;

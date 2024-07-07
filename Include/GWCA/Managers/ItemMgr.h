@@ -174,5 +174,7 @@ namespace GW {
 
         // Get encoded description of unlockable pvp item upgrade; returns false on failure
         GWCA_API bool GetPvPItemUpgradeEncodedDescription(uint32_t pvp_item_upgrade_idx, wchar_t** out);
+
+        GWCA_API const ItemFormula* GetItemFormula(const GW::Item* item);
     };
 }
