@@ -335,9 +335,9 @@ namespace GW {
             kPartyRemovePlayer          = 0x10000000 | 0x124,
             kPartySearchInviteReceived  = 0x10000000 | 0x135, // wparam = UIPacket::kPartySearchInviteReceived*
             kPartySearchInviteSent      = 0x10000000 | 0x137,
-            kEnumPreference             = 0x10000000 | 0x13E, // wparam = { EnumPreference pref_id, uint32_t val }
-            kCheckboxPreference         = 0x10000000 | 0x13F, // wparam = { FlagPreference pref_id, uint32_t val }
-            kPreferenceChanged          = 0x10000000 | 0x140,
+            kPreferenceEnumChanged      = 0x10000000 | 0x13E, // wparam = UiPacket::kPreferenceEnumChanged
+            kPreferenceFlagChanged      = 0x10000000 | 0x13F, // wparam = UiPacket::kPreferenceFlagChanged
+            kPreferenceValueChanged     = 0x10000000 | 0x140, // wparam = UiPacket::kPreferenceValueChanged
             kUIPositionChanged          = 0x10000000 | 0x141, // wparam = UIPacket::kUIPositionChanged
             kQuestAdded                 = 0x10000000 | 0x149, // wparam = { quest_id, ... }
             kQuestDetailsChanged        = 0x10000000 | 0x14A, // wparam = { quest_id, ... }
@@ -391,11 +391,26 @@ namespace GW {
             kLogChatMessage             = 0x30000000 | 0x1D, // wparam = UIPacket::kLogChatMessage*. Triggered when a message wants to be added to the persistent chat log.
             kRecvWhisper                = 0x30000000 | 0x1E, // wparam = UIPacket::kRecvWhisper*
         };
+        enum class FlagPreference : uint32_t;
+        enum class NumberPreference : uint32_t;
+        enum class EnumPreference : uint32_t;
 
         namespace UIPacket {
             struct kUIPositionChanged {
                 uint32_t window_id;
                 UI::WindowPosition* position;
+            };
+            struct kPreferenceFlagChanged {
+                UI::FlagPreference preference_id;
+                uint32_t new_value;
+            };
+            struct kPreferenceValueChanged {
+                UI::NumberPreference preference_id;
+                uint32_t new_value;
+            };
+            struct kPreferenceEnumChanged {
+                UI::EnumPreference preference_id;
+                uint32_t enum_index;
             };
             struct kPartySearchInvite {
                 uint32_t source_party_search_id;
