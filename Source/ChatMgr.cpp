@@ -266,6 +266,9 @@ namespace {
 
     void ForceRedrawChatLog() {
         GW::GameThread::Enqueue([]() {
+            const auto log = GW::UI::GetFrameByLabel(L"Log");
+            if (!(log && log->IsCreated() && log->IsVisible()))
+                return;
             struct {
                 GW::UI::FlagPreference pref = GW::UI::FlagPreference::ShowChatTimestamps;
                 uint32_t val = static_cast<uint32_t>(GW::UI::GetPreference(GW::UI::FlagPreference::ShowChatTimestamps));
