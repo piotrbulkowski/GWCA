@@ -477,7 +477,7 @@ namespace GW {
             if (!(bag_id > Constants::Bag::None && bag_id < Constants::Bag::Max))
                 return nullptr;
             Bag** bags = GetBagArray();
-            const auto bag = bags[(unsigned)bag_id];
+            const auto bag = bags ? bags[(unsigned)bag_id] : nullptr;
 #if _DEBUG
             if (bag)
                 GWCA_ASSERT(bag->bag_id() == bag_id);
