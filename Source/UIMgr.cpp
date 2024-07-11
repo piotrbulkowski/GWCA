@@ -106,6 +106,11 @@ namespace {
     SendFrameUIMessage_pt SendFrameUIMessage_Func = 0;
     SendFrameUIMessage_pt SendFrameUIMessage_Ret = 0;
 
+    typedef void(__cdecl* SendFrameUIMessageById_pt)(uint32_t frame_id, UI::UIMessage message_id, void* arg1, void* arg2);
+    SendFrameUIMessageById_pt SendFrameUIMessageById_Func = 0, SendFrameUIMessageById_Ret = 0;
+
+    
+
     typedef void(__cdecl* DrawOnCompass_pt)(uint32_t session_id, uint32_t pt_count, UI::CompassPoint* pts);
     DrawOnCompass_pt DrawOnCompass_Func = 0, DrawOnCompass_Ret = 0;
 
@@ -263,6 +268,13 @@ namespace {
 
     std::unordered_map<UI::UIMessage,std::vector<FrameCallbackEntry>> FrameUIMessage_callbacks;
 
+    void __cdecl OnSendFrameUIMessageById(uint32_t frame_id, UI::UIMessage message_id, void* wParam, void* lParam) {
+        HookBase::EnterHook();
+        if (frame_id)
+            SendFrameUIMessageById_Ret(frame_id, message_id, wParam, lParam);
+        HookBase::LeaveHook();
+    }
+
     void __fastcall OnSendFrameUIMessage(Array<UI::UIInteractionCallback>* frame_callbacks, void*, UI::UIMessage message_id, void* wParam, void* lParam) {
         HookBase::EnterHook();
         const auto frame = (UI::Frame*)(((uintptr_t)frame_callbacks) - 0xA0);
@@ -314,7 +326,11 @@ namespace {
         if (Verify(address))
             WorldMapState_Addr = *(uintptr_t*)address;
 
-        SendFrameUIMessage_Func = (SendFrameUIMessage_pt)Scanner::Find("\x83\xfe\x0b\x75\x14\x68\x77\x01\x00\x00", "xxxxxxxxxx", -0x1b);
+        address = Scanner::Find("\x83\xfb\x46\x73\x14", "xxxxx", -0x34);
+        if (address) {
+            SendFrameUIMessageById_Func = (SendFrameUIMessageById_pt)address;
+            SendFrameUIMessage_Func = (SendFrameUIMessage_pt)Scanner::FunctionFromNearCall(address + 0x67);
+        }
 
         // @TODO: Grab the seeding context from memory, write this ourselves!
         address = Scanner::Find("\x85\xc0\x74\x0d\x6a\xff\x50","xxxxxxx",0x7);
@@ -510,6 +526,7 @@ namespace {
         HookBase::CreateHook((void**)&SendUIMessage_Func, OnSendUIMessage, (void **)&RetSendUIMessage);
         HookBase::CreateHook((void**)&CreateUIComponent_Func, OnCreateUIComponent, (void**)&CreateUIComponent_Ret);
         HookBase::CreateHook((void**)&SendFrameUIMessage_Func, OnSendFrameUIMessage, (void**)&SendFrameUIMessage_Ret);
+        HookBase::CreateHook((void**)&SendFrameUIMessageById_Func, OnSendFrameUIMessageById, (void**)&SendFrameUIMessageById_Ret);
         HookBase::CreateHook((void**)&DrawOnCompass_Func, OnDrawOnCompass, (void**)&DrawOnCompass_Ret);
     }
 
@@ -524,6 +541,10 @@ namespace {
             HookBase::EnableHooks(CreateUIComponent_Func);
         if (DrawOnCompass_Func)
             HookBase::EnableHooks(DrawOnCompass_Func);
+        if (SendFrameUIMessage_Func)
+            HookBase::EnableHooks(SendFrameUIMessage_Func);
+        if (SendFrameUIMessageById_Func)
+            HookBase::EnableHooks(SendFrameUIMessageById_Func);
         UI::RegisterUIMessageCallback(&open_template_hook, UI::UIMessage::kOpenTemplate, OnOpenTemplate_UIMessage);
     }
     void DisableHooks() {
@@ -538,16 +559,21 @@ namespace {
             HookBase::DisableHooks(SendUIMessage_Func);
         if (CreateUIComponent_Func)
             HookBase::DisableHooks(CreateUIComponent_Func);
+        if (SendFrameUIMessage_Func)
+            HookBase::DisableHooks(SendFrameUIMessage_Func);
+        if (SendFrameUIMessageById_Func)
+            HookBase::DisableHooks(SendFrameUIMessageById_Func);
     }
 
     void Exit()
     {
+        HookBase::RemoveHook(DrawOnCompass_Func);
         HookBase::RemoveHook(AsyncDecodeStringPtr);
         HookBase::RemoveHook(SetTooltip_Func);
         HookBase::RemoveHook(SendUIMessage_Func);
         HookBase::RemoveHook(CreateUIComponent_Func);
-        HookBase::RemoveHook(CreateHashFromWchar_Func);
-        HookBase::RemoveHook(CreateHashFromWchar_Func);
+        HookBase::RemoveHook(SendFrameUIMessage_Func);
+        HookBase::RemoveHook(SendFrameUIMessageById_Func);
     }
 
     bool PrefsInitialised() {
