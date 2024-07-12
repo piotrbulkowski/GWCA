@@ -752,6 +752,10 @@ namespace GW {
         ::DisableHooks,           // disable_hooks
     };
     namespace UI {
+        GWCA_API GW::Constants::Language GetTextLanguage()
+        {
+            return (GW::Constants::Language)GW::UI::GetPreference(GW::UI::NumberPreference::TextLanguage);
+        }
         GWCA_API bool ButtonClick(Frame* btn_frame)
         {
             if (!(btn_frame && btn_frame->IsCreated())) {

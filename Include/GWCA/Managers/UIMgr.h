@@ -947,6 +947,8 @@ namespace GW {
             wchar_t* component_label;
         };
 
+        GWCA_API GW::Constants::Language GetTextLanguage();
+
         GWCA_API bool ButtonClick(Frame* btn_frame);
 
         GWCA_API Frame* GetRootFrame();
