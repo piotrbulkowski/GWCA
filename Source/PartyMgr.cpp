@@ -22,6 +22,7 @@
 #include <GWCA/Managers/PartyMgr.h>
 #include <GWCA/Managers/PlayerMgr.h>
 #include <GWCA/Managers/ChatMgr.h>
+#include <GWCA/Managers/MapMgr.h>
 
 namespace {
     using namespace GW;
@@ -204,9 +205,10 @@ namespace GW {
     };
     namespace PartyMgr {
         bool Tick(bool flag) {
-            // @Robustness: Make sure player isn't already ticked
-            if (!SetReadyStatus_Func)
+            if (!(SetReadyStatus_Func && GetPartyInfo() && GW::Map::GetInstanceType() == GW::Constants::InstanceType::Outpost))
                 return false;
+            if (flag == GetIsPlayerTicked())
+                return true;
             SetReadyStatus_Func(flag);
             return true;
         }
