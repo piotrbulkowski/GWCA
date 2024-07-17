@@ -327,6 +327,7 @@ namespace GW {
             kMapChange                  = 0x10000000 | 0x10F, // wparam = map id
             kCalledTargetChange         = 0x10000000 | 0x113, // wparam = { player_number, target_id }
             kErrorMessage               = 0x10000000 | 0x117, // wparam = { int error_index, wchar_t* error_encoded_string }
+            kPartyHardModeChanged       = 0x10000000 | 0x118, // wparam = { int is_hard_mode }
             kPartyAddHenchman           = 0x10000000 | 0x119,
             kPartyRemoveHenchman        = 0x10000000 | 0x11a,
             kPartyAddHero               = 0x10000000 | 0x11c,
@@ -335,6 +336,7 @@ namespace GW {
             kPartyRemovePlayer          = 0x10000000 | 0x124,
             kPartySearchInviteReceived  = 0x10000000 | 0x135, // wparam = UIPacket::kPartySearchInviteReceived*
             kPartySearchInviteSent      = 0x10000000 | 0x137,
+            kPartyShowConfirmDialog     = 0x10000000 | 0x138, // wparam = UIPacket::kPartyShowConfirmDialog
             kPreferenceEnumChanged      = 0x10000000 | 0x13E, // wparam = UiPacket::kPreferenceEnumChanged
             kPreferenceFlagChanged      = 0x10000000 | 0x13F, // wparam = UiPacket::kPreferenceFlagChanged
             kPreferenceValueChanged     = 0x10000000 | 0x140, // wparam = UiPacket::kPreferenceValueChanged
@@ -396,6 +398,11 @@ namespace GW {
         enum class EnumPreference : uint32_t;
 
         namespace UIPacket {
+            struct kPartyShowConfirmDialog {
+                uint32_t ui_message_to_send_to_party_frame;
+                uint32_t prompt_identitifier;
+                wchar_t* prompt_enc_str;
+            };
             struct kUIPositionChanged {
                 uint32_t window_id;
                 UI::WindowPosition* position;
