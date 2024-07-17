@@ -417,11 +417,11 @@ namespace GW {
     }
     namespace Items {
 
-        void OpenXunlaiWindow() {
-            Packet::StoC::DataWindow pack;
+        void OpenXunlaiWindow(bool anniversary_pane_unlocked) {
+            Packet::StoC::DataWindow pack{};
             pack.agent = 0;
             pack.type = 0;
-            pack.data = 3;
+            pack.data = anniversary_pane_unlocked ? 3 : 1;
             StoC::EmulatePacket(&pack);
         }
         bool CanInteractWithItem(const GW::Item* item) {
