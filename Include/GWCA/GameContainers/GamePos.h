@@ -17,13 +17,36 @@ namespace GW {
         uint32_t flags;
     } Mat4x3f;
 
+    struct Vec2f {
+        float x = 0.f;
+        float y = 0.f;
+
+        constexpr Vec2f(float _x, float _y)
+            : x(_x), y(_y)
+        {
+        }
+
+        constexpr Vec2f(int _x, int _y)
+        {
+            x = static_cast<float>(_x);
+            y = static_cast<float>(_y);
+        }
+
+        Vec2f() = default;
+    };
+
     struct Vec3f {
         float x = 0.f;
         float y = 0.f;
         float z = 0.f;
 
-        constexpr Vec3f(float _x, float _y, float _z)
+        constexpr Vec3f(float _x, float _y, float _z = 0.f)
             : x(_x), y(_y), z(_z)
+        {
+        }
+
+        constexpr Vec3f(GW::Vec2f v, float _z = 0.f)
+            : x(v.x), y(v.y), z(_z)
         {
         }
 
@@ -102,24 +125,6 @@ namespace GW {
     constexpr bool operator==(const Vec3f& lhs, const Vec3f& rhs) {
         return (lhs.x == rhs.x) && (lhs.y == rhs.y) && (lhs.z == rhs.z);
     }
-
-    struct Vec2f {
-        float x = 0.f;
-        float y = 0.f;
-
-        constexpr Vec2f(float _x, float _y)
-            : x(_x), y(_y)
-        {
-        }
-
-        constexpr Vec2f(int _x, int _y)
-        {
-            x = static_cast<float>(_x);
-            y = static_cast<float>(_y);
-        }
-
-        Vec2f() = default;
-    };
 
     constexpr Vec2f& operator+=(Vec2f& lhs, Vec2f rhs)
     {
