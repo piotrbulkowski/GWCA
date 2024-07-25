@@ -8,7 +8,7 @@ namespace GW
         return sqrtf(GetSquareDistance(p1, p2));
     }
 
-    float GetDistance(Vec2f p1, Vec2f p2) {
+    float GetDistance(const Vec2f& p1, const Vec2f& p2) {
         return sqrtf(GetSquareDistance(p1, p2));
     }
 

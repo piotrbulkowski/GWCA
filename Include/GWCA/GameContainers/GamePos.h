@@ -191,19 +191,19 @@ namespace GW {
                (p1.z - p2.z) * (p1.z - p2.z);
     }
 
-    constexpr float GetSquareDistance(Vec2f p1, Vec2f p2) {
+    constexpr float GetSquareDistance(const Vec2f& p1, const Vec2f& p2) {
         return (p1.x - p2.x) * (p1.x - p2.x) +
                (p1.y - p2.y) * (p1.y - p2.y);
     }
 
     float GetDistance(Vec3f p1, Vec3f p2);
-    float GetDistance(Vec2f p1, Vec2f p2);
+    float GetDistance(const Vec2f& p1, const Vec2f& p2);
 
     constexpr float GetSquaredNorm(const Vec3f& p) {
         return (p.x * p.x) + (p.y * p.y) + (p.z * p.z);
     }
 
-    constexpr float GetSquaredNorm(Vec2f p) {
+    constexpr float GetSquaredNorm(const Vec2f& p) {
         return (p.x * p.x) + (p.y * p.y);
     }
 
