@@ -244,7 +244,7 @@ namespace GW {
         float    y;
         uint32_t zplane;
 
-        GamePos(float _x, float _y, uint32_t _zplane)
+        GamePos(float _x, float _y, uint32_t _zplane = 0)
             : x(_x), y(_y), zplane(_zplane)
         {
         }
