@@ -45,6 +45,9 @@ namespace GW {
             Doa_FoundryBreakout = 743,
             Doa_FoundryOfFailedCreations = 744,
 
+            // slavers
+            The_Last_Hierophant = 917,
+
             // Prophecies
             ZaishenMission_The_Great_Northern_Wall = 936,
             ZaishenMission_Fort_Ranik = 937,
