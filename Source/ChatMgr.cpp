@@ -102,13 +102,25 @@ namespace {
         GW::HookBase::LeaveHook();
     }
 
-    typedef void(_cdecl* AddToChatLog_pt)(wchar_t* message, uint32_t channel);
+    typedef void(__cdecl* AddToChatLog_pt)(wchar_t* message, uint32_t channel);
     AddToChatLog_pt AddToChatLog_Func = nullptr, AddToChatLog_Ret = nullptr;
 
     void __cdecl OnAddToChatLog_Func(wchar_t* message, uint32_t channel) {
         GW::HookBase::EnterHook();
         auto packet = GW::UI::UIPacket::kLogChatMessage{ message, static_cast<Chat::Channel>(channel) };
         GW::UI::SendUIMessage(GW::UI::UIMessage::kLogChatMessage, &packet);
+        GW::HookBase::LeaveHook();
+    }
+
+    typedef void(__fastcall* PrintChatMessage_pt)(void* ctx, uint32_t edx, GW::Chat::Channel channel, wchar_t* message, FILETIME timestamp, uint32_t is_reprint);
+    PrintChatMessage_pt PrintChatMessage_Func = nullptr, PrintChatMessage_Ret = nullptr;
+
+    void* chat_window_context = nullptr;
+    void __fastcall OnPrintChatMessage_Func(void* ctx, uint32_t, GW::Chat::Channel channel, wchar_t* message, FILETIME timestamp, uint32_t is_reprint) {
+        GW::HookBase::EnterHook();
+        chat_window_context = ctx;
+        auto packet = GW::UI::UIPacket::kPrintChatMessage{ channel, message, timestamp, is_reprint };
+        GW::UI::SendUIMessage(GW::UI::UIMessage::kPrintChatMessage, &packet);
         GW::HookBase::LeaveHook();
     }
 
@@ -203,6 +215,7 @@ namespace {
         UI::UIMessage::kSendChatMessage,
         UI::UIMessage::kStartWhisper,
         UI::UIMessage::kLogChatMessage,
+        UI::UIMessage::kPrintChatMessage,
         UI::UIMessage::kRecvWhisper
     };
 
@@ -250,6 +263,13 @@ namespace {
             }
             if (AddToChatLog_Ret) {
                 AddToChatLog_Ret(packet->message, packet->channel);
+                return;
+            }
+        } break;
+        case UI::UIMessage::kPrintChatMessage: {
+            const auto packet = static_cast<UI::UIPacket::kPrintChatMessage*>(wparam);
+            if (PrintChatMessage_Ret) {
+                PrintChatMessage_Ret(chat_window_context, 0, packet->channel, packet->message, packet->timestamp, packet->is_reprint);
                 return;
             }
         } break;
@@ -314,7 +334,9 @@ namespace {
             }
         }
 
-        
+        PrintChatMessage_Func = (PrintChatMessage_pt)Scanner::FindAssertion("p:\\code\\gw\\ui\\game\\gmchatlog.cpp", "m_itemCount <= CHAT_LOG_SIZE", -0x18);
+
+        GWCA_INFO("[SCAN] PrintChatMessage_Func = %p", PrintChatMessage_Func);
         GWCA_INFO("[SCAN] GetSenderColor = %p", GetSenderColor_Func);
         GWCA_INFO("[SCAN] GetMessageColor = %p", GetMessageColor_Func);
         GWCA_INFO("[SCAN] SendChat = %p", SendChat_Func);
@@ -328,6 +350,7 @@ namespace {
         
 
 #ifdef _DEBUG
+        GWCA_ASSERT(PrintChatMessage_Func);
         GWCA_ASSERT(UICallback_ChatLogLine_Func);
         GWCA_ASSERT(block_chat_timestamps.IsValid());
         GWCA_ASSERT(GetSenderColor_Func);
@@ -348,6 +371,7 @@ namespace {
         HookBase::CreateHook((void**)&RecvWhisper_Func, OnRecvWhisper_Func, (void **)&RecvWhisper_Ret);
         HookBase::CreateHook((void**)&AddToChatLog_Func, OnAddToChatLog_Func, (void**)&AddToChatLog_Ret);
         HookBase::CreateHook((void**)&UICallback_AssignEditableText_Func, OnUICallback_AssignEditableText, (void**)& UICallback_AssignEditableText_Ret);
+        HookBase::CreateHook((void**)&PrintChatMessage_Func, OnPrintChatMessage_Func, (void**)&PrintChatMessage_Ret);
 
         for (size_t i = 0; i < (size_t)GW::Chat::Channel::CHANNEL_COUNT; i++) {
             const auto chan = (GW::Chat::Channel)i;

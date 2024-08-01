@@ -392,12 +392,19 @@ namespace GW {
             kSendChatMessage            = 0x30000000 | 0x1B, // wparam = UIPacket::kSendChatMessage*
             kLogChatMessage             = 0x30000000 | 0x1D, // wparam = UIPacket::kLogChatMessage*. Triggered when a message wants to be added to the persistent chat log.
             kRecvWhisper                = 0x30000000 | 0x1E, // wparam = UIPacket::kRecvWhisper*
+            kPrintChatMessage           = 0x30000000 | 0x1F, // wparam = UIPacket::kPrintChatMessage*. Triggered when a message wants to be added to the in-game chat window.
         };
         enum class FlagPreference : uint32_t;
         enum class NumberPreference : uint32_t;
         enum class EnumPreference : uint32_t;
 
         namespace UIPacket {
+            struct kPrintChatMessage {
+                GW::Chat::Channel channel;
+                wchar_t* message;
+                FILETIME timestamp;
+                uint32_t is_reprint;
+            };
             struct kPartyShowConfirmDialog {
                 uint32_t ui_message_to_send_to_party_frame;
                 uint32_t prompt_identitifier;
@@ -515,12 +522,6 @@ namespace GW {
             struct kSendChatMessage {
                 wchar_t* message;
                 uint32_t agent_id;
-            };
-            struct kPrintChatMessage {
-                GW::Chat::Channel channel;
-                wchar_t* message;
-                FILETIME timestamp;
-                bool is_reprint;
             };
             struct kLogChatMessage {
                 wchar_t* message;
