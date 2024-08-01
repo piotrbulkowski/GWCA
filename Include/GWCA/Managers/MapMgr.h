@@ -31,7 +31,35 @@ namespace GW {
     struct Module;
     extern Module MapModule;
 
+    struct WorldMapContext {
+        uint32_t frame_id;
+        uint32_t h0004;
+        uint32_t h0008;
+        float h000c;
+        float h0010;
+        uint32_t h0014;
+        float h0018;
+        float h001c;
+        float h0020;
+        float h0024;
+        float h0028;
+        float h002c;
+        float h0030;
+        float h0034;
+        float zoom; // 1.0f if zoomed in, 0.0f if zoomed out
+        GW::Vec2f top_left; // Viewport position relative to world map, start
+        GW::Vec2f bottom_right; // Viewport position relative to world map, end
+        uint32_t h004c[7];
+        float h0068;
+        float h006c;
+        uint32_t params[0x6d];
+    };
+    static_assert(sizeof(WorldMapContext) == 0x224);
+
     namespace Map {
+
+        GWCA_API WorldMapContext* GetWorldMapContext();
+
         GWCA_API float QueryAltitude(const GamePos& pos, float radius, float& alt, Vec3f* terrain_normal = nullptr);
 
         GWCA_API bool GetIsMapLoaded();
