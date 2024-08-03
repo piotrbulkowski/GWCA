@@ -58,6 +58,20 @@ namespace {
         GW::Hook::LeaveHook();
     }
 
+    MinimapContext* minimap_context = nullptr;
+    UI::UIInteractionCallback Minimap_UICallback_Func = nullptr, Minimap_UICallback_Ret = nullptr;
+
+    void OnMinimap_UICallback(UI::InteractionMessage* message, void* wParam, void* lParam) {
+        GW::Hook::EnterHook();
+        Minimap_UICallback_Ret(message, wParam, lParam);
+        if (message && message->wParam)
+            minimap_context = *(MinimapContext**)message->wParam;
+        if (message && message->message_id == GW::UI::UIMessage::kDestroyFrame)
+            minimap_context = nullptr;
+
+        GW::Hook::LeaveHook();
+    }
+
     void OnEnterChallengeMission_Hook(uint32_t identifier) {
         GW::UI::SendUIMessage(UI::UIMessage::kSendEnterMission, (void*)identifier);
     }
@@ -152,6 +166,12 @@ namespace {
             GW::HookBase::CreateHook((void**)&WorldMap_UICallback_Func, OnWorldMap_UICallback, (void**)&WorldMap_UICallback_Ret);
         }
 
+        Minimap_UICallback_Func = (UI::UIInteractionCallback)GW::Scanner::Find("\x81\xfb\x67\x01\x00\x10", "xxxxxx", -0x1a);
+        if (Minimap_UICallback_Func) {
+            GW::HookBase::CreateHook((void**)&Minimap_UICallback_Func, OnMinimap_UICallback, (void**)&Minimap_UICallback_Ret);
+        }
+
+        GWCA_INFO("[SCAN] Minimap_UICallback_Func = %p", WorldMap_UICallback_Func);
         GWCA_INFO("[SCAN] WorldMap_UICallback_Func = %p", WorldMap_UICallback_Func);
         GWCA_INFO("[SCAN] map_type_instance_infos address = %p, size = %d", map_type_instance_infos, map_type_instance_infos_size);
         GWCA_INFO("[SCAN] RegionId address = %p", region_id_addr);
@@ -161,6 +181,7 @@ namespace {
         GWCA_INFO("[SCAN] EnterChallengeMission_Func = %p", EnterChallengeMission_Func);
         GWCA_INFO("[SCAN] CancelEnterChallengeMission_Func = %p", CancelEnterChallengeMission_Func);
 #ifdef _DEBUG
+        GWCA_ASSERT(Minimap_UICallback_Func);
         GWCA_ASSERT(WorldMap_UICallback_Func);
         GWCA_ASSERT(map_type_instance_infos);
         GWCA_ASSERT(region_id_addr);
@@ -176,12 +197,16 @@ namespace {
             HookBase::EnableHooks(EnterChallengeMission_Func);
         if(WorldMap_UICallback_Func)
             HookBase::EnableHooks(WorldMap_UICallback_Func);
+        if (Minimap_UICallback_Func)
+            HookBase::EnableHooks(Minimap_UICallback_Func);
     }
     void DisableHooks() {
         if (EnterChallengeMission_Func)
             HookBase::DisableHooks(EnterChallengeMission_Func);
         if (WorldMap_UICallback_Func)
             HookBase::DisableHooks(WorldMap_UICallback_Func);
+        if (Minimap_UICallback_Func)
+            HookBase::DisableHooks(Minimap_UICallback_Func);
     }
     void Exit() {
         HookBase::RemoveHook(EnterChallengeMission_Func);
@@ -200,6 +225,10 @@ namespace GW {
         ::DisableHooks,           // disable_hooks
     };
     namespace Map {
+
+        MinimapContext* GetMinimapContext() {
+            return minimap_context;
+        }
 
         WorldMapContext* GetWorldMapContext() {
             return world_map_context;

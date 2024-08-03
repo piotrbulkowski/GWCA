@@ -31,6 +31,11 @@ namespace GW {
     struct Module;
     extern Module MapModule;
 
+    struct MinimapContext {
+        uint32_t params[0x12];
+    };
+    static_assert(sizeof(MinimapContext) == 0x48);
+
     struct WorldMapContext {
         uint32_t frame_id;
         uint32_t h0004;
@@ -57,6 +62,9 @@ namespace GW {
     static_assert(sizeof(WorldMapContext) == 0x224);
 
     namespace Map {
+
+
+        GWCA_API MinimapContext* GetMinimapContext();
 
         GWCA_API WorldMapContext* GetWorldMapContext();
 
