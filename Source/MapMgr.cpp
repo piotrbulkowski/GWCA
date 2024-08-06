@@ -23,6 +23,7 @@
 #include <GWCA/Managers/Module.h>
 #include <GWCA/Managers/UIMgr.h>
 #include <GWCA/Managers/MapMgr.h>
+#include <GWCA/Utilities/MemoryPatcher.h>
 
 
 namespace {
@@ -31,12 +32,12 @@ namespace {
     GW::Constants::ServerRegion* region_id_addr = 0;
     AreaInfo* area_info_addr = 0;
 
-    typedef float(__cdecl* QueryAltitude_pt)(
+    typedef int(__cdecl* QueryAltitude_pt)(
         const GamePos* point,
         float radius,
         float* alt,
         Vec3f* unk);
-    QueryAltitude_pt QueryAltitude_Func;
+    GW::MemoryPatcher bypass_tolerance_patch;
 
     typedef void(__cdecl* DoAction_pt)(uint32_t identifier);
     DoAction_pt EnterChallengeMission_Func = 0;
@@ -143,9 +144,12 @@ namespace {
         if (address && Scanner::IsValidPtr(*(uintptr_t*)(address)))
             InstanceInfoPtr = *(InstanceInfo**)(address);
 
-        address = Scanner::Find("\x8b\x58\x14\xff\x73\x78\xe8\x28\xbc\x02\x00\x83\xc4\x04\x85\xc0", "xxxxxxx????xxxxx", -0xd);
-        if (Verify(address))
-            QueryAltitude_Func = (QueryAltitude_pt)address;
+        QueryAltitude_Func = (QueryAltitude_pt)Scanner::Find("\x8b\x58\x14\xff\x73\x78\xe8\x28\xbc\x02\x00\x83\xc4\x04\x85\xc0", "xxxxxxx????xxxxx", -0xd);
+        address = Scanner::Find("\x74\x1d\x68\xa9\x01\x00\x00", "xxxxxxx");
+        if (address) {
+            // Theres a tolerance check in the QueryAltitude call stack, basically throws an assertion if the altitude found is less than 0.0f
+            bypass_tolerance_patch.SetPatch(address, "\xeb", 1);
+        }
 
         address = Scanner::Find("\xa9\x00\x00\x10\x00\x74\x3a", "xxxxxxx");
         CancelEnterChallengeMission_Func = (Void_pt)Scanner::FunctionFromNearCall(address + 0x19);
@@ -199,6 +203,8 @@ namespace {
             HookBase::EnableHooks(WorldMap_UICallback_Func);
         if (Minimap_UICallback_Func)
             HookBase::EnableHooks(Minimap_UICallback_Func);
+        if(bypass_tolerance_patch.IsValid())
+            bypass_tolerance_patch.TogglePatch(true);
     }
     void DisableHooks() {
         if (EnterChallengeMission_Func)
@@ -207,10 +213,14 @@ namespace {
             HookBase::DisableHooks(WorldMap_UICallback_Func);
         if (Minimap_UICallback_Func)
             HookBase::DisableHooks(Minimap_UICallback_Func);
+        if (bypass_tolerance_patch.IsValid())
+            bypass_tolerance_patch.TogglePatch(false);
+
     }
     void Exit() {
         HookBase::RemoveHook(EnterChallengeMission_Func);
         HookBase::RemoveHook(WorldMap_UICallback_Func);
+        bypass_tolerance_patch.Reset();
     }
 }
 
@@ -234,7 +244,7 @@ namespace GW {
             return world_map_context;
         }
 
-        float QueryAltitude(const GamePos& pos, float radius, float& alt, Vec3f* terrain_normal) {
+        int QueryAltitude(const GamePos& pos, float radius, float& alt, Vec3f* terrain_normal) {
             if (QueryAltitude_Func)
                 return QueryAltitude_Func(&pos, radius, &alt, terrain_normal);
             return 0;

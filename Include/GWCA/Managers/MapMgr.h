@@ -68,7 +68,7 @@ namespace GW {
 
         GWCA_API WorldMapContext* GetWorldMapContext();
 
-        GWCA_API float QueryAltitude(const GamePos& pos, float radius, float& alt, Vec3f* terrain_normal = nullptr);
+        GWCA_API int QueryAltitude(const GamePos& pos, float radius, float& alt, Vec3f* terrain_normal = nullptr);
 
         GWCA_API bool GetIsMapLoaded();
 
