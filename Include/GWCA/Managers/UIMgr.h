@@ -18,6 +18,8 @@ namespace GW {
 
     namespace Constants {
         enum class Language;
+        enum class MapID : uint32_t;
+        enum class QuestID : uint32_t;
     }
     namespace Chat {
         enum Channel : int;
@@ -305,6 +307,7 @@ namespace GW {
             kOpenWhisper                = 0x10000000 | 0x90, // wparam = wchar* name
             kLogout                     = 0x10000000 | 0x9b, // wparam = { bool unknown, bool character_select }
             kCompassDraw                = 0x10000000 | 0x9c, // wparam = UIPacket::kCompassDraw*
+            kOnScreenMessage            = 0x10000000 | 0xA0, // wparam = wchar_** encoded_string
             kDialogBody                 = 0x10000000 | 0xA4, // wparam = DialogBodyInfo*
             kDialogButton               = 0x10000000 | 0xA1, // wparam = DialogButtonInfo*
             kTargetNPCPartyMember       = 0x10000000 | 0xB1, // wparam = { uint32_t unk, uint32_t agent_id }
@@ -344,7 +347,7 @@ namespace GW {
             kQuestAdded                 = 0x10000000 | 0x149, // wparam = { quest_id, ... }
             kQuestDetailsChanged        = 0x10000000 | 0x14A, // wparam = { quest_id, ... }
             kClientActiveQuestChanged   = 0x10000000 | 0x14C, // wparam = { quest_id, ... }. Triggered when the game requests the current quest to change
-            kServerActiveQuestChanged   = 0x10000000 | 0x14E, // wparam = { quest_id, ... }. Triggered when the server requests the current quest to change
+            kServerActiveQuestChanged   = 0x10000000 | 0x14E, // wparam = UIPacket::kServerActiveQuestChanged*. Triggered when the server requests the current quest to change
             kObjectiveAdd               = 0x10000000 | 0x155, // wparam = UIPacket::kObjectiveAdd*
             kObjectiveComplete          = 0x10000000 | 0x156, // wparam = UIPacket::kObjectiveComplete*
             kObjectiveUpdated           = 0x10000000 | 0x157, // wparam = UIPacket::kObjectiveUpdated*
@@ -399,6 +402,13 @@ namespace GW {
         enum class EnumPreference : uint32_t;
 
         namespace UIPacket {
+            struct kServerActiveQuestChanged {
+                GW::Constants::QuestID quest_id;
+                GW::GamePos marker;
+                uint32_t h0024;
+                GW::Constants::MapID map_id;
+                uint32_t log_state;
+            };
             struct kPrintChatMessage {
                 GW::Chat::Channel channel;
                 wchar_t* message;
