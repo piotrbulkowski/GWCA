@@ -37,6 +37,7 @@ namespace {
         float radius,
         float* alt,
         Vec3f* unk);
+    QueryAltitude_pt QueryAltitude_Func;
     GW::MemoryPatcher bypass_tolerance_patch;
 
     typedef void(__cdecl* DoAction_pt)(uint32_t identifier);
